@@ -24,6 +24,7 @@ import java.io.EOFException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +57,6 @@ import com.bdaum.zoom.ui.gps.Waypoint;
 @SuppressWarnings("restriction")
 public class GeoshownOperation extends GeotagOperation {
 
-	private static final ArrayList<String> EMPTYLIST = new ArrayList<String>(0);
 	private String[] ids;
 	private Trackpoint trackpoint;
 	private String[] locIds;
@@ -235,7 +235,7 @@ public class GeoshownOperation extends GeotagOperation {
 			Waypoint wp = getPlaceInfo(meta, 0, latitude, longitude, null, info);
 			if (wp != null)
 				GpsUtilities.transferPlacedata(wp, loc);
-			if (asset != null && updateKeywords(asset, loc, meta, EMPTYLIST)) {
+			if (asset != null && updateKeywords(asset, loc, meta, Collections.emptyList())) {
 				toBeStored.add(asset);
 				toBeStored.add(meta);
 			}

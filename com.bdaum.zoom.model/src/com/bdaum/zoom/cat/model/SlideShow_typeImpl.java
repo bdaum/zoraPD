@@ -1,8 +1,12 @@
 package com.bdaum.zoom.cat.model;
 
-import java.util.*;
-import java.lang.String;
-import com.bdaum.aoModeling.runtime.*;
+import java.util.Date;
+
+import com.bdaum.aoModeling.runtime.AomConstants;
+import com.bdaum.aoModeling.runtime.AomObject;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.ErrorMessages;
+import com.bdaum.aoModeling.runtime.ModelMessages;
 
 /**
  * Generated with KLEEN Java Generator V.1.3
@@ -34,6 +38,9 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	 * @param zoom - Property
 	 * @param titleDisplay - Property
 	 * @param titleContent - Property
+	 * @param titleScheme - Property
+	 * @param titleTransparency - Property
+	 * @param colorScheme - Property
 	 * @param adhoc - Property
 	 * @param skipDublettes - Property
 	 * @param voiceNotes - Property
@@ -42,7 +49,7 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	 */
 	public SlideShow_typeImpl(String name, String description,
 			boolean fromPreview, int duration, int effect, int fading,
-			int zoom, int titleDisplay, int titleContent, boolean adhoc,
+			int zoom, int titleDisplay, int titleContent, int titleScheme, int titleTransparency, int colorScheme, boolean adhoc,
 			boolean skipDublettes, boolean voiceNotes, Date lastAccessDate,
 			String perspective) {
 		super();
@@ -55,6 +62,9 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 		this.zoom = zoom;
 		this.titleDisplay = titleDisplay;
 		this.titleContent = titleContent;
+		this.titleScheme = titleScheme;
+		this.titleTransparency = titleTransparency;
+		this.colorScheme = colorScheme;
 		this.adhoc = adhoc;
 		this.skipDublettes = skipDublettes;
 		this.voiceNotes = voiceNotes;
@@ -268,6 +278,74 @@ public class SlideShow_typeImpl extends AomObject implements SlideShow_type {
 	public int getTitleContent() {
 		return titleContent;
 	}
+	
+	/* *** Property titleScheme *** */
+
+	private int titleScheme;
+
+	/**
+	 * Set value of property titleScheme
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTitleScheme(int _value) {
+		titleScheme = _value;
+	}
+
+	/**
+	 * Get value of property titleScheme
+	 *
+	 * @return - value of field titleScheme
+	 */
+	public int getTitleScheme() {
+		return titleScheme;
+	}
+	
+	/* *** Property titleTransparency *** */
+
+	private int titleTransparency;
+
+	/**
+	 * Set value of property titleTransparency
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTitleTransparency(int _value) {
+		titleTransparency = _value;
+	}
+
+	/**
+	 * Get value of property titleTransparency
+	 *
+	 * @return - value of field titleTransparency
+	 */
+	public int getTitleTransparency() {
+		return titleTransparency;
+	}
+	
+	/* *** Property colorScheme *** */
+
+	private int colorScheme;
+
+	/**
+	 * Set value of property colorScheme
+	 *
+	 * @param _value - new field value
+	 */
+	public void setColorScheme(int _value) {
+		colorScheme = _value;
+	}
+
+	/**
+	 * Get value of property colorScheme
+	 *
+	 * @return - value of field colorScheme
+	 */
+	public int getColorScheme() {
+		return colorScheme;
+	}
+
+
 
 	/* *** Property adhoc *** */
 

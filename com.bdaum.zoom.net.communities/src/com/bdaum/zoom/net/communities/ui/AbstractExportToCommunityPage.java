@@ -13,13 +13,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.scohen.juploadr.uploadapi.AuthException;
 import org.scohen.juploadr.uploadapi.CommunicationException;
 
@@ -29,7 +29,7 @@ import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.communities.CommunityApi;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
+public abstract class AbstractExportToCommunityPage extends ColoredWizardPage implements Listener, ISelectionChangedListener {
 
 	protected static final String SELECTED_ACCOUNT = "selectedAccount"; //$NON-NLS-1$
 	protected final IConfigurationElement configElement;
@@ -75,40 +75,16 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 		});
 		editButton = new Button(group, SWT.PUSH);
 		editButton.setText(Messages.ExportToCommunityPage_edit);
-		editButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object el = accountViewer.getStructuredSelection().getFirstElement();
-				if (el instanceof CommunityAccount) {
-					final CommunityApi api = ((AbstractCommunityExportWizard) getWizard()).getApi();
-					final CommunityAccount account = (CommunityAccount) el;
-					BusyIndicator.showWhile(e.display, () -> {
-						EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(editButton.getShell(),
-								account, api);
-						if (dialog.open() == Window.OK) {
-							CommunityAccount result = dialog.getResult();
-							if (account.isNullAccount()) {
-								communityAccounts.add(0, new CommunityAccount(accountConfig));
-								accountViewer.setInput(communityAccounts);
-								accountViewer.setSelection(new StructuredSelection(result));
-							} else
-								accountViewer.update(result, null);
-							CommunityAccount.saveAllAccounts(id, communityAccounts);
-						}
-					});
-					validatePage();
-				}
-			}
-		});
+		editButton.addListener(SWT.Selection, this);
 		accountViewer.setInput(communityAccounts);
 		if (communityAccounts.size() == 1)
 			accountViewer.setSelection(new StructuredSelection(communityAccounts.get(0)));
-		accountViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateFields();
-				validatePage();
-			}
-		});
+		accountViewer.addSelectionChangedListener(this);
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateFields();
+		validatePage();
 	}
 
 	protected String checkAccount() {
@@ -153,5 +129,32 @@ public abstract class AbstractExportToCommunityPage extends ColoredWizardPage {
 	}
 
 	protected abstract boolean doFinish(CommunityAccount acc) throws CommunicationException, AuthException;
+	
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Selection && e.widget == editButton) {
+			Object el = accountViewer.getStructuredSelection().getFirstElement();
+			if (el instanceof CommunityAccount) {
+				final CommunityApi api = ((AbstractCommunityExportWizard) getWizard()).getApi();
+				final CommunityAccount account = (CommunityAccount) el;
+				BusyIndicator.showWhile(e.display, () -> {
+					EditCommunityAccountDialog dialog = new EditCommunityAccountDialog(editButton.getShell(),
+							account, api);
+					if (dialog.open() == Window.OK) {
+						CommunityAccount result = dialog.getResult();
+						if (account.isNullAccount()) {
+							communityAccounts.add(0, new CommunityAccount(accountConfig));
+							accountViewer.setInput(communityAccounts);
+							accountViewer.setSelection(new StructuredSelection(result));
+						} else
+							accountViewer.update(result, null);
+						CommunityAccount.saveAllAccounts(id, communityAccounts);
+					}
+				});
+				validatePage();
+			}
+		}
+		
+	}
 
 }

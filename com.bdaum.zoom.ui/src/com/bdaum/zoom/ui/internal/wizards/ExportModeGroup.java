@@ -175,7 +175,7 @@ public class ExportModeGroup implements Listener {
 			currentRawConverter.unget();
 		}
 		if (style != ORIGINALS) {
-			qualityGroup = new QualityGroup(parent, false);
+			qualityGroup = new QualityGroup(parent, false, false);
 			qualityGroup.addListener(SWT.Selection, this);
 		}
 		updateControls();
@@ -224,6 +224,8 @@ public class ExportModeGroup implements Listener {
 			} else
 				stackComp.setVisible(false);
 		}
+		if (qualityGroup != null)
+			qualityGroup.setUseWebP(selection == webp);
 	}
 
 	public void addListener(int type, Listener listener) {

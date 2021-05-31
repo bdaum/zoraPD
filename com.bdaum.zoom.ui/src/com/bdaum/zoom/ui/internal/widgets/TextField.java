@@ -39,11 +39,10 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.piccolo2d.PNode;
 import org.piccolo2d.event.PInputEvent;
@@ -83,7 +82,7 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 	private PSWTCanvas control;
 	private Menu previousMenu;
 	private IInputValidator validator;
-	private ListenerList<VerifyListener> listeners = new ListenerList<VerifyListener>();
+	private ListenerList<Listener> listeners = new ListenerList<Listener>();
 	private final int style;
 	private boolean valid = true;
 	private String text;
@@ -614,9 +613,8 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 					e.type = SWT.Verify;
 					e.text = errorMessage;
 					e.data = text;
-					VerifyEvent ev = new VerifyEvent(e);
-					for (VerifyListener l : listeners)
-						l.verifyText(ev);
+					for (Listener l : listeners)
+						l.handleEvent(e);
 				}
 			}
 		} else
@@ -1009,11 +1007,11 @@ public class TextField extends PNode implements ISpellCheckingTarget, IAdaptable
 		this.validator = validator;
 	}
 
-	public void addErrorListener(VerifyListener listener) {
+	public void addErrorListener(Listener listener) {
 		listeners.add(listener);
 	}
 
-	public void removeErrorListener(VerifyListener listener) {
+	public void removeErrorListener(Listener listener) {
 		listeners.remove(listener);
 	}
 

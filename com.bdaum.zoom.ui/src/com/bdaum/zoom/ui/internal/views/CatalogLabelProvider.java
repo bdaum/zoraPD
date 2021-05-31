@@ -82,25 +82,6 @@ public class CatalogLabelProvider extends ZColumnLabelProvider {
 			return ((GroupImpl) obj).getName();
 		return obj.toString();
 	}
-
-//	private static String getTooltipTitle(Object obj) {
-//		if (obj instanceof SmartCollection) {
-//			SmartCollection sm = (SmartCollection) obj;
-//			return NLS.bind(sm.getAlbum()
-//					? sm.getSystem() ? Messages.getString("CatalogLabelProvider.person_album") //$NON-NLS-1$
-//							: Messages.getString("CatalogLabelProvider.album") //$NON-NLS-1$
-//					: Messages.getString("CatalogLabelProvider.collection"), sm.getName()); //$NON-NLS-1$
-//		}
-//		if (obj instanceof SlideShow)
-//			return NLS.bind(Messages.getString("CatalogLabelProvider.slideshow"), ((SlideShow) obj).getName()); //$NON-NLS-1$
-//		if (obj instanceof Exhibition)
-//			return NLS.bind(Messages.getString("CatalogLabelProvider.exhibition"), ((Exhibition) obj).getName()); //$NON-NLS-1$
-//		if (obj instanceof WebGallery)
-//			return NLS.bind(Messages.getString("CatalogLabelProvider.web_gallery"), ((WebGallery) obj).getName()); //$NON-NLS-1$
-//		if (obj instanceof GroupImpl)
-//			return NLS.bind(Messages.getString("CatalogLabelProvider.group"), ((GroupImpl) obj).getName()); //$NON-NLS-1$
-//		return obj.toString();
-//	}
 	
 	@Override
 	public Image getToolTipImage(Object element) {

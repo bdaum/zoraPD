@@ -1467,18 +1467,13 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 
 		private ExhibitImpl exhibit;
 		private PSWTHandle midPoint;
-		private double imageWidth;
-		private double imageHeight;
-		private PSWTPath imageLabel;
-		private TextField description;
-		private TextField credits;
-		private TextField creationDate;
+		private double imageWidth, imageHeight;
+		private PSWTPath imageLabel, soldMark;
+		private TextField description, credits, creationDate;
 		private PSWTText resolutionWarning;
-		private PPresentationPanel pOuterFrame;
-		private PPresentationPanel pMat;
+		private PPresentationPanel pOuterFrame, pMat;
 		private final PSWTCanvas canvas;
 		private final PWall pwall;
-		private PSWTPath soldMark;
 
 		public PExhibit(PSWTCanvas canvas, PWall pwall, final ExhibitImpl exhibit, int pos, int y) {
 			this.canvas = canvas;
@@ -1874,13 +1869,8 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 	private ExhibitionImpl exhibition;
 	private List<PWall> walls = new ArrayList<PWall>(5);
 	private List<ExhibitImpl> exhibits = new ArrayList<ExhibitImpl>(50);
-	private Action addWallAction;
-	private Action layoutAction;
-	private Action markSoldAction;
-	private Action generateAction;
+	private Action addWallAction, layoutAction, markSoldAction, generateAction, deleteWallAction, editWallAction;
 	private Set<String> offlineImages = null;
-	private Action deleteWallAction;
-	private Action editWallAction;
 
 	public String getArtists() {
 		Set<String> artists = new HashSet<String>();
@@ -2098,7 +2088,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				ExhibitionImpl show = getExhibition();
 				if (show != null) {
 					ExhibitionImpl backup = ExhibitionPropertiesOperation.cloneExhibition(show);
-					show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), true, null);
+					show = ExhibitionEditDialog.open(getSite().getShell(), ExhibitionView.this, null, show, show.getName(), true, null);
 					if (show != null) {
 						performOperation(new ExhibitionPropertiesOperation(backup, setExhibition(show)));
 						setInput(exhibition);
@@ -2351,7 +2341,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 
 	protected ExhibitionImpl getExhibition() {
 		if (exhibition == null && !dbIsReadonly())
-			setExhibition(ExhibitionEditDialog.open(getSite().getShell(), null, null,
+			setExhibition(ExhibitionEditDialog.open(getSite().getShell(), null, null, null,
 					Messages.getString("ExhibitionView.create_exhibition"), false, null)); //$NON-NLS-1$
 		return exhibition;
 	}
@@ -2864,7 +2854,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 				exhibit.getLabelIndent(), exhibit.getAsset());
 	}
 
-	private void generate() {
+	public void generate() {
 		ExhibitionImpl show = getExhibition();
 		if (show == null)
 			return;
@@ -2890,7 +2880,7 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		boolean isFtp = show.getIsFtp();
 		String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
 		while (outputFolder == null || outputFolder.isEmpty()) {
-			show = ExhibitionEditDialog.open(getSite().getShell(), null, show, show.getName(), false,
+			show = ExhibitionEditDialog.open(getSite().getShell(), null, null, show, show.getName(), false,
 					Messages.getString("ExhibitionView.please_specify_target")); //$NON-NLS-1$
 			if (show == null)
 				return;
@@ -2900,50 +2890,53 @@ public class ExhibitionView extends AbstractPresentationView implements IHoverCo
 		boolean makeDefault = false;
 		boolean askForDefault = false;
 		final File file = new File(outputFolder);
-		if (!isFtp && file.exists() && file.listFiles().length > 0) {
-			AcousticMessageDialog dialog;
-			File resFile = new File(file, "res"); //$NON-NLS-1$
-			File[] rooms = resFile.listFiles(new FileFilter() {
-				public boolean accept(File f) {
-					return f.getName().startsWith("room_"); //$NON-NLS-1$
-				}
-			});
-			if (rooms.length > 0) {
-				File roomFile = new File(resFile, "room_" //$NON-NLS-1$
-						+ exhibitionId);
-				if (roomFile.exists()) {
-					askForDefault = rooms.length > 1;
+		if (!isFtp && file.exists()) {
+			File[] files = file.listFiles();
+			if (files != null && files.length > 0) {
+				AcousticMessageDialog dialog;
+				File resFile = new File(file, "res"); //$NON-NLS-1$
+				File[] rooms = resFile.listFiles(new FileFilter() {
+					public boolean accept(File f) {
+						return f.getName().startsWith("room_"); //$NON-NLS-1$
+					}
+				});
+				if (rooms != null && rooms.length > 0) {
+					File roomFile = new File(resFile, "room_" //$NON-NLS-1$
+							+ exhibitionId);
+					if (roomFile.exists()) {
+						askForDefault = rooms.length > 1;
+						dialog = new AcousticMessageDialog(getSite().getShell(),
+								Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
+								null, NLS.bind(Messages.getString("ExhibitionView.exhibition_exists"), file), //$NON-NLS-1$
+								MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
+										Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
+										IDialogConstants.CANCEL_LABEL },
+								0);
+					} else {
+						askForDefault = true;
+						dialog = new AcousticMessageDialog(getSite().getShell(), Messages.getString("ExhibitionView.add"), //$NON-NLS-1$
+								null, NLS.bind(Messages.getString("ExhibitionView.other_exhibitions"), file), //$NON-NLS-1$
+								MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.add_room"), //$NON-NLS-1$
+										Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
+										IDialogConstants.CANCEL_LABEL },
+								0);
+					}
+				} else
 					dialog = new AcousticMessageDialog(getSite().getShell(),
 							Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
-							null, NLS.bind(Messages.getString("ExhibitionView.exhibition_exists"), file), //$NON-NLS-1$
+							null, NLS.bind(Messages.getString("ExhibitionView.not_empty"), file), //$NON-NLS-1$
 							MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
 									Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
 									IDialogConstants.CANCEL_LABEL },
 							0);
-				} else {
-					askForDefault = true;
-					dialog = new AcousticMessageDialog(getSite().getShell(), Messages.getString("ExhibitionView.add"), //$NON-NLS-1$
-							null, NLS.bind(Messages.getString("ExhibitionView.other_exhibitions"), file), //$NON-NLS-1$
-							MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.add_room"), //$NON-NLS-1$
-									Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
-									IDialogConstants.CANCEL_LABEL },
-							0);
+				int ret = dialog.open();
+				switch (ret) {
+				case 2:
+					return;
+				case 1:
+					Core.deleteFileOrFolder(file);
+					break;
 				}
-			} else
-				dialog = new AcousticMessageDialog(getSite().getShell(),
-						Messages.getString("ExhibitionView.overwriteTitle"), //$NON-NLS-1$
-						null, NLS.bind(Messages.getString("ExhibitionView.not_empty"), file), //$NON-NLS-1$
-						MessageDialog.QUESTION, new String[] { Messages.getString("ExhibitionView.overwrite"), //$NON-NLS-1$
-								Messages.getString("ExhibitionView.clear_folder"), //$NON-NLS-1$
-								IDialogConstants.CANCEL_LABEL },
-						0);
-			int ret = dialog.open();
-			switch (ret) {
-			case 2:
-				return;
-			case 1:
-				Core.deleteFileOrFolder(file);
-				break;
 			}
 		}
 		if (askForDefault)

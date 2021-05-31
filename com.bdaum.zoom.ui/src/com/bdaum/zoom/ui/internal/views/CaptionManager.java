@@ -43,6 +43,7 @@ import org.eclipse.ui.IMemento;
 
 import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
+import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.TemplateProcessor;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
@@ -70,6 +71,8 @@ public class CaptionManager implements UiConstants, Listener {
 	private Asset currentItem;
 	private Timer timer = new Timer();
 	private TimerTask task;
+	private int clicks;
+	private boolean rightClick;
 
 	public void init(IMemento memento) {
 		if (memento != null) {
@@ -142,6 +145,7 @@ public class CaptionManager implements UiConstants, Listener {
 				}
 			}
 		};
+		configureAction.setImageDescriptor(Icons.prefs.getDescriptor());
 		configureAction.setToolTipText(Messages.getString("CaptionManager.configure_tooltip")); //$NON-NLS-1$
 	}
 
@@ -191,21 +195,34 @@ public class CaptionManager implements UiConstants, Listener {
 
 	@Override
 	public void handleEvent(Event e) {
-		if (e.type == SWT.MouseUp && (e.widget == caption || e.widget == target)) {
-			if (task != null) {
-				task.cancel();
-				task = null;
-			}
-			if (e.count == 1) {
-				task = new TimerTask() {
-					@Override
-					public void run() {
-						if (!target.isDisposed())
-							target.getDisplay().asyncExec(() -> configureAction.run());
-					}
-				};
-				timer.schedule(task, 300);
-				e.doit = false;
+		if (e.type == SWT.MouseUp) {
+			if ((e.stateMask & SWT.BUTTON3) != 0)
+				rightClick = true;
+			else if ((e.stateMask & SWT.BUTTON1) != 0 && (e.widget == caption || e.widget == target)) {
+				if (rightClick) {
+					rightClick = false;
+					return;
+				}
+				clicks = e.count;
+				if (task != null) {
+					task.cancel();
+					task = null;
+				}
+				if (clicks == 1) {
+					task = new TimerTask() {
+						@Override
+						public void run() {
+							if (!target.isDisposed())
+								target.getDisplay().asyncExec(() -> {
+									if (clicks == 1 && !target.isDisposed())
+										configureAction.run();
+								});
+							task = null;
+						}
+					};
+					timer.schedule(task, 300);
+					e.doit = false;
+				}
 			}
 		}
 	}

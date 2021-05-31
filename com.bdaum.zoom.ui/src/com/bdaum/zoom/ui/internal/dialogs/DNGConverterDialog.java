@@ -100,7 +100,7 @@ public class DNGConverterDialog extends ZTitleAreaDialog implements Listener {
 		switch (e.type) {
 		case SWT.Modify:
 			updateButtons();
-			break;
+			return;
 		case SWT.Selection:
 			String vlcDownload = System.getProperty(Messages.DNGConverterDialog_dngkey);
 			try {
@@ -110,7 +110,6 @@ public class DNGConverterDialog extends ZTitleAreaDialog implements Listener {
 			} catch (MalformedURLException e1) {
 				// should never happen
 			}
-			break;
 		}
 	}
 

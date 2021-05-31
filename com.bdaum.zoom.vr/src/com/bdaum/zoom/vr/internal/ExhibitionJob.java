@@ -192,7 +192,8 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 			targetFolder = new File(gallery.getOutputFolder());
 			targetFolder.mkdirs();
 			if (!targetFolder.exists()) {
-				Core.getCore().getDbFactory().getErrorHandler().showError(Messages.ExhibitionJob_gallery_creation_failed,
+				Core.getCore().getDbFactory().getErrorHandler().showError(
+						Messages.ExhibitionJob_gallery_creation_failed,
 						NLS.bind(Messages.ExhibitionJob_cannot_create_dir, targetFolder), null);
 				return;
 			}
@@ -1370,8 +1371,9 @@ public class ExhibitionJob extends CustomJob implements LoaderListener {
 				return f.getName().startsWith(ROOMPREFIX);
 			}
 		});
-		for (File room : rooms)
-			ids.add(room.getName().substring(ROOMPREFIX.length()));
+		if (rooms != null)
+			for (File room : rooms)
+				ids.add(room.getName().substring(ROOMPREFIX.length()));
 		File configFile = new File(resFile, "config.js"); //$NON-NLS-1$
 		if (configFile.exists()) {
 			StringBuffer sb = new StringBuffer(4096);

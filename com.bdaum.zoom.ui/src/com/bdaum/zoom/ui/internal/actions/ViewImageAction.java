@@ -165,7 +165,7 @@ public class ViewImageAction extends Action {
 								// should not happen
 							}
 						}
-						BatchUtilities.executeCommand(new String[] { viewerPath, file.getAbsolutePath() }, null,
+						BatchUtilities.executeCommand(new String[] { viewerPath, file.getAbsolutePath() }, null, viewer.getParent(),
 								Messages.ViewImageAction_run_viewer, IStatus.OK, IStatus.ERROR, -1, 2500L, "UTF-8", null); //$NON-NLS-1$
 						if (tempFile != null)
 							tempFile.delete();

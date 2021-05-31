@@ -31,34 +31,29 @@ import com.bdaum.zoom.core.Core;
 
 public class SlideshowPropertiesOperation extends AbstractOperation {
 
-	private final SlideShowImpl backup;
-	private final SlideShowImpl slideshow;
+	private final SlideShowImpl backup, slideshow;
 	private SlideShowImpl redo;
 
-	public SlideshowPropertiesOperation(SlideShowImpl backup,
-			SlideShowImpl slideshow) {
+	public SlideshowPropertiesOperation(SlideShowImpl backup, SlideShowImpl slideshow) {
 		super(Messages.SlideshowPropertiesOperation_set_slideshow_properties);
 		this.backup = backup;
 		this.slideshow = slideshow;
 	}
 
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		Core.getCore().getDbManager().safeTransaction(null, slideshow);
 		return Status.OK_STATUS;
 	}
 
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		transferValues(redo, slideshow);
 		return execute(monitor, info);
 	}
 
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		redo = cloneSlideshow(slideshow);
 		transferValues(backup, slideshow);
 		return execute(monitor, info);
@@ -79,12 +74,10 @@ public class SlideshowPropertiesOperation extends AbstractOperation {
 	}
 
 	public static SlideShowImpl cloneSlideshow(SlideShowImpl show) {
-		return new SlideShowImpl(show.getName(), show.getDescription(),
-				show.getFromPreview(), show.getDuration(), show.getEffect(),
-				show.getFading(), show.getZoom(), show.getTitleDisplay(),
-				show.getTitleContent(), show.getAdhoc(),
-				show.getSkipDublettes(), show.getVoiceNotes(),
-				show.getLastAccessDate(), show.getPerspective());
+		return new SlideShowImpl(show.getName(), show.getDescription(), show.getFromPreview(), show.getDuration(),
+				show.getEffect(), show.getFading(), show.getZoom(), show.getTitleDisplay(), show.getTitleContent(),
+				show.getTitleScheme(), show.getTitleTransparency(), show.getColorScheme(), show.getAdhoc(), show.getSkipDublettes(),
+				show.getVoiceNotes(), show.getLastAccessDate(), show.getPerspective());
 	}
 
 }

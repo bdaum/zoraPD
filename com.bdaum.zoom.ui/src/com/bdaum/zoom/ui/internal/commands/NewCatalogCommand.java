@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.FileDialog;
 
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.core.Constants;
-import com.bdaum.zoom.core.ICore;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.db.NullDbManager;
@@ -41,23 +40,20 @@ public class NewCatalogCommand extends AbstractCatCommandHandler {
 
 	@Override
 	public void run() {
-		final ICore coreActivator = CoreActivator.getDefault();
 		FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);
 		dialog.setText(Messages.NewCatAction_Create_new_cat);
-		UiActivator uiActivator = UiActivator.getDefault();
 		if (catFile != null) {
 			dialog.setFilterPath(catFile.getParent());
 			dialog.setFileName(catFile.getName());
 		}
-		dialog.setFilterExtensions(uiActivator.getCatFileExtensions());
-		dialog.setFilterNames(uiActivator.getSupportedCatFileNames());
+		dialog.setFilterExtensions(UiActivator.getDefault().getCatFileExtensions());
+		dialog.setFilterNames(UiActivator.getDefault().getSupportedCatFileNames());
 		dialog.setOverwrite(true);
 		dialog.setFileName("*" + Constants.CATALOGEXTENSION); //$NON-NLS-1$
 		final String file = dialog.open();
 		if (file != null) {
-			IDbManager dbManager = coreActivator.getDbManager();
-			File currentFile = dbManager.getFile();
-			if (currentFile != null && currentFile.equals(new File(file))) {
+			IDbManager dbManager = CoreActivator.getDefault().getDbManager();
+			if (new File(file).equals(dbManager.getFile())) {
 				AcousticMessageDialog.openWarning(getShell(), Messages.NewCatAction_Create_new_cat,
 						Messages.NewCatalogCommand_already_open);
 				return;
@@ -66,7 +62,7 @@ public class NewCatalogCommand extends AbstractCatCommandHandler {
 			if (preCatClose(false))
 				try {
 					BusyIndicator.showWhile(getShell().getDisplay(), () -> {
-						IDbManager db = coreActivator.openDatabase(file, true, null);
+						IDbManager db = CoreActivator.getDefault().openDatabase(file, true, null);
 						postCatOpen(db.getFileName(), true);
 						new EditMetaDialog(getShell(), getActiveWorkbenchWindow().getActivePage(), db, true, meta)
 								.open();

@@ -125,7 +125,7 @@ public class SelectFrameDialog extends ZTitleAreaDialog implements Listener {
 		case SWT.Paint:
 			if (zimage != null)
 				zimage.draw(e.gc, 0, 0, ZImage.UNCROPPED, 640, 400);
-			break;
+			return;
 		default:
 			Widget widget = e.widget;
 			if (widget == leftArrow)
@@ -138,7 +138,6 @@ public class SelectFrameDialog extends ZTitleAreaDialog implements Listener {
 				selectFrame(Math.min(frames, currentFrame + 1), true);
 			else if (widget == scale)
 				selectFrame(scale.getSelection(), false);
-			break;
 		}
 	}
 

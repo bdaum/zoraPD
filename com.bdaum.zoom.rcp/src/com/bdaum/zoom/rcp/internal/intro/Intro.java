@@ -399,24 +399,23 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 		case SWT.KeyUp:
 			if (e.keyCode == SWT.ESC)
 				close();
-			break;
+			return;
 		case SWT.MouseUp:
 			switch (testButton(e.x, e.y)) {
 			case START:
 				close();
-				break;
+				return;
 			case ECLIPSE:
 				showUrl(ECLIPSE_URL);
-				break;
+				return;
 			case LUCENE:
 				showUrl(LUCENE_URL);
-				break;
 			}
-			break;
+			return;
 		case SWT.MouseMove:
 			buttonCanvas.setCursor(
 					e.display.getSystemCursor(testButton(e.x, e.y) >= 0 ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW));
-			break;
+			return;
 		case SWT.Paint:
 			Rectangle area = buttonCanvas.getClientArea();
 			Rectangle ibounds = startImage.getBounds();
@@ -432,7 +431,6 @@ public class Intro extends IntroPart implements IHyperlinkListener, IExpansionLi
 			luceneImageRect = new Rectangle(area.width / 2 + ibounds.width, (area.height - lbounds.height) / 2,
 					lbounds.width, lbounds.height);
 			e.gc.drawImage(luceneImage, luceneImageRect.x, luceneImageRect.y);
-			break;
 		}
 		
 	}

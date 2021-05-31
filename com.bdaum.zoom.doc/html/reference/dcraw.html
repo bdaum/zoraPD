@@ -1,27 +1,65 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head>
-<meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Obtaining a DCRAW module</title>
-
-
-
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Obtaining a DCRAW module </h2>
-<br style="font-weight: bold;"><span style="font-weight: bold;">DCRAW</span> is the raw engine used in <span style="font-style: italic;">ZoRa PhotoDirector</span>.
-DCRAW is provided as a free raw converter by Dave Coffin in source
-form. Several web sites provide binary modules for the different
-platforms. Because new cameras introduce new raw file formats, DCRAW is
-updated frequently.<br><br><h4>Windows</h4>The Windows version of <span style="font-style: italic;">ZoRa PhotoDirector</span>
-come with a built-in DCRAW module for both 32- and 64-bit platforms.
-This DCRAW module is updated with each new release of&nbsp;<span style="font-style: italic;">ZoRa PhotoDirector. <br></span><br>Newer DCRAW modules can be downloaded from <br><ul><li><a target="_blank" href="http://www.fastpictureviewer.com/downloads/#links">http://www.fastpictureviewer.com/downloads/#links</a></li>
-  <li><a target="_blank" href="http://www.centrostudiprogressofotografico.it/en/dcraw/">http://www.centrostudiprogressofotografico.it/en/dcraw/</a><br>
-  </li>
-</ul>To install a custom DCRAW module, simply drop it into the sub folder <code>dropins/ </code>in the <span style="font-style: italic;">ZoRa Photo Director</span> installation folder. Alternatively, you may specify the location of the DCRAW module under <a href="importPrefs.html#raw"><acronym>Window&gt;Preferences&gt;Import&gt;Raw conversion</acronym><sup><acronym></acronym></sup></a>.<span style="font-style: italic;"></span><h4>Linux</h4>Under Linux <span style="font-style: italic;">ZoRa PhotoDirector</span>
-relies on the DCRAW module installed in the Linux platform. If you keep
-your platform up-to-date, you should always have the latest version of
-DCRAW.<h4>Mac OSX</h4>The Mac OSX version of <span style="font-style: italic;">ZoRa PhotoDirector</span>
-comes with a built-in DCRAW module. However, this module is somewhat
-outdated (Version 9.16). Newer versions of DCRAW for Mac OSX are found
-on the web but usually they do not run on all OSX platforms. Between
-OSX versions, library conventions were changed, so that modules
-compiled on a newer platform do not run on an older platform. So, it is
-a bit trial and error.<br><br>The best choice is probably&nbsp;downloading the latest source code from <a href="http://www.cybercom.net/%7Edcoffin/dcraw/">Dave Coffin's web site</a> and&nbsp;compiling it yourself. This can be done by the following steps:<br><br><ul><li>Install the<span style="font-style: italic;"> XCode IDE</span> from Apple (free)</li><li>Install the <span style="font-style: italic;">Command line tools</span> from within the XCode IDE.</li><li>Run &nbsp;<blockquote type="cite"><span style="color: rgb(51, 51, 51); font-family: georgia,arial,sans-serif; font-size: 13px; font-style: normal; font-variant: normal; font-weight: normal; letter-spacing: normal; line-height: 21.248px; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; word-spacing: 0px; background-color: rgb(255, 255, 255); display: inline ! important; float: none;">gcc -o dcraw -O4 dcraw.c -lm -DNODEPS</span></blockquote></li></ul><br>New DCRAW modules can simply be dropped into the sub folder <code>dropins/ </code>in the <span style="font-style: italic;">ZoRa Photo Director</span> installation folder. Alternatively, you may specify the location of a DCRAW module under&nbsp;<a href="importPrefs.html#raw"><acronym>ZoRa Photo Director&gt;Preferences&gt;Import&gt;Raw conversion</acronym></a>.<br><acronym></acronym></body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Obtaining a DCRAW module</title>
+    <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Obtaining a DCRAW module </h2>
+    <br style="font-weight: bold;">
+    <span style="font-weight: bold;">DCRAW</span> is the raw engine used in <span
+      style="font-style: italic;">ZoRa PhotoDirector</span>. DCRAW is provided
+    as a free raw converter by Dave Coffin in source form. Several web sites
+    provide binary modules for the different platforms. Because new cameras
+    introduce new raw file formats, DCRAW is updated frequently.<br>
+    <br>
+    <h4>Windows</h4>
+    The Windows version of <span style="font-style: italic;">ZoRa PhotoDirector</span>
+    come with a built-in DCRAW module for both 32- and 64-bit platforms. This
+    DCRAW module is updated with each new release of&nbsp;<span style="font-style: italic;">ZoRa
+      PhotoDirector. <br>
+    </span><br>
+    Newer DCRAW modules can be downloaded from <br>
+    <ul>
+      <li><a target="_blank" href="http://www.fastpictureviewer.com/downloads/#links">http://www.fastpictureviewer.com/downloads/#links</a></li>
+    </ul>
+    <p> To install a custom DCRAW module, simply drop it into the sub folder <code>dropins/
+        </code>in the <span style="font-style: italic;">ZoRa Photo Director</span>
+      installation folder. Alternatively, you may specify the location of the
+      DCRAW module under <a href="importPrefs.html#raw"><acronym>Window&gt;Preferences&gt;Import&gt;Raw
+          conversion</acronym><sup><acronym></acronym></sup></a>.</p>
+    <p>Unfortunately, the development of DCRAW has been discontinued. A
+      replacement is the program <code>dcraw_emu.exe</code> from the <b>LIBRAW
+      </b>project. You can install this converter in the same way as a DCRAW
+      module but make sure that <code>libraw.dll</code> resides ins the same
+      folder as <code>dcraw_emu.exe</code>. You can download LIBRAW from</p>
+    <ul>
+      <li><a href="https://www.libraw.org/download" target="_blank">https://www.libraw.org/download</a></li>
+    </ul>
+    <p><span style="font-style: italic;"></span> </p>
+    <h4>Linux</h4>
+    <p> Under Linux <span style="font-style: italic;">ZoRa PhotoDirector</span>
+      relies on the DCRAW module installed in the Linux platform. If you keep
+      your platform up-to-date, you should always have the latest version of
+      DCRAW. </p>
+    <p>Another possibility is to use the program <code>dcraw_emu</code> from
+      the <b>LIBRAW </b>project, but you must build it yourself from source
+      code. You can then install it in the same way as a DCRAW module. You can
+      download the sources from</p>
+    <ul>
+      <li><a href="https://www.libraw.org/download" target="_blank">https://www.libraw.org/download</a></li>
+    </ul>
+    <h4>Mac OSX</h4>
+    <p> The Mac OSX version of <span style="font-style: italic;">ZoRa
+        PhotoDirector</span> comes with a built-in DCRAW module. However, this
+      module is somewhat outdated (Version 9.16). </p>
+    <p>A replacement is the program <code>dcraw_emu</code> from the <b>LIBRAW
+      </b>project. You can install this converter in the same way as a DCRAW
+      module. You can download LIBRAW from</p>
+    <ul>
+      <li><a href="https://www.libraw.org/download" target="_blank">https://www.libraw.org/download</a></li>
+    </ul>
+    <acronym></acronym>
+  </body>
+</html>

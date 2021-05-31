@@ -45,8 +45,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
@@ -119,7 +117,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 
 	private static final int DEFAULTTHUMBSIZE = 128;
 
-	protected class ScaleContributionItem extends ControlContribution {
+	protected class ScaleContributionItem extends ControlContribution implements Listener {
 
 		private Scale scale;
 		private final int min;
@@ -142,34 +140,14 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 			Button button = new Button(comp, SWT.NONE);
 			button.setImage(Icons.refresh.getImage());
 			button.setToolTipText(Messages.getString("AbstractGalleryView.return_to_previous_thumbnail_size")); //$NON-NLS-1$
-			button.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					int s = thumbsize;
-					thumbsize = lastThumbSize;
-					lastThumbSize = s;
-					scale.setSelection(thumbsize);
-					fireSizeChanged();
-				}
-			});
+			button.addListener(SWT.Selection, this);
 			scale = new Scale(comp, SWT.NONE);
 			scale.setLayoutData(new RowData(100, SWT.DEFAULT));
 			scale.setMinimum(min);
 			scale.setMaximum(max);
 			scale.setSelection(thumbsize);
 			setTooltipText();
-			scale.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					thumbsize = scale.getSelection();
-					if (e.time - lastTime > 1000)
-						lastThumbSize = thumbsize;
-					lastTime = e.time;
-					setFocussedItem(null);
-					setTooltipText();
-					fireSizeChanged();
-				}
-			});
+			scale.addListener(SWT.Selection, this);
 			return comp;
 		}
 
@@ -211,13 +189,30 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 		public void decrement() {
 			increment(-scale.getPageIncrement());
 		}
+		
+		@Override
+		public void handleEvent(Event e) {
+			if (e.widget == scale) {
+				thumbsize = scale.getSelection();
+				if (e.time - lastTime > 1000)
+					lastThumbSize = thumbsize;
+				lastTime = e.time;
+				setFocussedItem(null);
+				setTooltipText();
+				fireSizeChanged();
+			} else {
+				int s = thumbsize;
+				thumbsize = lastThumbSize;
+				lastThumbSize = s;
+				scale.setSelection(thumbsize);
+				fireSizeChanged();
+			}
+		}
 	}
 
 	protected static final String THUMBNAIL_SIZE = "com.bdaum.zoom.currentThumbnailSize"; //$NON-NLS-1$
 	protected static final int MAXTHUMBSIZE = 512;
 	protected static final int MINTHUMBSIZE = 48;
-	private static final List<Asset> EMPTYLIST = new ArrayList<>(0);
-
 	private static final String LAST_SELECTION = "com.bdaum.zoom.lastSelection"; //$NON-NLS-1$
 	protected IStructuredSelection selection;
 	private IAction removeFromAlbumAction;
@@ -802,7 +797,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	}
 
 	private List<Asset> select(int type) {
-		List<Asset> result = EMPTYLIST;
+		List<Asset> result = Collections.emptyList();
 		IAssetProvider assetProvider = getAssetProvider();
 		if (assetProvider != null) {
 			List<Asset> assets = assetProvider.getAssets();
@@ -948,17 +943,24 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 
 	@Override
 	protected void updateStatusLine() {
+		StringBuilder sb = new StringBuilder();
 		IAssetProvider assetProvider = getAssetProvider();
 		if (assetProvider == null || assetProvider.getCurrentCollection() == null)
-			setStatusMessage(Messages.getString("AbstractGalleryView.no_collection"), false); //$NON-NLS-1$
+			sb.append(Messages.getString("AbstractGalleryView.no_collection")); //$NON-NLS-1$
 		else if (assetProvider.isEmpty())
-			setStatusMessage(assetProvider.getCurrentCollection().getAdhoc()
+			sb.append(assetProvider.getCurrentCollection().getAdhoc()
 					? Messages.getString("AbstractGalleryView.no_results") //$NON-NLS-1$
-					: Messages.getString("AbstractGalleryView.collection_empty"), false); //$NON-NLS-1$
+					: Messages.getString("AbstractGalleryView.collection_empty")); //$NON-NLS-1$
 		else
-			setStatusMessage(NLS.bind(Messages.getString("AbstractGalleryView.n_images"), //$NON-NLS-1$
+			sb.append(NLS.bind(Messages.getString("AbstractGalleryView.n_images"), //$NON-NLS-1$
 					String.valueOf(getAssetProvider().getAssetCount()),
-					String.valueOf(selection == null ? 0 : selection.size())), false);
+					String.valueOf(selection == null ? 0 : selection.size())));
+		addStatusLineExtension(sb);
+		setStatusMessage(sb.toString(), false);
+	}
+
+	protected void addStatusLineExtension(StringBuilder sb) {
+		// do nothing
 	}
 
 	@Override
@@ -1098,5 +1100,7 @@ public abstract class AbstractGalleryView extends ImageView implements StartList
 	public long getLastActivated() {
 		return lastActivated;
 	}
+
+	
 
 }

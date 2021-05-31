@@ -206,13 +206,21 @@ public class ZImage {
 				long presumableFreeMemory = runtime.maxMemory() - allocatedMemory;
 				image = loadViaImageIO(file, scalingFactor > 0 ? presumableFreeMemory >> 8 : Integer.MAX_VALUE);
 				if (image == null)
+					image = loadViaSwt(file.getAbsolutePath());
+				if (image == null)
 					image = loadViaImageJ(file);
 				if (image == null)
 					image = loadExtraFileTypes(file);
 			} catch (OutOfMemoryError e) {
 				throw e;
-			} catch (Exception e) {
-				image = loadExtraFileTypes(file);
+			} catch (Throwable e) {
+				try {
+					image = loadViaSwt(file.getAbsolutePath());
+				} catch (Throwable e1) {
+					// fall through
+				}
+				if (image == null)
+					image = loadExtraFileTypes(file);
 			}
 		}
 		if (image != null) {
@@ -230,6 +238,14 @@ public class ZImage {
 			image.setBw(bw);
 		}
 		return image;
+	}
+
+	private static ZImage loadViaSwt(String path) {
+		ImageLoader loader = new ImageLoader();
+		ImageData[] data = loader.load(path);
+		if (data != null && data.length >= 1)
+			return new ZImage(data[0], path);
+		return null;
 	}
 
 	private static double computeScale(int iWidth, int iHeight, int width, int height) {
@@ -633,8 +649,8 @@ public class ZImage {
 	 * @param targetSystem
 	 *            - ANY, SWTIMAGE or AWTIMAGE
 	 */
-	public void develop(IProgressMonitor monitor, Device device, int cropMode, int preferredWidth,
-			int preferredHeight, int targetSystem) {
+	public void develop(IProgressMonitor monitor, Device device, int cropMode, int preferredWidth, int preferredHeight,
+			int targetSystem) {
 		if (!developed) {
 			boolean cropping = cropMode == CROPPED && recipe != null && recipe.getCropping() != null;
 			if (scale < 1d && !cropping) {
@@ -800,7 +816,7 @@ public class ZImage {
 					convertToBuffered();
 				try {
 					WritableRaster r = bufferedImage.getRaster();
-					colorConvertOp.filter(r, r); //TODO still to slow
+					colorConvertOp.filter(r, r); // TODO still to slow
 				} catch (Exception e) {
 					// can't convert color profile
 				}
@@ -851,7 +867,7 @@ public class ZImage {
 			// labImage = null;
 			// }
 		} else if (bufferedImage != null) {
-			if (bufferedImage.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_CMYK)
+			if (isCMYK())
 				convertBufferedImageToRGB(format);
 			else
 				bufferedImage2Swt(); // our own SWT routines are faster
@@ -869,6 +885,10 @@ public class ZImage {
 			// break;
 			// }
 		}
+	}
+
+	private boolean isCMYK() {
+		return bufferedImage.getColorModel().getColorSpace().getType() == ColorSpace.TYPE_CMYK;
 	}
 
 	private void convertBufferedImageToRGB(int format) {
@@ -1178,9 +1198,12 @@ public class ZImage {
 				display.syncExec(() -> develop(monitor, display, cropMode, preferredWidth, pheight, ANY));
 		}
 		if (preferredHeight != 0 || format == IMAGE_WEBP) {
-			if (format == IMAGE_WEBP)
+			if (format == IMAGE_WEBP) {
 				convertToBuffered();
-			convertToRGB(AWTIMAGE);
+				if (isCMYK())
+					convertBufferedImageToRGB(AWTIMAGE);
+			} else
+				convertToRGB(AWTIMAGE);
 			if (bufferedImage != null) {
 				try {
 					if (ImageUtilities.saveBufferedImageToStream(bufferedImage, out, format, quality))

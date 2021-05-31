@@ -64,7 +64,7 @@ public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 		String fileName = "*.csv"; //$NON-NLS-1$
 
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.CsvTargetFilePage_target_file, true,
-				filterExtensions, filterNames, path, fileName, true, dialogSettings);
+				filterExtensions, filterNames, path, fileName, false, dialogSettings);
 		fileEditor.addListener(SWT.Modify, this);
 		firstLineButton = WidgetFactory.createCheckButton(composite, Messages.CsvTargetFilePage_first_line,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
@@ -108,10 +108,14 @@ public class CsvTargetFilePage extends ColoredWizardPage implements Listener {
 		return firstLineButton.getSelection();
 	}
 
-	public void finish() {
-		dialogSettings.put(CSVPATH, path);
-		dialogSettings.put(NOFIRSTLINE, !firstLineButton.getSelection());
-		fileEditor.saveValues();
+	public boolean finish() {
+		if (fileEditor.testSave()) {
+			dialogSettings.put(CSVPATH, path);
+			dialogSettings.put(NOFIRSTLINE, !firstLineButton.getSelection());
+			fileEditor.saveValues();
+			return true;
+		}
+		return false;
 	}
 
 }

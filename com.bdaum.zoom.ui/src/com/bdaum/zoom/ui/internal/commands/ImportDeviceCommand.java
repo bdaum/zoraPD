@@ -27,6 +27,7 @@ import org.eclipse.swt.custom.BusyIndicator;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.mtp.StorageObject;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.actions.Messages;
 import com.bdaum.zoom.ui.internal.wizards.ImportFromDeviceWizard;
 
@@ -38,22 +39,30 @@ public class ImportDeviceCommand extends AbstractCommandHandler {
 	}
 
 	public void doRun() {
-		StorageObject[] dcims;
-		while (true) {
-			dcims = Core.getCore().getVolumeManager().findDCIMs();
-			if (dcims.length > 0)
-				break;
-			MessageDialog dialog = new AcousticMessageDialog(getShell(),
-					Messages.ImportFromDeviceAction_Import_from_device, null,
-					Messages.ImportFromDeviceAction_there_seems_no_suitable_device, MessageDialog.QUESTION,
-					new String[] { IDialogConstants.RETRY_LABEL, IDialogConstants.CANCEL_LABEL }, 1);
-			if (dialog.open() > 0)
-				return;
+		UiActivator ui = UiActivator.getDefault();
+		if (ui.getImportDialogActive())
+			return;
+		ui.setImportDialogActive(true);
+		try {
+			StorageObject[] dcims;
+			while (true) {
+				dcims = Core.getCore().getVolumeManager().findDCIMs();
+				if (dcims.length > 0)
+					break;
+				MessageDialog dialog = new AcousticMessageDialog(getShell(),
+						Messages.ImportFromDeviceAction_Import_from_device, null,
+						Messages.ImportFromDeviceAction_there_seems_no_suitable_device, MessageDialog.QUESTION,
+						new String[] { IDialogConstants.RETRY_LABEL, IDialogConstants.CANCEL_LABEL }, 1);
+				if (dialog.open() > 0)
+					return;
+			}
+			ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, dcims, true, true, true, null, false);
+			WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
+			wizard.init(null, null);
+			wizardDialog.open();
+		} finally {
+			ui.setImportDialogActive(false);
 		}
-		ImportFromDeviceWizard wizard = new ImportFromDeviceWizard(null, dcims, true, true, true, null, false);
-		WizardDialog wizardDialog = new WizardDialog(getShell(), wizard);
-		wizard.init(null, null);
-		wizardDialog.open();
 	}
 
 }

@@ -22,8 +22,10 @@ package com.bdaum.zoom.ui.internal.views;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -51,26 +53,26 @@ import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.Icons;
 
-public class HistogramView extends BasicView {
+public class HistogramView extends BasicView implements IMenuListener {
 	public static final String ID = "com.bdaum.zoom.ui.views.HistogramView"; //$NON-NLS-1$
 	private static final String SHOW_RED = "showRed"; //$NON-NLS-1$
 	private static final String SHOW_GREEN = "showGreen"; //$NON-NLS-1$
 	private static final String SHOW_BLUE = "showBlue"; //$NON-NLS-1$
 	private static final String SHOW_GREY = "showGrey"; //$NON-NLS-1$
 	private static final String WEIGHTED = "weighted"; //$NON-NLS-1$
+	private static final String PROPOSALS = "proposals"; //$NON-NLS-1$
 	private static final String DARK = "dark"; //$NON-NLS-1$
 	private Canvas canvas;
 	private Asset currentItem;
-	private Action redAction, greenAction, blueAction, greyAction, centerAction, backgroundAction, trigger;
-	protected boolean showRed = true;
-	protected boolean showGrey = true;
-	protected boolean showBlue = true;
-	protected boolean showGreen = true;
-	private boolean weighted, dark;
+	private Action redAction, greenAction, blueAction, greyAction, centerAction, backgroundAction, trigger,
+			proposalsAction;
+	protected boolean showRed = true, showGrey = true, showBlue = true, showGreen = true;
+	private boolean weighted, dark, proposals;
 	private int count;
 	private Color darkBg, brightBg;
 	private CaptionManager captionManager = new CaptionManager();
 	private HistogramManager histogramManager = new HistogramManager();
+	private MenuManager contextMenuMgr;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -88,6 +90,8 @@ public class HistogramView extends BasicView {
 			weighted = bool != null && bool;
 			bool = memento.getBoolean(DARK);
 			dark = bool != null && bool;
+			bool = memento.getBoolean(PROPOSALS);
+			proposals = bool == null || bool;
 		}
 		captionManager.init(memento);
 	}
@@ -101,6 +105,7 @@ public class HistogramView extends BasicView {
 			memento.putBoolean(SHOW_GREY, showGrey);
 			memento.putBoolean(WEIGHTED, weighted);
 			memento.putBoolean(DARK, dark);
+			memento.putBoolean(PROPOSALS, proposals);
 			captionManager.saveState(memento);
 		}
 		super.saveState(memento);
@@ -122,10 +127,42 @@ public class HistogramView extends BasicView {
 		canvas.addListener(SWT.MouseUp, this);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(canvas, HelpContextIds.HISTOGRAM_VIEW);
 		makeActions();
+		hookContextMenu();
 		installListeners();
 		contributeToActionBars();
 		updateActions(true);
 		canvas.redraw();
+	}
+
+	protected void hookContextMenu() {
+		if (contextMenuMgr == null) {
+			contextMenuMgr = new MenuManager("#PopupMenu", ID); //$NON-NLS-1$
+			contextMenuMgr.setRemoveAllWhenShown(true);
+			contextMenuMgr.addMenuListener(this);
+			getControl().setMenu(contextMenuMgr.createContextMenu(getControl()));
+			getSite().registerContextMenu(contextMenuMgr, this);
+		}
+	}
+
+	public void menuAboutToShow(IMenuManager manager) {
+		fillContextMenu(manager);
+		manager.updateAll(true);
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+	}
+
+	private void fillContextMenu(IMenuManager manager) {
+		updateActions(true);
+		captionManager.fillMenu(manager);
+		manager.add(proposalsAction);
+	}
+
+	protected void unhookContextMenu() {
+		if (contextMenuMgr != null) {
+			getControl().removeListener(SWT.MouseDown, this);
+			contextMenuMgr.removeAll();
+			contextMenuMgr.dispose();
+			contextMenuMgr = null;
+		}
 	}
 
 	@Override
@@ -134,9 +171,10 @@ public class HistogramView extends BasicView {
 			paintControl(e);
 			return;
 		}
-		captionManager.handleEvent(e);
-		if (e.doit)
-			super.handleEvent(e);
+		// captionManager.handleEvent(e);
+		backgroundAction.run();
+		// if (e.doit)
+		super.handleEvent(e);
 	}
 
 	@Override
@@ -155,6 +193,7 @@ public class HistogramView extends BasicView {
 	private void fillLocalPullDown(IMenuManager manager) {
 		manager.add(backgroundAction);
 		manager.add(centerAction);
+		manager.add(proposalsAction);
 		manager.add(new Separator());
 		manager.add(redAction);
 		manager.add(greenAction);
@@ -189,7 +228,8 @@ public class HistogramView extends BasicView {
 			}
 		};
 		backgroundAction.setImageDescriptor(Icons.bw.getDescriptor());
-		centerAction = new Action(Messages.getString("HistogramView.centric"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
+		centerAction = new Action(Messages.getString("HistogramView.centric"), //$NON-NLS-1$
+				IAction.AS_CHECK_BOX) {
 			@Override
 			public void run() {
 				weighted = !weighted;
@@ -265,6 +305,20 @@ public class HistogramView extends BasicView {
 				: Messages.getString("HistogramView.grey_off")); //$NON-NLS-1$
 		greyAction.setChecked(showGrey);
 
+		proposalsAction = new Action(Messages.getString("HistogramView.proposals"), IAction.AS_CHECK_BOX) { //$NON-NLS-1$
+			@Override
+			public void run() {
+				proposals = !proposals;
+				setImageDescriptor(proposals ? Icons.info.getDescriptor() : Icons.noinfo.getDescriptor());
+				setToolTipText(showGrey ? Messages.getString("HistogramView.brightness_tooltip") //$NON-NLS-1$
+						: Messages.getString("HistogramView.grey_off")); //$NON-NLS-1$
+				refresh();
+			}
+		};
+		proposalsAction.setImageDescriptor(proposals ? Icons.info.getDescriptor() : Icons.noinfo.getDescriptor());
+		proposalsAction.setToolTipText(Messages.getString("HistogramView.proposals_tooltip")); //$NON-NLS-1$
+		proposalsAction.setChecked(proposals);
+
 		captionManager.makeActions();
 	}
 
@@ -282,7 +336,8 @@ public class HistogramView extends BasicView {
 		int width = clientArea.width;
 		int height = clientArea.height;
 		if (currentItem != null) {
-			histogramManager.paint(gc, 0, 0, width, height, dark, false, showGrey, showRed, showGreen, showBlue);
+			histogramManager.paint(gc, 0, 0, width, height, dark ? HistogramManager.DARK : HistogramManager.LIGHT,
+					false, showGrey, showRed, showGreen, showBlue, proposals);
 			captionManager.handleOverlay(e.gc, 0, 0, clientArea.width, clientArea.height, 112, 180);
 		} else {
 			String text = count > 1 ? Messages.getString("HistogramView.multiple_images_selected") //$NON-NLS-1$
@@ -308,7 +363,7 @@ public class HistogramView extends BasicView {
 		Asset previous = currentItem;
 		AssetSelection selectedAssets = getNavigationHistory().getSelectedAssets();
 		count = selectedAssets.size();
-		currentItem = (count == 1) ? selectedAssets.get(0) : null;
+		currentItem = count == 1 ? selectedAssets.get(0) : null;
 		if (previous != currentItem) {
 			histogramManager.recalculate(currentItem == null ? null : getImage(currentItem), weighted);
 			captionManager.updateCaption(currentItem);
@@ -360,5 +415,18 @@ public class HistogramView extends BasicView {
 	@Override
 	protected void updateStatusLine() {
 		// do nothing
+	}
+
+	public void setBw(boolean bw) {
+		if (showBlue == bw)
+			blueAction.run();
+		if (showGreen == bw)
+			greenAction.run();
+		if (showRed == bw)
+			redAction.run();
+		if (!showGrey)
+			greyAction.run();
+		if (weighted)
+			centerAction.run();
 	}
 }

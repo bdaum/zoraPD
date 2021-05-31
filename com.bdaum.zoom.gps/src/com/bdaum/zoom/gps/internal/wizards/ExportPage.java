@@ -57,7 +57,7 @@ public class ExportPage extends ColoredWizardPage implements Listener {
 				Messages.ExportPage_all_files };
 		String fileName = "*." + type; //$NON-NLS-1$
 		fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.ExportPage_target_file, true,
-				filterExtensions, filterNames, path, fileName, true, dialogSettings);
+				filterExtensions, filterNames, path, fileName, false, dialogSettings);
 		fileEditor.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		setControl(composite);
@@ -94,9 +94,13 @@ public class ExportPage extends ColoredWizardPage implements Listener {
 		return fileEditor.getText().trim();
 	}
 
-	public void finish() {
-		dialogSettings.put(NLS.bind(PATH, type), path);
-		fileEditor.saveValues();
+	public boolean finish() {
+		if (fileEditor.testSave()) {
+			dialogSettings.put(NLS.bind(PATH, type), path);
+			fileEditor.saveValues();
+			return true;
+		}
+		return false;
 	}
 
 }

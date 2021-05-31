@@ -45,8 +45,7 @@ import com.bdaum.zoom.ui.internal.wizards.AbstractAssetSelectionWizard;
 import com.bdaum.zoom.ui.internal.wizards.MetaSelectionPage;
 
 @SuppressWarnings("restriction")
-public class CsvExportWizard extends AbstractAssetSelectionWizard implements
-		IExportWizard, IPageChangedListener {
+public class CsvExportWizard extends AbstractAssetSelectionWizard implements IExportWizard, IPageChangedListener {
 
 	private static final String CSVSETTINGSID = "com.bdaum.zoom.csvProperties"; //$NON-NLS-1$
 	private CsvTargetFilePage filePage;
@@ -59,8 +58,7 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 		setDialogSettings(CsvActivator.getDefault(), CSVSETTINGSID);
 		int size = assets.size();
 		String msg = (size == 0) ? Messages.CsvExportWizard_nothing_selected
-				: (size == 1) ? Messages.CsvExportWizard_one_image : NLS.bind(
-						Messages.CsvExportWizard_n_images, size);
+				: (size == 1) ? Messages.CsvExportWizard_one_image : NLS.bind(Messages.CsvExportWizard_n_images, size);
 		setWindowTitle(msg);
 		IWizardContainer container = getContainer();
 		if (container instanceof IPageChangeProvider)
@@ -75,8 +73,8 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 		filePage.setImageDescriptor(imageDescriptor);
 		addPage(filePage);
 		metaPage = new MetaSelectionPage(
-				new QueryField[] { QueryField.IMAGE_ALL, QueryField.EXIF_ALL,
-						QueryField.IPTC_ALL }, false, ExportFieldViewerFilter.INSTANCE, false);
+				new QueryField[] { QueryField.IMAGE_ALL, QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false,
+				ExportFieldViewerFilter.INSTANCE, false);
 		metaPage.setImageDescriptor(imageDescriptor);
 		addPage(metaPage);
 		relabelPage = new RelabelPage();
@@ -100,12 +98,14 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 
 	@Override
 	public boolean performFinish() {
-		filePage.finish();
-		saveDialogSettings();
-		OperationJob.executeOperation(new ExportCsvOperation(assets,
-				getFilter(), getRelabelMap(), getTargetFile(), getFirstLine()),
-				this);
-		return true;
+		if (filePage.finish()) {
+			saveDialogSettings();
+			OperationJob.executeOperation(
+					new ExportCsvOperation(assets, getFilter(), getRelabelMap(), getTargetFile(), getFirstLine()),
+					this);
+			return true;
+		}
+		return false;
 	}
 
 	public Map<String, String> getRelabelMap() {
@@ -133,9 +133,7 @@ public class CsvExportWizard extends AbstractAssetSelectionWizard implements
 			file.createNewFile();
 			return file;
 		} catch (IOException e) {
-			CsvActivator.getDefault().logError(
-					NLS.bind(Messages.CsvExportWizard_cannot_create_file,
-							targetFile), e);
+			CsvActivator.getDefault().logError(NLS.bind(Messages.CsvExportWizard_cannot_create_file, targetFile), e);
 			return null;
 		}
 	}

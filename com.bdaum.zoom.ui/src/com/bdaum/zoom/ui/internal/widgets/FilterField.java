@@ -21,8 +21,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -46,30 +44,32 @@ public class FilterField implements Listener {
 		filterField.setToolTipText(Messages.FilterField_expressions_entered);
 		filterField.setData(EMPTY, Boolean.TRUE);
 		filterField.addListener(SWT.Modify, this);
-		filterField.addFocusListener(new FocusListener() {
-			public void focusLost(FocusEvent e) {
-				if (filterField.getData(EMPTY) != null) {
-					filterField.removeListener(SWT.Modify, FilterField.this);
-					filterField.setText(ENTER_FILTER_EXPRESSION);
-					filterField.addListener(SWT.Modify, FilterField.this);
-				}
-			}
-
-			public void focusGained(FocusEvent e) {
-				if (filterField.getData(EMPTY) != null) {
-					filterField.removeListener(SWT.Modify, FilterField.this);
-					filterField.setText(""); //$NON-NLS-1$
-					filterField.addListener(SWT.Modify, FilterField.this);
-				}
-			}
-		});
+		filterField.addListener(SWT.FocusIn, this);
+		filterField.addListener(SWT.FocusOut, this);
 	}
 
 	public void handleEvent(Event e) {
-		String s = filterField.getText();
-		filterField.setData(EMPTY, s.isEmpty() ? Boolean.TRUE : null);
-		filter = new WildCardFilter(s + '*', null);
-		fireModifyText(e);
+		switch (e.type) {
+		case SWT.FocusIn:
+			if (filterField.getData(EMPTY) != null) {
+				filterField.removeListener(SWT.Modify, FilterField.this);
+				filterField.setText(""); //$NON-NLS-1$
+				filterField.addListener(SWT.Modify, FilterField.this);
+			}
+			return;
+		case SWT.FocusOut:
+			if (filterField.getData(EMPTY) != null) {
+				filterField.removeListener(SWT.Modify, FilterField.this);
+				filterField.setText(ENTER_FILTER_EXPRESSION);
+				filterField.addListener(SWT.Modify, FilterField.this);
+			}
+			return;
+		default:
+			String s = filterField.getText();
+			filterField.setData(EMPTY, s.isEmpty() ? Boolean.TRUE : null);
+			filter = new WildCardFilter(s + '*', null);
+			fireModifyText(e);
+		}
 	}
 
 	protected void fireModifyText(Event e) {

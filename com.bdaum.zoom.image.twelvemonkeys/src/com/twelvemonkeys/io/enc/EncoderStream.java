@@ -33,6 +33,7 @@ package com.twelvemonkeys.io.enc;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 /**
@@ -79,7 +80,7 @@ public final class EncoderStream extends FilterOutputStream {
         flushOnWrite = pFlushOnWrite;
 
         buffer = ByteBuffer.allocate(1024);
-        buffer.flip();
+        ((Buffer) buffer).flip();  // cast because of JDK compatibilty
     }
 
     public void close() throws IOException {
@@ -94,7 +95,7 @@ public final class EncoderStream extends FilterOutputStream {
 
     private void encodeBuffer() throws IOException {
         if (buffer.position() != 0) {
-            buffer.flip();
+        	((Buffer) buffer).flip();  // cast because of JDK compatibilty
 
             // Make sure all remaining data in buffer is written to the stream
             encoder.encode(out, buffer);

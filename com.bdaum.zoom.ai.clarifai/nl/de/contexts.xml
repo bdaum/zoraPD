@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contexts>
-   <context id="pref_page_context" title="Clarifai-Einstellungen">
-      <description>Einstellungen für den Clarifai-Webdienst</description>
+   <context id="pref_page_context">
       <topic href="html/clarifai.html" label="Clarifai-Einstellungen"/>
    </context>
    

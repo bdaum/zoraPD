@@ -30,15 +30,16 @@
 
 package com.twelvemonkeys.imageio.plugins.tiff;
 
-import com.twelvemonkeys.lang.Validate;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+
+import com.twelvemonkeys.lang.Validate;
 
 /**
  * A decoder for data converted using "horizontal differencing predictor".
@@ -90,7 +91,7 @@ final class HorizontalDifferencingStream extends OutputStream {
 
         encodeRow();
 
-        buffer.flip();
+        ((Buffer) buffer).flip();  // cast because of JDK compatibilty
         channel.write(buffer);
         buffer.clear();
 

@@ -45,28 +45,23 @@ import com.bdaum.zoom.ui.internal.PreferencesUpdater;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
-public class PasteAction extends RetargetAction implements IAdaptable {
+public class PasteAction extends RetargetAction implements IAdaptable, Listener {
 	private IWorkbenchWindow window;
 	private Clipboard clipboard;
-	private Listener focusListener = new Listener() {
-		public void handleEvent(Event event) {
-			updateEnablement();
-		}
-	};
 
 	public PasteAction(IWorkbenchWindow window, Clipboard clipboard, String id, String text) {
 		super(id, text);
 		setActionHandler(this);
 		this.window = window;
 		this.clipboard = clipboard;
-		window.getShell().getDisplay().addFilter(SWT.FocusIn, focusListener);
+		window.getShell().getDisplay().addFilter(SWT.FocusIn, this);
 	}
 
 	@Override
 	public void dispose() {
 		Shell shell = window.getShell();
 		if (shell != null && !shell.isDisposed())
-			shell.getDisplay().removeFilter(SWT.FocusIn, focusListener);
+			shell.getDisplay().removeFilter(SWT.FocusIn, this);
 		super.dispose();
 	}
 
@@ -117,6 +112,10 @@ public class PasteAction extends RetargetAction implements IAdaptable {
 		if (adapter.equals(IPreferenceUpdater.class))
 			return new PreferencesUpdater();
 		return null;
+	}
+	
+	public void handleEvent(Event event) {
+		updateEnablement();
 	}
 
 }

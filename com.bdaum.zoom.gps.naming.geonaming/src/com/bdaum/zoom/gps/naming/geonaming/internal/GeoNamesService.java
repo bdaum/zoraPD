@@ -33,7 +33,6 @@ import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.httpclient.HttpException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IPreferencesService;
 import org.eclipse.osgi.util.NLS;
@@ -92,13 +91,13 @@ public class GeoNamesService extends AbstractGeocodingService implements Listene
 	private Combo contCombo;
 
 	public Place fetchPlaceInfo(double lat, double lon) throws SocketTimeoutException, IOException, WebServiceException,
-			SAXException, ParserConfigurationException, UnknownHostException, HttpException {
+			SAXException, ParserConfigurationException, UnknownHostException {
 		return fetchPlaceInfoFromGeoNames(Locale.getDefault().getLanguage(),
 				new String[] { usformat.format(lat), usformat.format(lon), Locale.getDefault().getLanguage() });
 	}
 
 	private static Place fetchPlaceInfoFromGeoNames(String lang, String[] parms) throws IOException, SAXException,
-			ParserConfigurationException, WebServiceException, UnknownHostException, HttpException {
+			ParserConfigurationException, WebServiceException, UnknownHostException {
 		Place place = new Place();
 		try (InputStream in = openGeonamesService(
 				NLS.bind("http://api.geonames.org/findNearbyPlaceName?lat={0}&lng={1}&lang={2}", //$NON-NLS-1$
@@ -128,7 +127,7 @@ public class GeoNamesService extends AbstractGeocodingService implements Listene
 	}
 
 	private static InputStream openGeonamesService(String query)
-			throws IOException, UnknownHostException, HttpException {
+			throws IOException, UnknownHostException {
 		IPreferencesService preferencesService = Platform.getPreferencesService();
 		String parms = preferencesService.getString(GeonamingActivator.PLUGIN_ID,
 				PreferenceConstants.GEONAMESPARMS, "", null); //$NON-NLS-1$
@@ -156,7 +155,7 @@ public class GeoNamesService extends AbstractGeocodingService implements Listene
 	}
 
 	public WaypointArea[] findLocation(String address)
-			throws IOException, WebServiceException, SAXException, ParserConfigurationException, HttpException {
+			throws IOException, WebServiceException, SAXException, ParserConfigurationException {
 		List<WaypointArea> pnts = new ArrayList<WaypointArea>();
 		Locale locale = Locale.getDefault();
 		String template = "http://api.geonames.org/search?" + getSearchParms() + "&countryBias={1}&lang={2}&maxRows={3}"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -324,7 +323,7 @@ public class GeoNamesService extends AbstractGeocodingService implements Listene
 
 
 	@Override
-	public double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException {
+	public double getElevation(double lat, double lon) throws UnknownHostException, IOException {
 		NumberFormat usformat = NumberFormat.getInstance(Locale.US);
 		usformat.setMaximumFractionDigits(5);
 		usformat.setGroupingUsed(false);

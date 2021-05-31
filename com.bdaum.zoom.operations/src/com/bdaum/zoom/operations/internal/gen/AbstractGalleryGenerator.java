@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -117,17 +116,14 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	private Storyboard selectedStoryboard;
 	private MultiStatus status;
 	private WebGalleryImpl gallery;
-	private File thumbnailFolder;
-	private File originalsFolder;
+	private File thumbnailFolder, originalsFolder, bigFolder, tTarget;
 	private String prefix;
 	private IProgressMonitor monitor;
 	protected IAdaptable adaptable;
 	private Set<String> filter;
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
-	private File bigFolder;
-	private File tTarget;
-
+	private int format;
 
 	public void generate(WebGalleryImpl webGallery, IProgressMonitor aMonitor, IAdaptable info, MultiStatus mstatus)
 			throws IOException {
@@ -137,6 +133,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			this.adaptable = info;
 			this.status = mstatus;
 			jpegQuality = webGallery.getJpegQuality();
+			format = webGallery.getImageFormat();
 			String[] xmpFilter = webGallery.getXmpFilter();
 			this.filter = xmpFilter == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(xmpFilter));
 			File[] templates = getTemplates();
@@ -244,11 +241,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	protected static final String HTTP = "http://"; //$NON-NLS-1$
 	protected static final String HTTPS = "https://"; //$NON-NLS-1$
 	private static final File[] EMPTYFILES = new File[0];
-	private File imageFolder;
-	private File rTarget;
-	private File nameplate;
-	private File bgImage;
-	private File targetFolder;
+	private File imageFolder, rTarget, nameplate, bgImage, targetFolder;
 	private IConfigurationElement configurationElement;
 	private int jpegQuality;
 	protected int maxImageWidthInSection = -1;
@@ -457,7 +450,11 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 	protected File[] getFolderChildren(Bundle bundle, String name) {
 		try {
 			File folder = FileLocator.findFile(bundle, name);
-			return folder == null ? EMPTYFILES : folder.listFiles();
+			if (folder != null) {
+				File[] files = folder.listFiles();
+				if (files != null)
+					return files;
+			}
 		} catch (Exception e) {
 			// ignore
 		}
@@ -492,14 +489,15 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			varmap.put("bgimage", generateBg(gallery, bgImage)); //$NON-NLS-1$
 		varmap.put("keywords", HtmlEncoderDecoder.getInstance().encodeHTML( //$NON-NLS-1$
 				Core.toStringList(gallery.getKeyword(), ", "), false)); //$NON-NLS-1$
-		String s = Format.XML_DATE_TIME_ZZONED_FORMAT.get().format(new Date());
+		String s = Format.XML_DATE_TIME_ZZONED_FORMAT.get().format(System.currentTimeMillis());
 		varmap.put("date", s.substring(0, s.length() - 2) + ':' + s.substring(s.length() - 2)); //$NON-NLS-1$
 		String url = configurationElement.getAttribute("url"); //$NON-NLS-1$
 		if (!gallery.getHideHeader()) {
 			varmap.put("name", HtmlEncoderDecoder.getInstance().encodeHTML(gallery.getName(), false)); //$NON-NLS-1$
 			String description = gallery.getDescription();
 			if (description != null && !description.isEmpty()) {
-				String d = gallery.getHtmlDescription() ? description : HtmlEncoderDecoder.getInstance().encodeHTML(description, true);
+				String d = gallery.getHtmlDescription() ? description
+						: HtmlEncoderDecoder.getInstance().encodeHTML(description, true);
 				varmap.put("description", d); //$NON-NLS-1$
 				varmap.put("descriptiondiv", //$NON-NLS-1$
 						NLS.bind("<div id=\"description\" class=\"description-container\">{0}</div>", d)); //$NON-NLS-1$
@@ -533,7 +531,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		StringBuilder sb = new StringBuilder();
 		ICore activator = CoreActivator.getDefault();
 		IDbManager dbManager = activator.getDbManager();
-		int thumbnailSizeInPixel = getThumbnailSizeInPixel(gallery.getThumbSize());
+		int thumbnailSizeInPixel = getThumbnailSize(gallery.getThumbSize());
 		int i = 0;
 		boolean first = true;
 		for (Storyboard storyboard : gallery.getStoryboard()) {
@@ -589,7 +587,8 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 										thumbnailSizeInPixel, getBigImageSize(), includeMetadata, copyright, enlarge,
 										gallery.getRadius(), gallery.getAmount(), gallery.getThreshold(),
 										gallery.getApplySharpening());
-								String imageName = Core.getFileName(uri, false) + ".jpg"; //$NON-NLS-1$
+								String imageName = Core.getFileName(uri, false)
+										+ (format == Constants.FORMAT_WEBP ? ".webp" : ".jpg"); //$NON-NLS-1$ //$NON-NLS-2$
 								File imageFile = new File(imageFolder, imageName);
 								File bigFile = bigFolder != null ? new File(bigFolder, imageName) : null;
 								File thumbnail = thumbnailFolder == null ? null : new File(thumbnailFolder, imageName);
@@ -725,6 +724,13 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			// ignore
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public int getThumbnailSize(int thumbSize) {
+		if (thumbSize < 10 && thumbSize > -10)
+			return getThumbnailSizeInPixel(thumbSize);
+		return thumbSize;
 	}
 
 	protected Rectangle computeImageBounds(int isize) {
@@ -912,20 +918,20 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 			Storyboard storyboard, String thumbnail, String image, String big, String original, int storyBoardNo);
 
 	private File generateImage(AssetImpl asset, File imageFile, Image image, boolean meta, int quality) {
-		ImageLoader swtLoader = null;
-		if (image != null) {
-			swtLoader = new ImageLoader();
-			if (quality > 0)
-				swtLoader.compression = quality;
-			swtLoader.data = new ImageData[] { image.getImageData() };
-		}
+
 		try {
 			if (meta && filter != null && !filter.isEmpty()) {
 				byte[] bytes = null;
-				if (swtLoader != null) {
-					ByteArrayOutputStream bout = new ByteArrayOutputStream();
-					swtLoader.save(bout, SWT.IMAGE_JPEG);
-					bytes = bout.toByteArray();
+				if (image != null) {
+					try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+						if (format == Constants.FORMAT_WEBP)
+							ImageUtilities.saveBufferedImageToStream(
+									ImageUtilities.swtImage2buffered(image.getImageData()), out,
+									format == Constants.FORMAT_WEBP ? ZImage.IMAGE_WEBP : SWT.IMAGE_JPEG, quality);
+						else
+							getSwtLoader(image, quality).save(out, SWT.IMAGE_JPEG);
+						bytes = out.toByteArray();
+					}
 				} else {
 					int length = (int) imageFile.length();
 					bytes = new byte[length];
@@ -950,16 +956,32 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				try (FileOutputStream out = new FileOutputStream(imageFile)) {
 					out.write(bytes);
 				}
-			} else if (swtLoader != null) {
+			} else if (image != null)
 				try (FileOutputStream out = new FileOutputStream(imageFile)) {
-					swtLoader.save(out, SWT.IMAGE_JPEG);
+					if (format == Constants.FORMAT_WEBP)
+						ImageUtilities.saveBufferedImageToStream(ImageUtilities.swtImage2buffered(image.getImageData()),
+								out, format == Constants.FORMAT_WEBP ? ZImage.IMAGE_WEBP : SWT.IMAGE_JPEG, quality);
+					else
+						getSwtLoader(image, quality).save(out, SWT.IMAGE_JPEG);
 				}
-			}
 			return imageFile;
-		} catch (IOException e) {
+		} catch (
+
+		IOException e) {
 			addError(NLS.bind(Messages.AbstractGalleryGenerator_io_error_for_image_n, imageFile.getName()), e);
 			return null;
 		}
+	}
+
+	private ImageLoader getSwtLoader(Image image, int quality) {
+		ImageLoader swtLoader = null;
+		if (image != null) {
+			swtLoader = new ImageLoader();
+			if (quality > 0)
+				swtLoader.compression = quality;
+			swtLoader.data = new ImageData[] { image.getImageData() };
+		}
+		return swtLoader;
 	}
 
 	private static File generateThumbnail(File out, Image image, int thumbSize) {
@@ -1120,8 +1142,9 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 										sb.append("<li>"); //$NON-NLS-1$
 									else if (first)
 										sb.append(", "); //$NON-NLS-1$
-									sb.append(HtmlEncoderDecoder.getInstance().encodeHTML(qf.getLabel(), false)).append(": ").append( //$NON-NLS-1$
-											HtmlEncoderDecoder.getInstance().encodeHTML(text, false));
+									sb.append(HtmlEncoderDecoder.getInstance().encodeHTML(qf.getLabel(), false))
+											.append(": ").append( //$NON-NLS-1$
+													HtmlEncoderDecoder.getInstance().encodeHTML(text, false));
 									if (css != null)
 										sb.append("</li>\n"); //$NON-NLS-1$
 								}
@@ -1303,7 +1326,7 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 				navpos = "top"; //$NON-NLS-1$
 		}
 		varmap.put(NAVPOS, navpos);
-		return 3 * (Math.abs(getThumbnailSizeInPixel(show.getThumbSize())) + leftmargin + rightmargin);
+		return 3 * (Math.abs(getThumbnailSize(show.getThumbSize())) + leftmargin + rightmargin);
 	}
 
 	protected double getParamDouble(WebParameter param, double dflt) {
@@ -1345,11 +1368,6 @@ public abstract class AbstractGalleryGenerator implements IGalleryGenerator, Loa
 		return false;
 	}
 
-	/*
-	 * (nicht-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.IGalleryGenerator#needsThumbnails()
-	 */
 	public boolean needsThumbnails() {
 		return true;
 	}

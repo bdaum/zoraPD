@@ -100,7 +100,7 @@ public class CatalogGroupHoverContribution extends AbstractHoverContribution imp
 				return Messages.CatalogGroupHoverContribution_timeline;
 			if (ANNOTATIONS.equals(key))
 				return Messages.CatalogGroupHoverContribution_filter_set;
-			else if (STATISTICS.equals(key))
+			if (STATISTICS.equals(key))
 				return Messages.CatalogGroupHoverContribution_nine_folders;
 		} else if (object instanceof Group) {
 			Group group = (Group) object;

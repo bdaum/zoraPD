@@ -342,4 +342,8 @@ public abstract class ZColumnLabelProvider extends OwnerDrawLabelProvider
 		CssActivator.getDefault().applyExtendedStyle(viewerControl, this);
 	}
 
+	public Composite getViewerControl() {
+		return viewerControl;
+	}
+
 }

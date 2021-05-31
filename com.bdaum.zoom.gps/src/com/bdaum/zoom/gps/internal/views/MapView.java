@@ -275,7 +275,7 @@ public class MapView extends BasicView implements StatusTextListener, MapListene
 	}
 
 	protected void updateGeoPosition(String[] ids, double latitude, double longitude, int type, String uuid) {
-		if (mapData != null && !mapData.isEmpty()) {
+		if (mapData != null) { //  && !mapData.isEmpty()) {
 			GpsConfiguration gpsConfig = GpsActivator.getDefault().createGpsConfiguration();
 			gpsConfig.overwrite = true;
 			boolean modify = ids != null;

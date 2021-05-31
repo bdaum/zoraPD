@@ -23,10 +23,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -99,7 +99,7 @@ public class Lire implements ILireService {
 
 	public static Algorithm[] SupportedSimilarityAlgorithms;
 	
-	private Set<String> postponedIndexing = Collections.synchronizedSet(new HashSet<>(511));
+	private Set<String> postponedIndexing = ConcurrentHashMap.newKeySet(511);
 	private Set<String> fieldsToLoad = new HashSet<>(3);
 
 

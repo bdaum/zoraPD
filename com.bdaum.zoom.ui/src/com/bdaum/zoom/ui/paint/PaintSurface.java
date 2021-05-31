@@ -11,10 +11,6 @@
 package com.bdaum.zoom.ui.paint;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -94,12 +90,7 @@ public class PaintSurface implements Listener {
 		setPaintSession(null);
 
 		/* Add our listeners */
-		paintCanvas.addDisposeListener(new DisposeListener() {
-
-			public void widgetDisposed(DisposeEvent e) {
-				displayFDC.gc.dispose();
-			}
-		});
+		paintCanvas.addListener(SWT.Dispose, this);
 		paintCanvas.addListener(SWT.MouseUp, this);
 		paintCanvas.addListener(SWT.MouseDown, this);
 		paintCanvas.addListener(SWT.MouseDoubleClick, this);
@@ -111,24 +102,12 @@ public class PaintSurface implements Listener {
 		ScrollBar horizontal = paintCanvas.getHorizontalBar();
 		if (horizontal != null) {
 			horizontal.setVisible(true);
-			horizontal.addSelectionListener(new SelectionAdapter() {
-
-				@Override
-				public void widgetSelected(SelectionEvent event) {
-					scrollHorizontally((ScrollBar) event.widget);
-				}
-			});
+			horizontal.addListener(SWT.Selection, this);
 		}
 		ScrollBar vertical = paintCanvas.getVerticalBar();
 		if (vertical != null) {
 			vertical.setVisible(true);
-			vertical.addSelectionListener(new SelectionAdapter() {
-
-				@Override
-				public void widgetSelected(SelectionEvent event) {
-					scrollVertically((ScrollBar) event.widget);
-				}
-			});
+			vertical.addListener(SWT.Selection, this);
 		}
 		handleResize();
 	}
@@ -138,30 +117,38 @@ public class PaintSurface implements Listener {
 		switch (e.type) {
 		case SWT.Paint:
 			paintControl(e);
-			break;
+			return;
 		case SWT.Resize:
 			handleResize();
-			break;
+			return;
 		case SWT.MouseUp:
 			processMouseEventCoordinates(e);
 			if (paintSession != null)
 				paintSession.handleEvent(e);
-			break;
+			return;
 		case SWT.MouseDown:
 			processMouseEventCoordinates(e);
 			if (paintSession != null)
 				paintSession.handleEvent(e);
-			break;
+			return;
 		case SWT.MouseDoubleClick:
 			processMouseEventCoordinates(e);
 			if (paintSession != null)
 				paintSession.handleEvent(e);
-			break;
+			return;
+		case SWT.Selection:
+			if (e.widget == paintCanvas.getHorizontalBar())
+				scrollHorizontally((ScrollBar) e.widget);
+			else
+				scrollVertically((ScrollBar) e.widget);
+			return;
+		case SWT.Dispose:
+			displayFDC.gc.dispose();
+			return;
 		case SWT.MouseMove:
 			processMouseEventCoordinates(e);
 			if (paintSession != null)
 				paintSession.handleEvent(e);
-			break;
 		}
 		
 	}

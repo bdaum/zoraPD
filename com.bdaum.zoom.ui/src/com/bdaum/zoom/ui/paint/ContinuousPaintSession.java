@@ -116,18 +116,16 @@ public abstract class ContinuousPaintSession extends BasicPaintSession {
 		case SWT.MouseUp:
 			if (e.button != 1) return;
 			if (! dragInProgress) return; // spurious event
-//			abortRetrigger();
 			mouseSegmentFinished(e);
 			endSession();
 			dragInProgress = false;
-			break;
+			return;
 		case SWT.MouseMove:
 			final PaintSurface ps = getPaintSurface();
 			ps.setStatusCoord(ps.getCurrentPosition());
 			if (! dragInProgress) return;
 			mouseSegmentFinished(e);
 			prepareRetrigger();
-			break;
 		}
 	}
 	

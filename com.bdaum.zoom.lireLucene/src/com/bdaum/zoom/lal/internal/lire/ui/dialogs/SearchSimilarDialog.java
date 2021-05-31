@@ -31,8 +31,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
@@ -79,7 +77,7 @@ import com.bdaum.zoom.ui.paint.ToolSettings;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class SearchSimilarDialog extends ZTitleAreaDialog {
+public class SearchSimilarDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.similaritySearchDialog"; //$NON-NLS-1$
 	private SmartCollectionImpl collection;
@@ -174,11 +172,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 120;
 		keywordField.setLayoutData(layoutData);
-		keywordField.addListener(SWT.Modify, new Listener() {
-			public void handleEvent(Event e) {
-				updateScale();
-			}
-		});
+		keywordField.addListener(SWT.Modify, this);
 		KeywordVerifyListener keywordVerifyListener = new KeywordVerifyListener();
 		Set<String> keywords = dbManager.getMeta(true).getKeywords();
 		keywordVerifyListener.setKeywords(keywords.toArray(new String[keywords.size()]));
@@ -191,13 +185,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 		scale.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		scale.setMaximum(100);
 		scale.setIncrement(5);
-		scale.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				scale.setToolTipText(String.valueOf(scale.getSelection()));
-				updateKeywordField();
-			}
-		});
+		scale.addListener(SWT.Selection, this);
 		new Label(sliderGroup, SWT.NONE).setText(Messages.SearchSimilarDialog_keywords);
 	}
 
@@ -259,12 +247,7 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 			findWithinGroup = new FindWithinGroup(optionsGroup);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(optionsGroup);
-			findInNetworkGroup.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					validateAlgo();
-				}
-			});
+			findInNetworkGroup.addListener(SWT.Selection, this);
 			if (currentCollection != null)
 				findInNetworkGroup.setSelection(currentCollection.getNetwork());
 		}
@@ -377,6 +360,16 @@ public class SearchSimilarDialog extends ZTitleAreaDialog {
 
 	private void updateKeywordField() {
 		keywordField.setEnabled(scale.getSelection() > 0 || !scale.isEnabled());
+	}
+
+	public void handleEvent(Event e) {
+		if (e.widget == scale) {
+			scale.setToolTipText(String.valueOf(scale.getSelection()));
+			updateKeywordField();
+		} else if (e.widget == keywordField)
+			updateScale();
+		else
+			validateAlgo();
 	}
 
 }

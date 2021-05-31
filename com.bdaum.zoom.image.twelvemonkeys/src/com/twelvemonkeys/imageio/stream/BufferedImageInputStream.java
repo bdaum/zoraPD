@@ -30,14 +30,16 @@
 
 package com.twelvemonkeys.imageio.stream;
 
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageInputStreamImpl;
+import static com.twelvemonkeys.lang.Validate.notNull;
+
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static com.twelvemonkeys.lang.Validate.notNull;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageInputStreamImpl;
 
 /**
  * A buffered {@code ImageInputStream}.
@@ -78,7 +80,7 @@ public final class BufferedImageInputStream extends ImageInputStreamImpl impleme
 
         if (length >= 0) {
             buffer.position(length);
-            buffer.flip();
+            ((Buffer) buffer).flip();  // cast because of JDK compatibilty
         }
         else {
             buffer.limit(0);

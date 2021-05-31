@@ -46,6 +46,7 @@ import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.mtp.ObjectFilter;
 import com.bdaum.zoom.ui.AssetSelection;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.dialogs.SlideshowEditDialog;
 import com.bdaum.zoom.ui.internal.views.SlideShowPlayer;
 
@@ -80,9 +81,12 @@ public class SlideshowAction extends Action {
 			int duration = getInt(settings, SlideshowEditDialog.DELAY, 7000);
 			int effect = getInt(settings, SlideshowEditDialog.EFFECT, Constants.SLIDE_TRANSITION_RANDOM);
 			int zoom = getInt(settings, SlideshowEditDialog.ZOOM, 0);
-			int fading = getInt(settings, SlideshowEditDialog.FADING,1000);
-			int titleDisplay = getInt(settings, SlideshowEditDialog.TITLEDISPLAY,1500);
-			int titleContent = getInt(settings, SlideshowEditDialog.TITLECONTENT,Constants.SLIDE_TITLEONLY);
+			int fading = getInt(settings, SlideshowEditDialog.FADING, 1000);
+			int titleDisplay = getInt(settings, SlideshowEditDialog.TITLEDISPLAY, 1500);
+			int titleContent = getInt(settings, SlideshowEditDialog.TITLECONTENT, Constants.SLIDE_TITLEONLY);
+			int titleScheme = getInt(settings, SlideshowEditDialog.TITLESCHEME, UiConstants.BLACKONWHITE);
+			int titleAlpha = getInt(settings, SlideshowEditDialog.TITLETRANSPARENCY, 0);
+			int colorScheme = getInt(settings, SlideshowEditDialog.COLORSCHEME, UiConstants.BG_DARK_GRAY);
 			boolean fromPreview = false;
 			try {
 				fromPreview = settings.getBoolean(SlideshowEditDialog.FROMPREVIEW);
@@ -90,7 +94,8 @@ public class SlideshowAction extends Action {
 				// ignore
 			}
 			SlideShowImpl show = new SlideShowImpl("", "", fromPreview, duration, //$NON-NLS-1$ //$NON-NLS-2$
-					effect, fading, zoom, titleDisplay, titleContent, true, true, false, new Date(), null);
+					effect, fading, zoom, titleDisplay, titleContent, titleScheme, titleAlpha, colorScheme, true, true,
+					false, new Date(), null);
 			SlideshowEditDialog dialog = new SlideshowEditDialog(window.getShell(), null, show,
 					Messages.SlideshowActionDelegate_adhoc_slideshow, true, false);
 			List<SlideImpl> slides = createSlides(selectedAssets, show);
@@ -111,7 +116,7 @@ public class SlideshowAction extends Action {
 				player.close();
 		}
 	}
-	
+
 	private static int getInt(IDialogSettings settings, String key, int dflt) {
 		try {
 			return settings.getInt(key);
@@ -128,7 +133,7 @@ public class SlideshowAction extends Action {
 		int lag = Math.min(fading / 3, duration / 2);
 		int effect = show.getEffect();
 		int zoom = show.getZoom();
-		for (Iterator<SlideImpl> it = slides.iterator();it.hasNext();) {
+		for (Iterator<SlideImpl> it = slides.iterator(); it.hasNext();) {
 			SlideImpl slide = it.next();
 			int safety = slide.getSafety();
 			if (safety > privacy) {
@@ -147,8 +152,8 @@ public class SlideshowAction extends Action {
 	}
 
 	private static List<SlideImpl> createSlides(List<Asset> selectedAssets, SlideShowImpl show) {
-		ObjectFilter filter = new FileNameExtensionFilter(
-				ImageConstants.getSupportedImageFileExtensionsGroups(true), true);
+		ObjectFilter filter = new FileNameExtensionFilter(ImageConstants.getSupportedImageFileExtensionsGroups(true),
+				true);
 		List<SlideImpl> slides = new ArrayList<SlideImpl>(selectedAssets.size());
 		int index = 0;
 		String id = show.getStringId();
@@ -177,7 +182,8 @@ public class SlideshowAction extends Action {
 				if (effect == Constants.SLIDE_TRANSITION_RANDOM)
 					effect = (int) (Math.random() * Constants.SLIDE_TRANSITION_N);
 				SlideImpl slide = new SlideImpl(tit, index, null, Constants.SLIDE_NO_THUMBNAILS, fading, fading,
-						duration, fading + lag, effect, show.getZoom(), 0, 0, false, asset.getSafety(), asset.getStringId());
+						duration, fading + lag, effect, show.getZoom(), 0, 0, false, asset.getSafety(),
+						asset.getStringId());
 				slides.add(slide);
 				show.addEntry(slide.getStringId());
 				slide.setSlideShow_entry_parent(id);

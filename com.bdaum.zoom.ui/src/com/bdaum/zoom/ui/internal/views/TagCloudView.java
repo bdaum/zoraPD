@@ -50,10 +50,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
@@ -62,7 +60,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPartListener;
@@ -100,7 +97,8 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiActivator;
 
 @SuppressWarnings("restriction")
-public class TagCloudView extends ViewPart implements IDbListener {
+public class TagCloudView extends ViewPart
+		implements IDbListener, ISelectionChangedListener, Listener, IMenuListener, IPartListener, MouseListener {
 
 	public class SchemeAction extends Action {
 
@@ -135,7 +133,6 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			viewer.setMaxWords(occurrences = size);
 			refresh(true);
 		}
-
 	}
 
 	private static final String NETWORKED = "networked"; //$NON-NLS-1$
@@ -143,7 +140,8 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	private static final String SCHEME = "scheme"; //$NON-NLS-1$
 	private static final String FILTER = "filter"; //$NON-NLS-1$
 
-	private static final List<ScoredString> EMPTYSCORES = new ArrayList<ScoredString>(0);
+	private static final List<ScoredString> EMPTYSCORES = Collections.emptyList();
+	private static final List<ScoredString> NOINDEX = Collections.singletonList(new ScoredString(Messages.getString("TagCloudView.no_index"), 100)); //$NON-NLS-1$
 
 	private static final int ALL = 0;
 	private static final int SPRING = 1;
@@ -322,69 +320,45 @@ public class TagCloudView extends ViewPart implements IDbListener {
 				return 0;
 			}
 		});
-		cloud.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				mouseData = (ScoredString) (e.data == null ? null : ((Word) e.data).data);
-				mouseButton = e.button;
-				stateMask = e.stateMask;
-				updateActions();
-			}
-		});
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				if (mouseButton == 1) {
-					selection = (IStructuredSelection) event.getSelection();
-					updateActions();
-				} else
-					viewer.setSelection(selection);
-			}
-		});
+		cloud.addMouseListener(this);
+		viewer.addSelectionChangedListener(this);
 		Core.getCore().getDbFactory().addDbListener(this);
 		refresh(false);
 		makeActions(getViewSite().getActionBars());
-		hookDoubleClickAction();
 		hookContextMenu();
 		contributeToActionBars();
 		updateActions();
-		parent.addControlListener(new ControlAdapter() {
-			@Override
-			public void controlResized(ControlEvent e) {
-				Rectangle clientArea = ((Composite) e.widget).getClientArea();
-				int size = Math.min(clientArea.width, clientArea.height);
-				int xoff = size < clientArea.width ? (clientArea.width - size) / 2 : 0;
-				int yoff = size < clientArea.height ? (clientArea.height - size) / 2 : 0;
-				cloud.setBounds(clientArea.x + xoff, clientArea.y + yoff, size, size);
-				if (scoredStrings == null)
-					refresh(false);
-				else
-					cloud.layoutCloud(null, true);
-			}
-		});
-		getSite().getPage().addPartListener(new IPartListener() {
+		parent.addListener(SWT.Resize, this);
+		getSite().getPage().addPartListener(this);
+	}
 
-			public void partOpened(IWorkbenchPart part) {
-				// do nothing
-			}
+	public void partOpened(IWorkbenchPart part) {
+		// do nothing
+	}
 
-			public void partDeactivated(IWorkbenchPart part) {
-				// do nothing
-			}
+	public void partDeactivated(IWorkbenchPart part) {
+		// do nothing
+	}
 
-			public void partClosed(IWorkbenchPart part) {
-				// do nothing
-			}
+	public void partClosed(IWorkbenchPart part) {
+		// do nothing
+	}
 
-			public void partBroughtToTop(IWorkbenchPart part) {
-				// do nothing
-			}
+	public void partBroughtToTop(IWorkbenchPart part) {
+		// do nothing
+	}
 
-			public void partActivated(IWorkbenchPart part) {
-				if (part == TagCloudView.this) {
-					viewer.setSelection(selection);
-				}
-			}
-		});
+	public void partActivated(IWorkbenchPart part) {
+		if (part == TagCloudView.this)
+			viewer.setSelection(selection);
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (mouseButton == 1) {
+			selection = (IStructuredSelection) event.getSelection();
+			updateActions();
+		} else
+			viewer.setSelection(selection);
 	}
 
 	@Override
@@ -407,12 +381,20 @@ public class TagCloudView extends ViewPart implements IDbListener {
 	private void refresh(boolean cold) {
 		if (cold)
 			scoredStrings = null;
-		final List<ScoredString> scoredStrings = getScoredStrings();
-		if (scoredStrings != null)
-			BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
-				viewer.setInput(scoredStrings);
-				viewer.setSelection(selection);
+		if (!viewer.getControl().isDisposed())
+			viewer.getControl().getDisplay().asyncExec(() -> {
+				if (!viewer.getControl().isDisposed()) {
+					final List<ScoredString> locScoredStrings = getScoredStrings();
+					if (locScoredStrings != null)
+						BusyIndicator.showWhile(viewer.getControl().getDisplay(), () -> {
+							if (!viewer.getControl().isDisposed()) {
+								viewer.setInput(locScoredStrings);
+								viewer.setSelection(selection);
+							}
+						});
+				}
 			});
+
 	}
 
 	private void updateActions() {
@@ -458,14 +440,6 @@ public class TagCloudView extends ViewPart implements IDbListener {
 		fillLocalToolBar(bars.getToolBarManager());
 	}
 
-	private void hookDoubleClickAction() {
-		cloud.addListener(SWT.MouseDoubleClick, new Listener() {
-			public void handleEvent(Event event) {
-				((stateMask & SWT.CTRL) != 0 ? searchAllAction : searchOneAction).run();
-			}
-		});
-	}
-
 	protected void fillContextMenu(IMenuManager manager) {
 		updateActions();
 		if (mouseData != null) {
@@ -485,16 +459,15 @@ public class TagCloudView extends ViewPart implements IDbListener {
 		if (contextMenuMgr == null) {
 			contextMenuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 			contextMenuMgr.setRemoveAllWhenShown(true);
-			contextMenuMgr.addMenuListener(new IMenuListener() {
-				public void menuAboutToShow(IMenuManager manager) {
-					fillContextMenu(manager);
-					manager.updateAll(true);
-				}
-			});
-			Menu menu = contextMenuMgr.createContextMenu(viewer.getControl());
-			viewer.getControl().setMenu(menu);
+			contextMenuMgr.addMenuListener(this);
+			viewer.getControl().setMenu(contextMenuMgr.createContextMenu(viewer.getControl()));
 			getSite().registerContextMenu(contextMenuMgr, viewer);
 		}
+	}
+
+	public void menuAboutToShow(IMenuManager manager) {
+		fillContextMenu(manager);
+		manager.updateAll(true);
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
@@ -704,8 +677,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 			sm.addCriterion(new CriterionImpl(ICollectionProcessor.TEXTSEARCH, null,
 					new TextSearchOptions_typeImpl(s, maxNumber, score / 100f), null, score, false));
 			Ui.getUi().getNavigationHistory(getSite().getWorkbenchWindow()).postSelection(new StructuredSelection(sm));
-			IViewReference[] viewReferences = getSite().getPage().getViewReferences();
-			for (IViewReference ref : viewReferences)
+			for (IViewReference ref : getSite().getPage().getViewReferences())
 				if (ref.getView(false) == this) {
 					getSite().getPage().setPartState(ref, IWorkbenchPage.STATE_MINIMIZED);
 					break;
@@ -715,9 +687,7 @@ public class TagCloudView extends ViewPart implements IDbListener {
 
 	private static String constructQuery(List<ScoredString> tags) {
 		StringBuilder sb = new StringBuilder();
-		Iterator<ScoredString> iterator = tags.iterator();
-		while (iterator.hasNext()) {
-			ScoredString ss = iterator.next();
+		for (ScoredString ss : tags) {
 			if (sb.length() > 0)
 				sb.append(" AND "); //$NON-NLS-1$
 			sb.append(ss.getString());
@@ -746,8 +716,8 @@ public class TagCloudView extends ViewPart implements IDbListener {
 				ticket = peerService.askForTagCloud(size);
 			List<ScoredString> result;
 			File indexPath = dbManager.getIndexPath();
-			if (indexPath == null)
-				result = EMPTYSCORES;
+			if (indexPath == null || dbManager.getMeta(true).getNoIndex())
+				result = ticket == null ? NOINDEX : EMPTYSCORES;
 			else {
 				ILuceneService luceneService = Core.getCore().getDbFactory().getLuceneService();
 				try {
@@ -798,12 +768,10 @@ public class TagCloudView extends ViewPart implements IDbListener {
 		}
 		if (scoredStrings.isEmpty()) {
 			String msg;
-			if (networked)
-				msg = Messages.getString("TagCloudView.no_tags_in_network"); //$NON-NLS-1$
-			else if (Core.getCore().getDbManager().getMeta(true).getNoIndex())
-				msg = Messages.getString("TagCloudView.indexing_disabled"); //$NON-NLS-1$
-			else
-				msg = Messages.getString("TagCloudView.no_tags_in_catalog"); //$NON-NLS-1$
+			msg = networked ? Messages.getString("TagCloudView.no_tags_in_network") : //$NON-NLS-1$
+					Core.getCore().getDbManager().getMeta(true).getNoIndex()
+							? Messages.getString("TagCloudView.indexing_disabled") //$NON-NLS-1$
+							: Messages.getString("TagCloudView.no_tags_in_catalog"); //$NON-NLS-1$
 			scoredStrings.add(new ScoredString(msg, 1000));
 		}
 		int maxScores = 0;
@@ -860,6 +828,36 @@ public class TagCloudView extends ViewPart implements IDbListener {
 		memento.putInteger(SCHEME, scheme);
 		memento.putInteger(OCCURRENCES, occurrences);
 		memento.putString(FILTER, Core.toStringList(filter, ' '));
+	}
+
+	public void handleEvent(Event e) {
+		Rectangle clientArea = ((Composite) e.widget).getClientArea();
+		int size = Math.min(clientArea.width, clientArea.height);
+		int xoff = size < clientArea.width ? (clientArea.width - size) / 2 : 0;
+		int yoff = size < clientArea.height ? (clientArea.height - size) / 2 : 0;
+		cloud.setBounds(clientArea.x + xoff, clientArea.y + yoff, size, size);
+		if (scoredStrings == null)
+			refresh(false);
+		else
+			cloud.layoutCloud(null, true);
+	}
+
+	@Override
+	public void mouseDoubleClick(MouseEvent e) {
+		((stateMask & SWT.CTRL) != 0 ? searchAllAction : searchOneAction).run();
+	}
+
+	@Override
+	public void mouseDown(MouseEvent e) {
+		mouseData = (ScoredString) (e.data instanceof Word ? ((Word) e.data).data : null);
+		mouseButton = e.button;
+		stateMask = e.stateMask;
+		updateActions();
+	}
+
+	@Override
+	public void mouseUp(MouseEvent e) {
+		// do nothing
 	}
 
 }

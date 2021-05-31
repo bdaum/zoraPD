@@ -33,10 +33,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -45,6 +41,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -56,7 +54,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public abstract class AbstractSelectExhibitDialog extends ZDialog {
+public abstract class AbstractSelectExhibitDialog extends ZDialog implements Listener {
 
 	protected static final int ICONWIDTH = 48;
 	protected TableViewer viewer;
@@ -168,27 +166,27 @@ public abstract class AbstractSelectExhibitDialog extends ZDialog {
 				processSelection();
 			}
 		});
-		viewer.getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.character == '\r')
-					processSelection();
-			}
-		});
-		viewer.getControl().addFocusListener(new FocusListener() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (focusGained)
-					cancelPressed();
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				focusGained = true;
-			}
-		});
+		viewer.getControl().addListener(SWT.KeyUp, this);
+		viewer.getControl().addListener(SWT.FocusIn, this);
+		viewer.getControl().addListener(SWT.FocusOut, this);
 		viewer.getTable().pack();
 		return area;
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyUp:
+			if (e.character == '\r')
+				processSelection();
+			return;
+		case SWT.FocusIn:
+			focusGained = true;
+			return;
+		case SWT.FocusOut:
+			if (focusGained)
+				cancelPressed();
+		}
 	}
 
 	protected abstract String getAssetId(Object element);

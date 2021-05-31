@@ -17,48 +17,72 @@
             icon="icons/lightbox.gif"
             id="com.bdaum.zoom.rcp.LightboxPerspective"
             name="%perspective.name.lightbox">
+         <description>
+            %perspective.description.lightbox
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.SleevesPerspective"
             icon="icons/sleeves.gif"
             id="com.bdaum.zoom.rcp.SleevesPerspective"
             name="%perspective.name.sleeves">
+         <description>
+            %perspective.description.sleeves
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.SlidesPerspective"
             icon="icons/slideshow.gif"
             id="com.bdaum.zoom.SlidesPerspective"
             name="%perspective.name.slides">
+         <description>
+            %perspective.description.slideshow
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.ExhibitionPerspective"
             icon="icons/exhibition.png"
             id="com.bdaum.zoom.ExhibitionPerspective"
             name="%perspective.name.exhibition">
+         <description>
+            %perspective.description.exhibition
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.WebGalleryPerspective"
             icon="icons/webGallery.gif"
             id="com.bdaum.zoom.WebGalleryPerspective"
             name="%perspective.name.web_gallery">
+         <description>
+            %perspective.description.webgallery
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.PresentationPerspective"
             icon="icons/presentation.png"
             id="com.bdaum.zoom.PresentationPerspective"
             name="%perspective.presentation">
+         <description>
+            %perspective.description.presentation
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.TablePerspective"
             icon="icons/table.png"
             id="com.bdaum.zoom.rcp.TablePerspective"
             name="%perspective.name.table">
+         <description>
+            %perspective.description.table
+         </description>
       </perspective>
       <perspective
             class="com.bdaum.zoom.rcp.internal.perspective.DataEntryPerspective"
             icon="icons/dataEntry.png"
             id="com.bdaum.zoom.rcp.DataEntryPerspective"
             name="%perspective.name.dataentry">
+         <description>
+            %perspective.description.entry
+         </description>
       </perspective>
    </extension>
    <extension
@@ -93,16 +117,8 @@
                value="about.gif">
          </property>
          <property
-               name="startupProgressRect"
-               value="1,314,448,4">
-         </property>
-         <property
                name="windowImages"
                value="zora16.png,zora32.png,zora48.png,zora64.png,zora128.png,zora256.png">
-         </property>
-         <property
-               name="preferenceCustomization"
-               value="plugin_customization.ini">
          </property>
       </product>
    </extension>

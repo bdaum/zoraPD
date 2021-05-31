@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.webserver"
       label="Webserver Feature"
-      version="3.6.2"
+      version="3.7.0"
       provider-name="bdaum industrial communications">
 
    <description>

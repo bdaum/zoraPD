@@ -21,12 +21,10 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -36,8 +34,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -62,7 +58,7 @@ import com.bdaum.zoom.ui.internal.dialogs.Messages;
 
 public class CollectionEditGroup {
 
-	public class PrepareJob extends Job implements DisposeListener {
+	public class PrepareJob extends Job implements Listener {
 
 		private Control control;
 		private SmartCollection coll;
@@ -84,14 +80,14 @@ public class CollectionEditGroup {
 		protected IStatus run(IProgressMonitor monitor) {
 			asyncExec(() -> {
 				if (!control.isDisposed())
-					control.addDisposeListener(PrepareJob.this);
+					control.addListener(SWT.Dispose, PrepareJob.this);
 			});
 			try {
 				doRun(monitor);
 			} finally {
 				asyncExec(() -> {
 					if (!control.isDisposed())
-						control.removeDisposeListener(PrepareJob.this);
+						control.removeListener(SWT.Dispose, PrepareJob.this);
 				});
 			}
 			return Status.OK_STATUS;
@@ -102,7 +98,7 @@ public class CollectionEditGroup {
 				control.getDisplay().asyncExec(runnable);
 		}
 
-		public void widgetDisposed(DisposeEvent e) {
+		public void handleEvent(Event e) {
 			cancel();
 		}
 
@@ -140,18 +136,16 @@ public class CollectionEditGroup {
 		public void apply() {
 			if (!applyPreparationList.isEmpty() && !control.isDisposed())
 				asyncExec(() -> {
-					if (!control.isDisposed()) {
-						int size = applyPreparationList.size();
-						for (int i = 0; i < size; i++)
+					if (!control.isDisposed())
+						for (int i = 0; i < applyPreparationList.size(); i++)
 							applyPreparationList.get(i).run();
-					}
 				});
 		}
 
 		protected void saveProposal(Map<QueryField, Set<String>> valueMap, QueryField qfield, String s) {
 			Set<String> set = valueMap.get(qfield);
 			if (set == null)
-				valueMap.put(qfield, set = Collections.synchronizedSet(new HashSet<String>(101)));
+				valueMap.put(qfield, set = ConcurrentHashMap.newKeySet(101));
 			set.add(s);
 		}
 	}
@@ -179,7 +173,7 @@ public class CollectionEditGroup {
 
 	private ListenerList<Listener> modifyListeners = new ListenerList<>();
 
-	private Map<QueryField, Set<String>> preparedValues = Collections.synchronizedMap(new HashMap<>());
+	private Map<QueryField, Set<String>> preparedValues = new ConcurrentHashMap<>();
 
 	private boolean preparationDone = false;
 

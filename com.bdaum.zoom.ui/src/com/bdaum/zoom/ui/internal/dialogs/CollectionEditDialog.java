@@ -31,12 +31,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -193,11 +187,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 				nameField.setLayoutData(data);
 				if (current != null)
 					((Text) nameField).setText(current.getName());
-				((Text) nameField).addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						updateButtons();
-					}
-				});
+				((Text) nameField).addListener(SWT.Modify, this);
 				nameField.setEnabled(!readonly);
 			}
 			if (current == null || !isSystem || current.getAlbum()
@@ -210,12 +200,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 						if (album) {
 							descriptionField = new StyledText(generalComp, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
 							((StyledText) descriptionField).setText(current.getDescription());
-							descriptionField.addMouseListener(new MouseAdapter() {
-								@Override
-								public void mouseDoubleClick(MouseEvent e) {
-									detectAndHandleHyperlink();
-								}
-							});
+							descriptionField.addListener(SWT.MouseDoubleClick, this);
 						} else
 							((Label) (descriptionField = new Label(generalComp, SWT.WRAP)))
 									.setText(current.getDescription());
@@ -242,17 +227,7 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 			if (current != null)
 				colorCode = current.getColorCode() - 1;
 			colorCodeButton.setImage(Icons.toSwtColors(colorCode));
-			colorCodeButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					ColorCodeDialog dialog = new ColorCodeDialog(getShell(), colorCode);
-					dialog.create();
-					dialog.getShell().setLocation(colorCodeButton.toDisplay(0, 0));
-					int code = dialog.open();
-					if (code >= Constants.COLOR_UNDEFINED)
-						colorCodeButton.setImage(Icons.toSwtColors(colorCode = code));
-				}
-			});
+			colorCodeButton.addListener(SWT.Selection, this);
 		} else {
 			generalComp.setLayout(new GridLayout());
 			new Label(generalComp, SWT.NONE).setText(Messages.CollectionEditDialog_adhoc_hint);
@@ -290,7 +265,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 		labelConfigGroup = new LabelConfigGroup(apperanceComp, true, true, false);
 		labelConfigGroup.addListener(SWT.Modify, this);
 		if (current != null)
-			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(), current.getAlignment(), false);
+			labelConfigGroup.setSelection(current.getShowLabel(), current.getLabelTemplate(), current.getFontSize(),
+					current.getAlignment(), false);
 		else
 			labelConfigGroup.setSelection(Constants.TITLE_LABEL, "", 8, 1, false); //$NON-NLS-1$
 		return apperanceComp;
@@ -314,7 +290,17 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 	}
 
 	public void handleEvent(Event e) {
-		updateButtons();
+		if (e.type == SWT.Modify)
+			updateButtons();
+		else if (e.type == SWT.Selection) {
+			ColorCodeDialog dialog = new ColorCodeDialog(getShell(), colorCode);
+			dialog.create();
+			dialog.getShell().setLocation(colorCodeButton.toDisplay(0, 0));
+			int code = dialog.open();
+			if (code >= Constants.COLOR_UNDEFINED)
+				colorCodeButton.setImage(Icons.toSwtColors(colorCode = code));
+		} else if (e.type == SWT.MouseDoubleClick)
+			detectAndHandleHyperlink();
 	}
 
 	@Override
@@ -408,7 +394,8 @@ public class CollectionEditDialog extends ZTitleAreaDialog implements ISizeHandl
 										: ((Label) descriptionField).getText(),
 				colorCode + 1, current != null ? current.getLastAccessDate() : null,
 				current != null ? current.getGeneration() + 1 : 0, current != null ? current.getPerspective() : null,
-				labelConfigGroup.getSelection(), labelConfigGroup.getTemplate(), labelConfigGroup.getFontSize(), labelConfigGroup.getAlignment(), null);
+				labelConfigGroup.getSelection(), labelConfigGroup.getTemplate(), labelConfigGroup.getFontSize(),
+				labelConfigGroup.getAlignment(), null);
 		if (isSystem || UiUtilities.isImport(current))
 			result.setStringId(current.getStringId());
 		collectionEditGroup.applyCriteria(result, name);

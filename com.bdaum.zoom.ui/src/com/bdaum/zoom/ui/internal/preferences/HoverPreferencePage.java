@@ -39,10 +39,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -77,7 +73,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 public class HoverPreferencePage extends AbstractPreferencePage
-		implements IDoubleClickListener, Listener, ISelectionChangedListener {
+		implements IDoubleClickListener, Listener, ISelectionChangedListener, ITreeContentProvider {
 
 	public class HoverNode {
 
@@ -126,7 +122,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 
 	}
 
-	public class HoverEditGroup extends CGroup implements Listener, VerifyListener {
+	public class HoverEditGroup extends CGroup implements Listener {
 
 		private Text templateField;
 		private Text previewField;
@@ -152,7 +148,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			lab.setText(Messages.getString("HoverPreferencePage.template")); //$NON-NLS-1$
 			templateField = new Text(this, SWT.MULTI | SWT.LEAD | SWT.BORDER);
 			if (isTitle)
-				templateField.addVerifyListener(this);
+				templateField.addListener(SWT.Verify, this);
 			GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 			layoutData.heightHint = h;
 			layoutData.widthHint = 300;
@@ -162,9 +158,9 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			if (variables != null && variables.length > 0) {
 				addVariableButton = new Button(this, SWT.PUSH);
 				addVariableButton.setText(Messages.getString("HoverPreferencePage.add_variable")); //$NON-NLS-1$
-				addVariableButton.addSelectionListener(new SelectionAdapter() {
+				addVariableButton.addListener(SWT.Selection, new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						AddVariablesDialog dialog = new AddVariablesDialog(getShell(),
 								Messages.getString("HoverPreferencePage.add_variable"), variables, vlabels); //$NON-NLS-1$
 						Point loc = templateField.toDisplay(20, 10);
@@ -179,9 +175,9 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			if (metadata) {
 				addMetadataButon = new Button(this, SWT.PUSH);
 				addMetadataButon.setText(Messages.getString("HoverPreferencePage.add_metadata")); //$NON-NLS-1$
-				addMetadataButon.addSelectionListener(new SelectionAdapter() {
+				addMetadataButon.addListener(SWT.Selection, new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(getShell());
 						Point loc = templateField.toDisplay(20, 10);
 						dialog.create();
@@ -207,9 +203,14 @@ public class HoverPreferencePage extends AbstractPreferencePage
 		}
 
 		@Override
-		public void handleEvent(Event event) {
-			computePreview();
-			updateButtons();
+		public void handleEvent(Event e) {
+			if (e.type == SWT.Verify) {
+				if (e.text.indexOf('\n') >= 0)
+					e.doit = false;
+			} else {
+				computePreview();
+				updateButtons();
+			}
 		}
 
 		public void setTemplate(String template) {
@@ -225,12 +226,6 @@ public class HoverPreferencePage extends AbstractPreferencePage
 
 		public String getTemplate() {
 			return templateField.getText();
-		}
-
-		@Override
-		public void verifyText(VerifyEvent e) {
-			if (e.text.indexOf('\n') >= 0)
-				e.doit = false;
 		}
 
 	}
@@ -387,7 +382,8 @@ public class HoverPreferencePage extends AbstractPreferencePage
 				Messages.getString("HoverPreferencePage.templates_tooltip")); //$NON-NLS-1$
 		Composite comp0 = createTemplatesPage(tabFolder);
 		tabItem0.setControl(comp0);
-		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("HoverPreferencePage.timing"), Messages.getString("HoverPreferencePage.timing_tooltip")); //$NON-NLS-1$ //$NON-NLS-2$
+		tabItem1 = UiUtilities.createTabItem(tabFolder, Messages.getString("HoverPreferencePage.timing"), //$NON-NLS-1$
+				Messages.getString("HoverPreferencePage.timing_tooltip")); //$NON-NLS-1$
 		Composite comp1 = createTimingPage(tabFolder);
 		tabItem1.setControl(comp1);
 		initTabFolder(0);
@@ -399,7 +395,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 		Composite comp = new Composite(tabFolder, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout());
-		new Label(comp, SWT.WRAP).setText(Messages.getString("HoverPreferencePage.timing_expl"));  //$NON-NLS-1$
+		new Label(comp, SWT.WRAP).setText(Messages.getString("HoverPreferencePage.timing_expl")); //$NON-NLS-1$
 		new Label(comp, SWT.NONE);
 		Composite composite = new Composite(comp, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -440,33 +436,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = 250;
 		viewer.getTree().setLayoutData(layoutData);
-		viewer.setContentProvider(new ITreeContentProvider() {
-			@Override
-			public boolean hasChildren(Object element) {
-				return element instanceof Category;
-			}
-
-			@Override
-			public Object getParent(Object element) {
-				if (element instanceof HoverNode)
-					return ((HoverNode) element).getParent();
-				return null;
-			}
-
-			@Override
-			public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof Object[])
-					return (Object[]) inputElement;
-				return null;
-			}
-
-			@Override
-			public Object[] getChildren(Object parentElement) {
-				if (parentElement instanceof Category)
-					return ((Category) parentElement).getChildren().toArray();
-				return null;
-			}
-		});
+		viewer.setContentProvider(this);
 		viewer.setComparator(new ViewerComparator());
 		ZColumnViewerToolTipSupport.enableFor(viewer);
 		TreeViewerColumn col1 = new TreeViewerColumn(viewer, SWT.NONE);
@@ -518,7 +488,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 	public void init(IWorkbench wb) {
 		super.init(wb);
 		setTitle(Messages.getString("HoverPreferencePage.hover")); //$NON-NLS-1$
-		setMessage(Messages.getString("HoverPreferencePage.hover"));  //$NON-NLS-1$
+		setMessage(Messages.getString("HoverPreferencePage.hover")); //$NON-NLS-1$
 	}
 
 	@Override
@@ -553,9 +523,9 @@ public class HoverPreferencePage extends AbstractPreferencePage
 			for (HoverNode node : cat.getChildren())
 				node.save();
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.HOVERDELAY,delayTimeField.getSelection());
-		preferenceStore.setValue(PreferenceConstants.HOVERBASETIME,baseTimeField.getSelection());
-		preferenceStore.setValue(PreferenceConstants.HOVERCHARTIME,charTimeField.getSelection());
+		preferenceStore.setValue(PreferenceConstants.HOVERDELAY, delayTimeField.getSelection());
+		preferenceStore.setValue(PreferenceConstants.HOVERBASETIME, baseTimeField.getSelection());
+		preferenceStore.setValue(PreferenceConstants.HOVERCHARTIME, charTimeField.getSelection());
 	}
 
 	@Override
@@ -565,6 +535,7 @@ public class HoverPreferencePage extends AbstractPreferencePage
 
 	@Override
 	public void handleEvent(Event event) {
+
 		if (event.widget == editButton)
 			openEditDialog();
 		else if (event.widget == resetButton) {
@@ -645,6 +616,32 @@ public class HoverPreferencePage extends AbstractPreferencePage
 					|| titleTemplate.equals(contrib.getDefaultTitleTemplate());
 		}
 		return unmodified;
+	}
+
+	@Override
+	public boolean hasChildren(Object element) {
+		return element instanceof Category;
+	}
+
+	@Override
+	public Object getParent(Object element) {
+		if (element instanceof HoverNode)
+			return ((HoverNode) element).getParent();
+		return null;
+	}
+
+	@Override
+	public Object[] getElements(Object inputElement) {
+		if (inputElement instanceof Object[])
+			return (Object[]) inputElement;
+		return null;
+	}
+
+	@Override
+	public Object[] getChildren(Object parentElement) {
+		if (parentElement instanceof Category)
+			return ((Category) parentElement).getChildren().toArray();
+		return null;
 	}
 
 }

@@ -198,10 +198,13 @@ public class ImportFromDeviceData {
 	}
 
 	public String getDcimOwner() {
-		if (dcims != null && dcims.length > 0)
-			return dcims[0].getParentName();
-		return null;
+		return (dcims != null && dcims.length > 0) ? dcims[0].getParentName() : null;
 	}
+	
+	public String getMedia() {
+		return (dcims != null && dcims.length > 0) ? dcims[0].getMedium() : null;
+	}
+
 
 	public void setTimeshift(int timeshift) {
 		this.timeshift = timeshift;

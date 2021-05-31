@@ -25,25 +25,24 @@ import java.net.URL;
 
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.FtpAccountSelectionDialog;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class RemoteImportPage extends ColoredWizardPage {
+public class RemoteImportPage extends ColoredWizardPage implements Listener {
 
 	private static final String HISTORY_ITEMS = "historyItems"; //$NON-NLS-1$
 	private Combo combo;
+
 	public RemoteImportPage() {
 		super("main", Messages.RemoteImportPage_import_remote_images, null); //$NON-NLS-1$
 	}
@@ -61,27 +60,13 @@ public class RemoteImportPage extends ColoredWizardPage {
 			if (combo.getItemCount() > 0)
 				combo.setText(combo.getItem(0));
 		}
-		combo.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validatePage();
-			}
-		});
-		final GridData gd_combo = new GridData(SWT.FILL, SWT.CENTER, true,
-				false);
+		combo.addListener(SWT.Modify, this);
+		final GridData gd_combo = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_combo.widthHint = 350;
 		combo.setLayoutData(gd_combo);
 		Button browseButton = new Button(composite, SWT.PUSH);
 		browseButton.setText(Messages.RemoteImportPage_browse);
-		browseButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FtpAccountSelectionDialog dialog = new FtpAccountSelectionDialog(getShell());
-				if (dialog.open() == Window.OK) {
-					combo.setText(dialog.getResult().getUrl());
-					validatePage();
-				}
-			}
-		});
+		browseButton.addListener(SWT.Selection, this);
 		setTitle(Messages.RemoteImportPage_title);
 		setMessage(Messages.RemoteImportPage_enter_a_valid_url);
 		super.createControl(parent);
@@ -112,6 +97,20 @@ public class RemoteImportPage extends ColoredWizardPage {
 	public void saveSettings() {
 		String[] hist = UiUtilities.updateComboHistory(combo);
 		getDialogSettings().put(HISTORY_ITEMS, hist);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Modify)
+			validatePage();
+		else {
+			FtpAccountSelectionDialog dialog = new FtpAccountSelectionDialog(getShell());
+			if (dialog.open() == Window.OK) {
+				combo.setText(dialog.getResult().getUrl());
+				validatePage();
+			}
+		}
+
 	}
 
 }

@@ -44,17 +44,11 @@ import com.bdaum.zoom.ui.job.AbstractUiDaemon;
 public class SyncPicasaJob extends AbstractUiDaemon {
 
 	private static final String EMAIL = "email"; //$NON-NLS-1$
-
 	private static final String DISPLAY = "display"; //$NON-NLS-1$
-
 	private static final String NAME = "name"; //$NON-NLS-1$
-
 	private static final String FACES = "faces"; //$NON-NLS-1$
-
 	private static final String PICASA_INI = ".picasa.ini"; //$NON-NLS-1$
-
 	protected static final Object CONTACTS = "contacts"; //$NON-NLS-1$
-
 	protected static final Object CONTACT = "contact"; //$NON-NLS-1$
 
 	private IDbManager dbManager;

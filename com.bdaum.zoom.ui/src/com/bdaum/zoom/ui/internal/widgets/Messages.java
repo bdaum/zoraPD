@@ -86,11 +86,9 @@ public class Messages extends NLS {
 	public static String SectionLayoutGroup_thumbs_left;
 	public static String SectionLayoutGroup_thumbs_right;
 	public static String SectionLayoutGroup_thumbs_top;
-	public static String TextField_text_operation;
 	public static String TextMenuListener_add_to_dict;
 	public static String TextMenuListener_copy;
 	public static String TextMenuListener_cut;
-	public static String TextMenuListener_edit_text;
 	public static String TextMenuListener_paste;
 	public static String TextMenuListener_redo;
 	public static String TextMenuListener_selectall;
@@ -102,9 +100,12 @@ public class Messages extends NLS {
 	public static String TextWithVariableGroup_select_template;
 	public static String WatermarkGroup_create_watermark;
 	public static String WatermarkGroup_does_not_exist;
+	public static String WatermarkGroup_only_png_bmp;
 	public static String WatermarkGroup_select_file;
+	public static String WatermarkGroup_select_watermark_file;
 	public static String WatermarkGroup_watermark_files;
 	public static String WebFontGroup_select_font;
+	public static String CompressionGroup_enter_0;
 	public static String CompressionGroup_jpegQuality;
 	public static String CompressionGroup_use_webp;
 	public static String CompressionGroup_webp_tooltip;

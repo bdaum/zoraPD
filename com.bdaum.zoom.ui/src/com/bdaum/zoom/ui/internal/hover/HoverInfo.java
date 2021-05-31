@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.hover;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,27 +39,23 @@ import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.views.ImageRegion;
 
-//@SuppressWarnings("restriction")
 @SuppressWarnings("restriction")
 public class HoverInfo implements IHoverInfo, IHoverContext {
 
+	private static final String ITEM_PHOTO = "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
 	private Object object;
 	private ImageRegion[] regions;
-	// private QueryField[] queryFields;
-	private String info;
-	private String title;
+	private String info, title;
 
 	/**
 	 * @param object
 	 *            - asset, list of assets
 	 * @param regions
 	 *            - regionIds
-	 * @param queryFields
 	 */
-	public HoverInfo(Object object, ImageRegion[] regions) { // , QueryField[] queryFields) {
+	public HoverInfo(Object object, ImageRegion[] regions) {
 		this.object = object;
 		this.regions = regions;
-		// this.queryFields = queryFields;
 	}
 
 	/**
@@ -95,11 +90,6 @@ public class HoverInfo implements IHoverInfo, IHoverContext {
 		this.object = tooltip;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.bdaum.zoom.ui.internal.hover.IHoverInfo#getText()
-	 */
 	@Override
 	public String getText() {
 		if (info == null) {
@@ -116,19 +106,16 @@ public class HoverInfo implements IHoverInfo, IHoverContext {
 		if (object instanceof Asset || object instanceof List<?>) {
 			if (object instanceof Asset) {
 				IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(((Asset) object).getFormat());
-				hoverId = mediaSupport != null ? mediaSupport.getGalleryHoverId()
-						: "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
-			} else {
+				hoverId = mediaSupport != null ? mediaSupport.getGalleryHoverId() : ITEM_PHOTO;
+			} else
 				for (Asset asset : (List<Asset>) object) {
 					IMediaSupport mediaSupport = CoreActivator.getDefault().getMediaSupport(asset.getFormat());
-					String id = mediaSupport != null ? mediaSupport.getGalleryHoverId()
-							: "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
+					String id = mediaSupport != null ? mediaSupport.getGalleryHoverId() : ITEM_PHOTO;
 					if (hoverId == null)
 						hoverId = id;
 					else if (!hoverId.equals(id))
-						hoverId = "com.bdaum.zoom.ui.hover.galleryItem.photo"; //$NON-NLS-1$
+						hoverId = ITEM_PHOTO;
 				}
-			}
 		}
 		return hoverId;
 	}
@@ -141,12 +128,9 @@ public class HoverInfo implements IHoverInfo, IHoverContext {
 				StringBuilder sb = new StringBuilder();
 				sb.append(Messages.HoverInfo_origin);
 				String peer = assetOrigin.getLocation();
-				File catFile = assetOrigin.getCatFile();
-				if (peerService.isLocal(peer))
-					sb.append(catFile.getName());
-				else
-					sb.append(peer).append(", ").append(catFile.getName()); //$NON-NLS-1$
-				sb.append('\n');
+				if (!peerService.isLocal(peer))
+					sb.append(peer).append(", "); //$NON-NLS-1$
+				sb.append(assetOrigin.getCatFile().getName()).append('\n');
 				return sb.toString();
 			}
 		}
@@ -154,58 +138,53 @@ public class HoverInfo implements IHoverInfo, IHoverContext {
 	}
 
 	private static String compileRegionData(ImageRegion[] imageRegions) {
-		if (imageRegions == null)
-			return null;
-		LinkedList<String> lines = new LinkedList<String>();
-		IDbManager dbManager = Core.getCore().getDbManager();
-		for (ImageRegion imageRegion : imageRegions) {
-			List<RegionImpl> regions = Core.getCore().getDbManager().obtainObjects(RegionImpl.class, false,
-					"asset_person_parent", //$NON-NLS-1$
-					imageRegion.owner.getStringId(), QueryField.EQUALS, Constants.OID, imageRegion.regionId,
-					QueryField.EQUALS);
-			if (!regions.isEmpty()) {
-				Region region = regions.get(0);
-				String albumId = region.getAlbum();
-				String name = "?"; //$NON-NLS-1$
-				String description = ""; //$NON-NLS-1$
-				if (albumId != null) {
-					SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
-					if (album != null) {
-						name = album.getName();
-						if (album.getDescription() != null && !album.getDescription().equals(name))
-							description = album.getDescription();
+		if (imageRegions != null) {
+			LinkedList<String> lines = new LinkedList<String>();
+			IDbManager dbManager = Core.getCore().getDbManager();
+			for (ImageRegion imageRegion : imageRegions) {
+				List<RegionImpl> regions = Core.getCore().getDbManager().obtainObjects(RegionImpl.class, false,
+						"asset_person_parent", //$NON-NLS-1$
+						imageRegion.owner.getStringId(), QueryField.EQUALS, Constants.OID, imageRegion.regionId,
+						QueryField.EQUALS);
+				if (!regions.isEmpty()) {
+					Region region = regions.get(0);
+					String albumId = region.getAlbum();
+					String name = "?"; //$NON-NLS-1$
+					String description = ""; //$NON-NLS-1$
+					if (albumId != null) {
+						SmartCollectionImpl album = dbManager.obtainById(SmartCollectionImpl.class, albumId);
+						if (album != null) {
+							name = album.getName();
+							if (album.getDescription() != null && !album.getDescription().equals(name))
+								description = album.getDescription();
+						}
 					}
+					if (region.getDescription() != null && !region.getDescription().isEmpty()) {
+						if (!description.isEmpty())
+							description += "; "; //$NON-NLS-1$
+						description += region.getDescription();
+					}
+					StringBuilder lsb = new StringBuilder();
+					lsb.append(name);
+					if (!description.isEmpty() && !(description.endsWith(name)
+							&& description.charAt(description.length() - name.length() - 2) == ':'))
+						lsb.append(" - ").append(description); //$NON-NLS-1$
+					String line = lsb.toString();
+					lines.remove(line);
+					lines.add(line);
 				}
-				if (region.getDescription() != null && !region.getDescription().isEmpty()) {
-					if (!description.isEmpty())
-						description += "; "; //$NON-NLS-1$
-					description += region.getDescription();
-				}
-				StringBuilder lsb = new StringBuilder();
-				lsb.append(name);
-				if (!description.isEmpty() && !(description.endsWith(name)
-						&& description.charAt(description.length() - name.length() - 2) == ':'))
-					lsb.append(" - ").append(description); //$NON-NLS-1$
-				String line = lsb.toString();
-				lines.remove(line);
-				lines.add(line);
+				Collections.sort(lines);
 			}
-			Collections.sort(lines);
-		}
-		if (!lines.isEmpty()) {
-			StringBuilder sb = new StringBuilder();
-			for (String line : lines)
-				sb.append('[').append(line).append("]\n"); //$NON-NLS-1$
-			return sb.toString();
+			if (!lines.isEmpty()) {
+				StringBuilder sb = new StringBuilder();
+				for (String line : lines)
+					sb.append('[').append(line).append("]\n"); //$NON-NLS-1$
+				return sb.toString();
+			}
 		}
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.bdaum.zoom.ui.internal.hover.IHoverInfo#getTitle()
-	 */
 	@Override
 	public String getTitle() {
 		if (title == null) {

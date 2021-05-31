@@ -391,28 +391,27 @@ public class RangeControl extends Composite implements Listener {
 					gc.fillRectangle(clientArea.x + x1, clientArea.y, x2 - x1, clientArea.height);
 				}
 			}
-			break;
+			return;
 		case SWT.MouseUp:
 			lowDown = false;
 			highDown = false;
-			break;
+			return;
 		case SWT.MouseDoubleClick:
 			lowDown = false;
 			highDown = false;
 			lowSpinner.setSelection(selection.x);
 			highSpinner.setSelection(selection.y);
 			canvas.redraw();
-			break;
+			return;
 		case SWT.MouseMove:
 			if (lowDown || highDown)
 				processMouseEvent(event);
-			break;
+			return;
 		case SWT.Selection:
 		case SWT.DefaultSelection:
 		case SWT.Modify:
 			fireEvent(event);
 			canvas.redraw();
-			break;
 		}
 	}
 

@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.program.HtmlEncoderDecoder;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
@@ -16,7 +17,7 @@ import com.bdaum.zoom.ui.internal.html.HtmlContentAssistant;
 import com.bdaum.zoom.ui.internal.html.HtmlSourceViewer;
 import com.bdaum.zoom.ui.internal.html.XMLCodeScanner;
 
-public class DescriptionGroup {
+public class DescriptionGroup implements Listener {
 
 	private Label descriptionHelpLabel;
 	private Composite descriptionComposite;
@@ -34,12 +35,7 @@ public class DescriptionGroup {
 		formatGroup.setLayout(new GridLayout(2, false));
 		formatButtonGroup = new RadioButtonGroup(formatGroup, null, SWT.HORIZONTAL,
 				Messages.DescriptionGroup_plain_text, "HTML"); //$NON-NLS-1$
-		formatButtonGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateDescriptionStack(parent);
-			}
-		});
+		formatButtonGroup.addListener(SWT.Selection, this);
 		descriptionHelpLabel = new Label(formatGroup, SWT.NONE);
 		GridData gd_descriptionHelp = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_descriptionHelp.horizontalIndent = 20;
@@ -63,7 +59,7 @@ public class DescriptionGroup {
 		setText("", false); //$NON-NLS-1$
 	}
 
-	private void updateDescriptionStack(final Composite parent) {
+	private void updateDescriptionStack(final Shell shell) {
 		if (formatButtonGroup.getSelection() == 1) {
 			descriptionHtmlViewer.getDocument().set(HtmlEncoderDecoder.getInstance().encodeHTML(descriptionField.getText(), true));
 			descriptionStack.topControl = descriptionHtmlViewer.getControl();
@@ -71,7 +67,7 @@ public class DescriptionGroup {
 		} else {
 			StringBuilder sb = new StringBuilder();
 			if (HtmlEncoderDecoder.getInstance().decodeHTML(descriptionHtmlViewer.getDocument().get(), sb)
-					&& !AcousticMessageDialog.openConfirm(parent.getShell(), Messages.DescriptionGroup_html_to_plain,
+					&& !AcousticMessageDialog.openConfirm(shell, Messages.DescriptionGroup_html_to_plain,
 							Messages.DescriptionGroup_existing_markup_will_be_deleted)) {
 				formatButtonGroup.setSelection(1);
 				return;
@@ -114,6 +110,11 @@ public class DescriptionGroup {
 
 	private void updateHelpLabel() {
 		descriptionHelpLabel.setVisible(formatButtonGroup.isEnabled(1) && formatButtonGroup.getSelection() == 1);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateDescriptionStack(formatButtonGroup.getShell());
 	}
 
 }

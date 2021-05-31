@@ -28,12 +28,6 @@ import java.util.regex.PatternSyntaxException;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.fieldassist.ComboContentAdapter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -41,8 +35,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.fieldassist.ContentAssistCommandAdapter;
 
@@ -57,7 +53,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class RegExDialog extends ZTitleAreaDialog {
+public class RegExDialog extends ZTitleAreaDialog implements Listener {
 
 	/** The size of the dialogs search history. */
 	private static final int HISTORY_SIZE = 5;
@@ -104,8 +100,8 @@ public class RegExDialog extends ZTitleAreaDialog {
 
 	private boolean winTarget;
 
-	public RegExDialog(Shell parentShell, MigrationRule rule, String defPath,
-			boolean targetOnly, int fileSeparatorPolicy, int selection) {
+	public RegExDialog(Shell parentShell, MigrationRule rule, String defPath, boolean targetOnly,
+			int fileSeparatorPolicy, int selection) {
 		super(parentShell, HelpContextIds.REGEX_DIALOG);
 		this.defPath = defPath;
 		this.targetOnly = targetOnly;
@@ -150,15 +146,8 @@ public class RegExDialog extends ZTitleAreaDialog {
 		if (volumeField != null)
 			updateCombo(volume, volumeField, volumeHistory);
 		if (selection > 0) {
-			fTargetField.addFocusListener(new FocusListener() {
-				public void focusLost(FocusEvent e) {
-					fTargetField.removeFocusListener(this);
-				}
-
-				public void focusGained(FocusEvent e) {
-					fTargetField.setSelection(new Point(0, selection));
-				}
-			});
+			fTargetField.addListener(SWT.FocusIn, this);
+			fTargetField.addListener(SWT.FocusOut, this);
 		}
 		if (testPath != null)
 			sourcePathLabel.setText(testPath);
@@ -178,99 +167,55 @@ public class RegExDialog extends ZTitleAreaDialog {
 	@SuppressWarnings("unused")
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		ModifyListener listener = new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validate();
-				evaluateTargetPath();
-			}
-		};
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		new Label(composite, SWT.NONE)
-				.setText(Messages.RegExDialog_source_pattern);
+		new Label(composite, SWT.NONE).setText(Messages.RegExDialog_source_pattern);
 		// Create the source content assist field
 		ComboContentAdapter contentAdapter = new ComboContentAdapter();
 		fSourceField = new Combo(composite, SWT.DROP_DOWN | SWT.BORDER);
 		fSourceField.setEnabled(!targetOnly);
-		fSourceField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		fSourceField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		if (!targetOnly) {
 			FindReplaceDocumentAdapterContentProposalProvider findProposer = new FindReplaceDocumentAdapterContentProposalProvider(
 					true, false);
-			new ContentAssistCommandAdapter(fSourceField, contentAdapter,
-					findProposer, CONTENT_ASSIST_PROPOSALS, new char[0], true);
-			fSourceField.addModifyListener(listener);
+			new ContentAssistCommandAdapter(fSourceField, contentAdapter, findProposer, CONTENT_ASSIST_PROPOSALS,
+					new char[0], true);
+			fSourceField.addListener(SWT.Modify, this);
 		}
-		new Label(composite, SWT.NONE)
-				.setText(Messages.RegExDialog_target_pattern);
+		new Label(composite, SWT.NONE).setText(Messages.RegExDialog_target_pattern);
 		// Create the target content assist field
 		FindReplaceDocumentAdapterContentProposalProvider replaceProposer = new FindReplaceDocumentAdapterContentProposalProvider(
 				false, false);
 		fTargetField = new Combo(composite, SWT.DROP_DOWN | SWT.BORDER);
-		new ContentAssistCommandAdapter(fTargetField, contentAdapter,
-				replaceProposer, CONTENT_ASSIST_PROPOSALS, new char[0], true);
-		fTargetField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
-		fTargetField.addModifyListener(listener);
+		new ContentAssistCommandAdapter(fTargetField, contentAdapter, replaceProposer, CONTENT_ASSIST_PROPOSALS,
+				new char[0], true);
+		fTargetField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		fTargetField.addListener(SWT.Modify, this);
 		if (winTarget) {
-			new Label(composite, SWT.NONE)
-					.setText(Messages.RegExDialog_target_volume_name);
+			new Label(composite, SWT.NONE).setText(Messages.RegExDialog_target_volume_name);
 			volumeField = new Combo(composite, SWT.DROP_DOWN | SWT.BORDER);
-			volumeField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-					false));
-			volumeField.addModifyListener(listener);
+			volumeField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			volumeField.addListener(SWT.Modify, this);
 		}
 		// Test area
 		CGroup testGroup = new CGroup(composite, SWT.NONE);
-		testGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false,
-				2, 1));
+		testGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		testGroup.setLayout(new GridLayout(3, false));
 		testGroup.setText(Messages.RegExDialog_test_area);
-		new Label(testGroup, SWT.NONE)
-				.setText(Messages.RegExDialog_source_path);
+		new Label(testGroup, SWT.NONE).setText(Messages.RegExDialog_source_path);
 		sourcePathLabel = new Label(testGroup, SWT.NONE);
-		sourcePathLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
+		sourcePathLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		Button testButton = new Button(testGroup, SWT.PUSH);
 		testButton.setText(Messages.RegExDialog_browse);
-		testButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
-				dialog.setText(Messages.RegExDialog_select_source_file);
-				if (testPath != null)
-					dialog.setFilterPath(testPath);
-				else if (defPath != null)
-					dialog.setFilterPath(defPath);
-				String path = dialog.open();
-				if (path != null) {
-					testPath = path;
-					if (Constants.WIN32) {
-						int i = path.indexOf(':');
-						if (i == 1) {
-							String volume = Core.getCore().getVolumeManager()
-									.getVolumeForFile(new File(path));
-							if (volume != null)
-								testPath = volume + path.substring(1);
-						}
-					}
-					sourcePathLabel.setText(testPath);
-					evaluateTargetPath();
-				}
-			}
-		});
-		new Label(testGroup, SWT.NONE)
-				.setText(Messages.RegExDialog_target_path);
+		testButton.addListener(SWT.Selection, this);
+		new Label(testGroup, SWT.NONE).setText(Messages.RegExDialog_target_path);
 		targetPathLabel = new Label(testGroup, SWT.NONE);
-		targetPathLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false, 2, 1));
-		new Label(testGroup, SWT.NONE)
-				.setText(Messages.RegExDialog_target_volume);
+		targetPathLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		new Label(testGroup, SWT.NONE).setText(Messages.RegExDialog_target_volume);
 		targetVolumeLabel = new Label(testGroup, SWT.NONE);
-		targetVolumeLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER,
-				true, false, 2, 1));
+		targetVolumeLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		new Label(composite, SWT.NONE);
 		return area;
 	}
@@ -278,8 +223,7 @@ public class RegExDialog extends ZTitleAreaDialog {
 	protected void evaluateTargetPath() {
 		String source = fSourceField.getText();
 		String target = fTargetField.getText();
-		String volume = fTargetField.isEnabled() ? fTargetField.getText()
-				: null;
+		String volume = fTargetField.isEnabled() ? fTargetField.getText() : null;
 		if (!source.isEmpty()) {
 			if (testPath != null && !testPath.isEmpty()) {
 				try {
@@ -300,16 +244,13 @@ public class RegExDialog extends ZTitleAreaDialog {
 								break;
 							}
 							targetPathLabel.setText(result);
-							targetVolumeLabel.setText(volume != null ? volume
-									: extractVolume(result));
+							targetVolumeLabel.setText(volume != null ? volume : extractVolume(result));
 						} else {
-							targetPathLabel
-									.setText(Messages.RegExDialog_test_file_not_migrated);
+							targetPathLabel.setText(Messages.RegExDialog_test_file_not_migrated);
 							targetVolumeLabel.setText(""); //$NON-NLS-1$
 						}
 					} else {
-						targetPathLabel
-								.setText(Messages.RegExDialog_source_pattern_does_not_match);
+						targetPathLabel.setText(Messages.RegExDialog_source_pattern_does_not_match);
 						targetVolumeLabel.setText(""); //$NON-NLS-1$
 					}
 				} catch (PatternSyntaxException e) {
@@ -317,8 +258,7 @@ public class RegExDialog extends ZTitleAreaDialog {
 					targetVolumeLabel.setText(""); //$NON-NLS-1$
 				}
 			} else {
-				targetPathLabel
-						.setText(Messages.RegExDialog_test_file_undefined);
+				targetPathLabel.setText(Messages.RegExDialog_test_file_undefined);
 				targetVolumeLabel.setText(""); //$NON-NLS-1$
 			}
 		} else {
@@ -334,8 +274,7 @@ public class RegExDialog extends ZTitleAreaDialog {
 		if (i >= 0)
 			return (i < 2) ? null : migratedPath.substring(0, i);
 		if (migratedPath.startsWith("/")) //$NON-NLS-1$
-			return ((VolumeManager) Core.getCore().getVolumeManager())
-					.extractLinuxPath(migratedPath);
+			return ((VolumeManager) Core.getCore().getVolumeManager()).extractLinuxPath(migratedPath);
 		return null;
 	}
 
@@ -362,18 +301,15 @@ public class RegExDialog extends ZTitleAreaDialog {
 		source = fSourceField.getText();
 		if (!targetOnly) {
 			updateHistory(source, fSourceHistory);
-			dialogSettings.put(SOURCEHISTORY,
-					Core.toStringList(fSourceHistory, '\n'));
+			dialogSettings.put(SOURCEHISTORY, Core.toStringList(fSourceHistory, '\n'));
 		}
 		target = fTargetField.getText();
 		updateHistory(target, fTargetHistory);
-		dialogSettings.put(TARGETHISTORY,
-				Core.toStringList(fTargetHistory, '\n'));
+		dialogSettings.put(TARGETHISTORY, Core.toStringList(fTargetHistory, '\n'));
 		if (volumeField != null) {
 			volume = volumeField.getText();
 			updateHistory(volume, volumeHistory);
-			dialogSettings.put(VOLUMEHISTORY,
-					Core.toStringList(volumeHistory, '\n'));
+			dialogSettings.put(VOLUMEHISTORY, Core.toStringList(volumeHistory, '\n'));
 		}
 		if (testPath != null && !testPath.isEmpty())
 			dialogSettings.put(TESTPATH, testPath);
@@ -395,5 +331,44 @@ public class RegExDialog extends ZTitleAreaDialog {
 
 	public MigrationRule getResult() {
 		return new MigrationRuleImpl(source, target, volume);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.FocusIn:
+			fTargetField.setSelection(new Point(0, selection));
+			return;
+		case SWT.FocusOut:
+			fTargetField.removeListener(SWT.FocusIn, this);
+			fTargetField.removeListener(SWT.FocusOut, this);
+			return;
+		case SWT.Modify:
+			validate();
+			evaluateTargetPath();
+			return;
+		case SWT.Selection:
+			FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+			dialog.setText(Messages.RegExDialog_select_source_file);
+			if (testPath != null)
+				dialog.setFilterPath(testPath);
+			else if (defPath != null)
+				dialog.setFilterPath(defPath);
+			String path = dialog.open();
+			if (path != null) {
+				testPath = path;
+				if (Constants.WIN32) {
+					int i = path.indexOf(':');
+					if (i == 1) {
+						String volume = Core.getCore().getVolumeManager().getVolumeForFile(new File(path));
+						if (volume != null)
+							testPath = volume + path.substring(1);
+					}
+				}
+				sourcePathLabel.setText(testPath);
+				evaluateTargetPath();
+			}
+		}
+
 	}
 }

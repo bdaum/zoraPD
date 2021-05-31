@@ -83,4 +83,9 @@ public class DngConverter implements IConverter {
 		return file == null ? null : file.getParentFile();
 	}
 
+	@Override
+	public String getLibPath() {
+		return null;
+	}
+
 }

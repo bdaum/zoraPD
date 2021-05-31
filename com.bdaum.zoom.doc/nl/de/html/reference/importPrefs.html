@@ -1,169 +1,264 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="de"><head>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Importeinstellungen</title><link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css"><link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
-<h2>Importeinstellungen</h2>
-<h4><span style="font-weight: bold;">Allgemein</span></h4>
-<h4><span style="font-weight: bold;"></span></h4>
-<ul style="font-weight: normal;"><li><span style="font-weight: bold;">Inhalt</span><br>
-<span style="font-weight: bold;"></span></li>
-  <ul>
-    <li><span style="font-weight: bold;">Herstellernotizen importieren.</span> Falls Sie in den herstellerspezifischen <span style="font-style: italic;">Makernotes</span>
-der EXIF-Metadaten interessiert sind, markieren Sie diese Option. Falls
-nicht, lassen Sie diese Option unmarkiert. Falls Sie später Ihre
-Meinung ändern sollten, können Sie diese Option ändern und die
-EXIF-Daten Ihrer Bilder im Katalog aktualisieren.</li>
-    <li><span style="font-weight: bold;">Gesichtsdaten von der Kamera importieren</span>. Markieren Sie diese Option, wenn Sie Gesichtsdaten wie die Gesichtsregionen von Ihrer Kamera importieren möchten.<br>
-  </li>
-  </ul>
-
-  
-</ul><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Anzeige</span><br>
-</li>
-  <ul>
-    <li><span style="font-weight: bold;">Max. Länge der Importliste.</span>
-Einträge in der Importgruppe, welche diese Maximallänge überschreiten,
-werden gelöscht (wenn leere Systemkollektionen gelöscht werden).</li>
-  </ul>
-  <li><span style="font-weight: bold;">Ereignisse</span><br>
-  </li>
-
-  
-  <ul>
-    <li><span style="font-weight: bold;">Nach Import die importierten Bilder anzeigen</span>. Setzen Sie diese Option, um nach einem Import die importierten Bilder automatisch in der aktuellen Galerie anzuzeigen.</li>
-    <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Beim Anschluss eines Geräts.</span> Wählen Sie <span style="font-weight: bold;">Bilder importieren</span>, wenn beim Anschluss eines Geräts oder eines externen Speichers die Funktion <span style="font-style: italic;">Von Gerät importieren </span>aufgerufen werden soll. Wählen Sie&nbsp; <span style="font-weight: bold;">Kabelgebundenes Fotografieren starten</span>, wenn beim Anschluss eines Geräts automatisch der Modus für <a href="tethered.html">kabelgebundenes Fotografieren</a> aufgerufen werden soll.</font></li>
-    <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Neue kabelgebundene Aufnahme zeigen in</span>. Wählen Sie, auf welche Art ein mittels kabelgebundenen Fotografierens erhaltenes Bild gezeigt werden soll:</font></li>
-    <ul>
-<li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">Galerie</span>.
-Das Bild wird als Miniaturansicht in der Kollektion <span style="font-style: italic;">Letzter Import</span> in der aktuellen Galerie gezeigt. Es kann von dort aus mit einem Doppelklick geöffnet werden.</font></li><li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">interner Bildbetrachter</span>. Das Bild wird sofort mittels des externen Bildbetrachters gezeigt.</font></li><li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"><span style="font-weight: bold;">externer Bildbetrachter</span>. </font><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21">Das Bild wird sofort mittels des</font><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_0_21"> <a href="fileAssociations.html">konfigurierten extenern Bildbetrachters</a> gezeigt.<br>
-        </font></li>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Importeinstellungen</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+    <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+  </head>
+  <body>
+    <h2>Importeinstellungen</h2>
+    <h4><span style="font-weight: bold;">Allgemein</span></h4>
+    <h4><span style="font-weight: bold;"></span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Inhalt</span><br>
+        <span style="font-weight: bold;"></span></li>
+      <ul>
+        <li><span style="font-weight: bold;">Herstellernotizen importieren.</span>
+          Falls Sie in den herstellerspezifischen <span style="font-style: italic;">Makernotes</span>
+          der EXIF-Metadaten interessiert sind, markieren Sie diese Option.
+          Falls
+          nicht, lassen Sie diese Option unmarkiert. Falls Sie später Ihre
+          Meinung ändern sollten, können Sie diese Option ändern und die
+          EXIF-Daten Ihrer Bilder im Katalog aktualisieren.</li>
+        <li><span style="font-weight: bold;">Gesichtsdaten von der Kamera
+            importieren</span>. Markieren Sie diese Option, wenn Sie
+          Gesichtsdaten wie die Gesichtsregionen von Ihrer Kamera importieren
+          möchten.<br>
+        </li>
+      </ul>
     </ul>
-</ul></ul>
-<h4><a name="raw"></a>RAW conversion</h4>
-<ul style="font-weight: normal;">
-  <ul>
-
-  
-  </ul>
-
-
-
-</ul>
-<span style="font-weight: bold;"><br></span>
-<h4><span style="font-weight: bold;"><a name="raw"></a>RAW-Konvertierung</span></h4><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Raw-Konverter.</span> Hier können Sie zwischen <span style="font-weight: bold;">dcraw,</span> <span style="font-weight: bold;">RawTherapee</span> und <span style="font-weight: bold;">darktable</span> als Raw-Konverter wählen</li></ul><h4>dcraw</h4>Die folgenden Optionen gelten für <span style="font-style: italic;">dcraw</span>:
-
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Externes
-dcraw-Modul</span>. Hier
-können Sie den Pfad zu einem <a href="dcraw.html">externen DCRAW-Modul</a> spezifizieren, also
-einem DCRAW-Konverter außerhalb des Installationsordners.<br><span style="font-weight: bold;">Tipp:&nbsp;</span>Falls Sie einen auf DCRAW basierenden RAW-Konverter wie z.B. <span style="font-style: italic;">LightZone</span>
-benutzen, ist es sinnvoll, auf das in diesem RAW-Konverter installierte
-DCRAW-Modul zu verweisen. So können Sie sicherstellen, dass sowohl der
-RAW-Konverter als auch&nbsp;<span style="font-style: italic;">ZoRa PhotoDirector</span>&nbsp;die gleiche Version von DCRAW verwenden.</li></ul><li><span style="font-weight: bold;">Optionen</span><span style="font-weight: normal;"><br>Diese Optionen werden nur beim Laden hochauflösender Bilder angewandt, nicht jedoch bei der Generierung von Miniaturansichten.</span></li><ul style="font-weight: normal;">
-    <li><span style="font-weight: bold;">Weißabgleich.</span> Wählt die Methode für den Weißabgleich aus:</li>
-    <ul>
-<li><span style="font-style: italic;">D65.</span> Eine Graukarte, die mit einer D65-Lichtquelle beleuchtet wird, erscheint grau.</li><li><span style="font-style: italic;">Kamera</span>. Der von der Kamera vorgeschlagene Weißabgleich wird durchgeführt.<br>
-</li><li><span style="font-style: italic;">dcraw</span>. Der vom DCRAW-Konverter vorgeschlagene Weißabgleich wird durchgeführt.</li>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Anzeige</span><br>
+      </li>
+      <ul>
+        <li><span style="font-weight: bold;">Max. Länge der Importliste.</span>
+          Einträge in der Importgruppe, welche diese Maximallänge überschreiten,
+          werden gelöscht (wenn leere Systemkollektionen gelöscht werden).</li>
+      </ul>
+      <li><span style="font-weight: bold;">Ereignisse</span><br>
+      </li>
+      <ul>
+        <li><span style="font-weight: bold;">Nach Import die importierten Bilder
+            anzeigen</span>. Setzen Sie diese Option, um nach einem Import die
+          importierten Bilder automatisch in der aktuellen Galerie anzuzeigen.</li>
+        <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+            id="TR_0_21"><span style="font-weight: bold;">Beim Anschluss eines
+              Geräts.</span> Wählen Sie <span style="font-weight: bold;">Bilder
+              importieren</span>, wenn beim Anschluss eines Geräts oder eines
+            externen Speichers die Funktion <span style="font-style: italic;">Von
+              Gerät importieren </span>aufgerufen werden soll. Wählen Sie&nbsp;
+            <span style="font-weight: bold;">Kabelgebundenes Fotografieren
+              starten</span>, wenn beim Anschluss eines Geräts automatisch der
+            Modus für <a href="tethered.html">kabelgebundenes Fotografieren</a>
+            aufgerufen werden soll.</font></li>
+        <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+            id="TR_0_21"><span style="font-weight: bold;">Neue kabelgebundene
+              Aufnahme zeigen in</span>. Wählen Sie, auf welche Art ein mittels
+            kabelgebundenen Fotografierens erhaltenes Bild gezeigt werden soll:</font></li>
+        <ul>
+          <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+              id="TR_0_21"><span style="font-weight: bold;">Galerie</span>.
+              Das Bild wird als Miniaturansicht in der Kollektion <span style="font-style: italic;">Letzter
+                Import</span> in der aktuellen Galerie gezeigt. Es kann von dort
+              aus mit einem Doppelklick geöffnet werden.</font></li>
+          <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+              id="TR_0_21"><span style="font-weight: bold;">interner
+                Bildbetrachter</span>. Das Bild wird sofort mittels des externen
+              Bildbetrachters gezeigt.</font></li>
+          <li><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+              id="TR_0_21"><span style="font-weight: bold;">externer
+                Bildbetrachter</span>. </font><font onmouseover="top.Highlight.Apply(this);"
+              onmouseout="top.Highlight.Clear();" id="TR_0_21">Das Bild wird
+              sofort mittels des</font><font onmouseover="top.Highlight.Apply(this);"
+              onmouseout="top.Highlight.Clear();" id="TR_0_21"> <a href="fileAssociations.html">konfigurierten
+                extenern Bildbetrachters</a> gezeigt.<br>
+            </font></li>
+        </ul>
+      </ul>
     </ul>
-<li><span style="font-weight: bold;">Interpolation</span>. Wählt den DCRAW-Interpolationsalgorithmus aus. Verfügbar sind::</li><ul style="font-weight: normal;"><li><span style="font-style: italic;">bilinear</span> (schnell)</li><li><span style="font-style: italic;">Variable Number of Gradients</span> (VNG)</li><li><span style="font-style: italic;">Patterned Pixel Grouping</span> (PPG)&nbsp;</li><li><span style="font-style: italic;">Adaptive Homogeneity-Directed</span> (AHD)&nbsp;</li></ul><li><span style="font-weight: bold;">Iterationen</span>. Zahl der Iterationen mit einem 3x3-Median-Filter. Vermindert Artefakte, verlangsamt allerdings die Konvertierung.</li><li><span style="font-weight: bold;">Spitzlichter wiederherstellen. </span>Überbelichte Spitzlichter werden teilweise wieder hergestellt.&nbsp;<span style="font-weight: bold;"></span>Verlangsamt&nbsp;die Konvertierung.</li></ul>
-  <li><span style="font-weight: bold;">Aktive Rezept-Detektoren.</span>
-Markieren Sie alle RAW-Konverter, die Sie für die Entwicklung von RAW-
-und DNG-Bildern verwenden. Entfernen Sie die Markierungen von den
-anderen, um Import und Anzeige nicht unnötig zu verlangsamen. Im Fall,
-dass zu einem Bild mehrere Rezepte von unterschiedlichen RAW-Konvertern
-vorliegen, wird das aktuellste Rezept verwendet. In der Spalte <span style="font-weight: bold;">Konfiguration</span> können Sie angeben, wie Konflikte zwischen konkurrierenten Entwicklungsrezepten aufgelöst werden sollen.<br>
-  </li>
-  <li><span style="font-weight: bold;">Entwicklungsrezepte beim Import von RAW-Bildern berücksichtigen</span>.
-Entfernen Sie die Markierung, wenn Sie die in RAW-Konvertern gemachten
-Korrekturen nicht anwenden wollen. Das beschleunigt einige Operationen
-- und Sie erhalten die ursprünglichen RAW-Dateien zur Ansicht.</li>
-  <li><span style="font-weight: bold;">Rezept von abgeleiteten Bildern archivieren</span>.
-Ist diese Option ausgewählt, werden RAW-Rezepte, die zur Herstellung
-eines abgeleiteten Bildes dienten, im Katalog archiviert. So kann das
-Rezept später leicht wieder hergestellt werden, wenn es nach der
-Erstellung des abgeleiteten Bildes modifiziert worden sein sollte.</li>
-
-  <li><span style="font-weight: bold;">Alle betroffenen Katalogeinträge jetzt aktualisieren?</span>
-Diese Option steht nur nach dem Hinzufügen eines neuen Rezeptdetektors
-zur Verfügung. Markieren Sie die Option, um vorhandene Rezepte des
-neuen Detektors auf existierende Katalogeinträge anzuwenden.</li>
-  
-
-
-</ul>
-<h4>RawTherapee</h4>Die folgenden Optionen gelten für <span style="font-style: italic;">RawTherapee</span><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">RawTherapee-Modul</span>. Hier müssen Sie den Pfad des <span style="font-style: italic;">RawTherapee-</span>Ausführungemoduls angeben, das auf Ihrem System installiert sein muss</li></ul><li style="font-weight: bold;">Optionen<br><span style="font-weight: normal;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">.pp3-Sidecar-Rezepte berücksichtingen.&nbsp;</span>Markieren Sie diese Option, wenn Sie die von <span style="font-style: italic;">RawTherapee</span>
-erstellten Konvertierungsrezepte während dem Import, der Anzeige und
-dem Export von Bildern anwenden wollen. Die Ergebnisse sind 100%
-identisch zu den mit <span style="font-style: italic;">RawTherapee</span> direkt erstellten Konvertierungsergebnissen.</li></ul></ul>
-<h4>darktable</h4>
-Die folgenden Optionen gelten für <span style="font-style: italic;">darktable</span>
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">darktable-Modul</span>. Hier müssen Sie den Pfad des <span style="font-style: italic;">darktable-</span>Ausführungemoduls angeben, das auf Ihrem System installiert sein muss</li></ul>
-</ul>
-<h4><span style="font-weight: bold;">DNG-Konvertierung</span></h4>
-
-<span style="font-weight: bold;">&nbsp;&nbsp;</span>&nbsp; (Nur unter Windows und dem
-MacOS)
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Grundlagen</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">RAW-Dateien
-importieren</span>.
-Hier
-wird angegeben,
-wie RAW-Dateien importiert werden:&nbsp;</li><ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">In
-DNG konvertieren und sowohl RAW- als auch&nbsp; DNG-Dateien importieren</span>. Dies
-ist der sicherste Import-Modus, da Bilder sowohl im ursprünglichen
-Format als auch im kameraneutralen DNG-Format gespeichert werden.</li>
-<li><span style="font-weight: bold;">Nur
-RAW-Dateien importieren</span>.&nbsp;Eine
-Konvertierung in das DNG-Format findet nicht statt.</li>
-<li><span style="font-weight: bold;">In
-DNG konvertieren und nur die DNG-Dateien importieren</span>.</li>
-<li><span style="font-weight: bold;">In
-DNG mit eingebetteten RAW-Daten konvertieren und die DNG-Dateien
-importieren</span>. Mit
-dieser Option ist es
-möglich, die ursprüngliche RAW-Datei aus der DNG-Datei
-mit&nbsp;Hilfe&nbsp;des <span style="font-style: italic;">Adobe-DNG-Konverters</span> wiederzugewinnen.</li>
-</ul><li><span style="font-weight: bold;">Speicherort des
-Adobe-DNG-Konverters</span>. Wenn
-Sie RAW-Dateien während des Importvorgangs in das DNG-Format
-konvertieren möchten, müssen Sie den Speicherort des&nbsp;Adobe-DNG-Konverters
-hier angeben. Sie
-können eine Kopie der kostenlosen <span style="font-style: italic;">
-Adobe DNG Converter </span>von&nbsp;<a target="_blank" href="http://www.adobe.com/products/dng/">www.adobe.com/products/dng/&nbsp;</a>
-downloaden.</li></ul>
-
-
-<li><span style="font-weight: bold;">Optionen</span><span style="font-weight: bold;"></span></li><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Unkomprimierte DNG-Dateien
-erstellen. </span> Erweiterte Einstellung. Lesen
-Sie bitte die Dokumentation des <span style="font-style: italic;">Adobe-DNG-Konverters</span>.&nbsp;
-</li><li><span style="font-weight: bold;">Ursprüngliches RAW-Format in
-lineares Bild konvertieren. </span> Erweiterte Einstellung. Lesen
-Sie bitte die Dokumentation&nbsp;des
-      <span style="font-style: italic;">Adobe-DNG-Konverters</span>.&nbsp;</li><li><span style="font-weight: bold;">DNG-Unterordner</span>.
-Konvertierte
-DNG-Dateien werden in einem Unterordner des Ordners, der die RAW-Datei
-enthält, abgelegt. Sie
-können hier diesen Unterordner frei benennen oder aber das Feld leer
-lassen, um die DNG-Dateien Seite an Seite mit den RAW-Dateien zu
-speichern.<br>
-</li></ul></ul><br>
-
-</body></html>
+    <ul style="font-weight: normal;">
+      <ul>
+      </ul>
+    </ul>
+    <span style="font-weight: bold;"><br>
+    </span>
+    <h4><span style="font-weight: bold;"><a name="raw"></a>RAW-Konvertierung</span></h4>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Raw-Konverter.</span> Hier können Sie
+        zwischen <span style="font-weight: bold;">dcraw,</span> <span style="font-weight: bold;">RawTherapee</span>
+        und <span style="font-weight: bold;">darktable</span> als Raw-Konverter
+        wählen</li>
+    </ul>
+    <h4>dcraw</h4>
+    Die folgenden Optionen gelten für <code><span style="font-style: italic;">dcraw</span></code>:
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Externes
+            dcraw-Modul</span>. Hier
+          können Sie den Pfad zu einem <a href="dcraw.html">externen
+            DCRAW-Modul</a> spezifizieren, also
+          einem DCRAW-Konverter außerhalb des Installationsordners. Das kann
+          auch ein <code>dcraw_emu</code>-Modul aus dem Projekt LIBRAW sein.<br>
+          <span style="font-weight: bold;">Tipp:&nbsp;</span>Falls Sie einen auf
+          DCRAW basierenden RAW-Konverter wie z.B. <span style="font-style: italic;">LightZone</span>
+          benutzen, ist es sinnvoll, auf das in diesem RAW-Konverter
+          installierte
+          DCRAW-Modul zu verweisen. So können Sie sicherstellen, dass sowohl der
+          RAW-Konverter als auch&nbsp;<span style="font-style: italic;">ZoRa
+            PhotoDirector</span>&nbsp;die gleiche Version von DCRAW verwenden.</li>
+      </ul>
+      <li><span style="font-weight: bold;">Optionen</span><span style="font-weight: normal;"><br>
+          Diese Optionen werden nur beim Laden hochauflösender Bilder angewandt,
+          nicht jedoch bei der Generierung von Miniaturansichten.</span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Weißabgleich.</span> Wählt die
+          Methode für den Weißabgleich aus:</li>
+        <ul>
+          <li><span style="font-style: italic;">D65.</span> Eine Graukarte, die
+            mit einer D65-Lichtquelle beleuchtet wird, erscheint grau.</li>
+          <li><span style="font-style: italic;">Kamera</span>. Der von der
+            Kamera vorgeschlagene Weißabgleich wird durchgeführt.<br>
+          </li>
+          <li><span style="font-style: italic;">dcraw</span>. Der vom
+            DCRAW-Konverter vorgeschlagene Weißabgleich wird durchgeführt.</li>
+        </ul>
+        <li><span style="font-weight: bold;">Interpolation</span>. Wählt den
+          DCRAW-Interpolationsalgorithmus aus. Verfügbar sind::</li>
+        <ul style="font-weight: normal;">
+          <li><span style="font-style: italic;">bilinear</span> (schnell)</li>
+          <li><span style="font-style: italic;">Variable Number of Gradients</span>
+            (VNG)</li>
+          <li><span style="font-style: italic;">Patterned Pixel Grouping</span>
+            (PPG)&nbsp;</li>
+          <li><span style="font-style: italic;">Adaptive Homogeneity-Directed</span>
+            (AHD)&nbsp;</li>
+        </ul>
+        <li><span style="font-weight: bold;">Iterationen</span>. Zahl der
+          Iterationen mit einem 3x3-Median-Filter. Vermindert Artefakte,
+          verlangsamt allerdings die Konvertierung.</li>
+        <li><span style="font-weight: bold;">Spitzlichter wiederherstellen. </span>Überbelichte
+          Spitzlichter werden teilweise wieder hergestellt.&nbsp;<span style="font-weight: bold;"></span>Verlangsamt&nbsp;die
+          Konvertierung.</li>
+      </ul>
+      <li><span style="font-weight: bold;">Aktive Rezept-Detektoren.</span>
+        Markieren Sie alle RAW-Konverter, die Sie für die Entwicklung von RAW-
+        und DNG-Bildern verwenden. Entfernen Sie die Markierungen von den
+        anderen, um Import und Anzeige nicht unnötig zu verlangsamen. Im Fall,
+        dass zu einem Bild mehrere Rezepte von unterschiedlichen RAW-Konvertern
+        vorliegen, wird das aktuellste Rezept verwendet. In der Spalte <span style="font-weight: bold;">Konfiguration</span>
+        können Sie angeben, wie Konflikte zwischen konkurrierenten
+        Entwicklungsrezepten aufgelöst werden sollen.<br>
+      </li>
+      <li><span style="font-weight: bold;">Entwicklungsrezepte beim Import von
+          RAW-Bildern berücksichtigen</span>.
+        Entfernen Sie die Markierung, wenn Sie die in RAW-Konvertern gemachten
+        Korrekturen nicht anwenden wollen. Das beschleunigt einige Operationen
+        - und Sie erhalten die ursprünglichen RAW-Dateien zur Ansicht.</li>
+      <li><span style="font-weight: bold;">Rezept von abgeleiteten Bildern
+          archivieren</span>.
+        Ist diese Option ausgewählt, werden RAW-Rezepte, die zur Herstellung
+        eines abgeleiteten Bildes dienten, im Katalog archiviert. So kann das
+        Rezept später leicht wieder hergestellt werden, wenn es nach der
+        Erstellung des abgeleiteten Bildes modifiziert worden sein sollte.</li>
+      <li><span style="font-weight: bold;">Alle betroffenen Katalogeinträge
+          jetzt aktualisieren?</span>
+        Diese Option steht nur nach dem Hinzufügen eines neuen Rezeptdetektors
+        zur Verfügung. Markieren Sie die Option, um vorhandene Rezepte des
+        neuen Detektors auf existierende Katalogeinträge anzuwenden.</li>
+    </ul>
+    <h4>RawTherapee</h4>
+    Die folgenden Optionen gelten für <span style="font-style: italic;">RawTherapee</span>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">RawTherapee-Modul</span>. Hier
+          müssen Sie den Pfad des <span style="font-style: italic;">RawTherapee-</span>Ausführungemoduls
+          angeben, das auf Ihrem System installiert sein muss</li>
+      </ul>
+      <li style="font-weight: bold;">Optionen<br>
+        <span style="font-weight: normal;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">.pp3-Sidecar-Rezepte
+            berücksichtingen.&nbsp;</span>Markieren Sie diese Option, wenn Sie
+          die von <span style="font-style: italic;">RawTherapee</span>
+          erstellten Konvertierungsrezepte während dem Import, der Anzeige und
+          dem Export von Bildern anwenden wollen. Die Ergebnisse sind 100%
+          identisch zu den mit <span style="font-style: italic;">RawTherapee</span>
+          direkt erstellten Konvertierungsergebnissen.</li>
+      </ul>
+    </ul>
+    <h4>darktable</h4>
+    Die folgenden Optionen gelten für <span style="font-style: italic;">darktable</span>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Konverter</span><span style="font-weight: bold;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">darktable-Modul</span>. Hier müssen
+          Sie den Pfad des <span style="font-style: italic;">darktable-</span>Ausführungemoduls
+          angeben, das auf Ihrem System installiert sein muss</li>
+      </ul>
+    </ul>
+    <h4><span style="font-weight: bold;">DNG-Konvertierung</span></h4>
+    <span style="font-weight: bold;">&nbsp;&nbsp;</span>&nbsp; (Nur unter
+    Windows und dem
+    MacOS)
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Grundlagen</span><span style="font-weight: bold;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">RAW-Dateien
+            importieren</span>.
+          Hier
+          wird angegeben,
+          wie RAW-Dateien importiert werden:&nbsp;</li>
+        <ul style="font-weight: normal;">
+          <li><span style="font-weight: bold;">In
+              DNG konvertieren und sowohl RAW- als auch&nbsp; DNG-Dateien
+              importieren</span>. Dies
+            ist der sicherste Import-Modus, da Bilder sowohl im ursprünglichen
+            Format als auch im kameraneutralen DNG-Format gespeichert werden.</li>
+          <li><span style="font-weight: bold;">Nur
+              RAW-Dateien importieren</span>.&nbsp;Eine
+            Konvertierung in das DNG-Format findet nicht statt.</li>
+          <li><span style="font-weight: bold;">In
+              DNG konvertieren und nur die DNG-Dateien importieren</span>.</li>
+          <li><span style="font-weight: bold;">In
+              DNG mit eingebetteten RAW-Daten konvertieren und die DNG-Dateien
+              importieren</span>. Mit
+            dieser Option ist es
+            möglich, die ursprüngliche RAW-Datei aus der DNG-Datei
+            mit&nbsp;Hilfe&nbsp;des <span style="font-style: italic;">Adobe-DNG-Konverters</span>
+            wiederzugewinnen.</li>
+        </ul>
+        <li><span style="font-weight: bold;">Speicherort des
+            Adobe-DNG-Konverters</span>. Wenn
+          Sie RAW-Dateien während des Importvorgangs in das DNG-Format
+          konvertieren möchten, müssen Sie den Speicherort
+          des&nbsp;Adobe-DNG-Konverters
+          hier angeben. Sie
+          können eine Kopie der kostenlosen <span style="font-style: italic;">
+            Adobe DNG Converter </span>von&nbsp;<a target="_blank" href="http://www.adobe.com/products/dng/">www.adobe.com/products/dng/&nbsp;</a>
+          downloaden.</li>
+      </ul>
+      <li><span style="font-weight: bold;">Optionen</span><span style="font-weight: bold;"></span></li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Unkomprimierte DNG-Dateien
+            erstellen. </span> Erweiterte Einstellung. Lesen
+          Sie bitte die Dokumentation des <span style="font-style: italic;">Adobe-DNG-Konverters</span>.&nbsp;
+        </li>
+        <li><span style="font-weight: bold;">Ursprüngliches RAW-Format in
+            lineares Bild konvertieren. </span> Erweiterte Einstellung. Lesen
+          Sie bitte die Dokumentation&nbsp;des <span style="font-style: italic;">Adobe-DNG-Konverters</span>.&nbsp;</li>
+        <li><span style="font-weight: bold;">DNG-Unterordner</span>.
+          Konvertierte
+          DNG-Dateien werden in einem Unterordner des Ordners, der die RAW-Datei
+          enthält, abgelegt. Sie
+          können hier diesen Unterordner frei benennen oder aber das Feld leer
+          lassen, um die DNG-Dateien Seite an Seite mit den RAW-Dateien zu
+          speichern.<br>
+        </li>
+      </ul>
+    </ul>
+    <br>
+  </body>
+</html>

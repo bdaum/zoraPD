@@ -42,13 +42,13 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
@@ -66,7 +66,7 @@ import com.bdaum.zoom.ui.internal.widgets.JpegMetaGroup;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public class MetadataPreferencePage extends AbstractPreferencePage {
+public class MetadataPreferencePage extends AbstractPreferencePage implements ICheckStateListener, Listener {
 
 	private static final Object[] EMPTY = new Object[0];
 	private final static NumberFormat af = (NumberFormat.getNumberInstance());
@@ -150,16 +150,25 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				Messages.getString("MetadataPreferencePage.essential_metadata"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.essential_tooltip")); //$NON-NLS-1$
 		essentialsGroup.setLayout(new GridLayout(2, false));
+		Label label = new Label(essentialsGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2,  1));
+		label.setText(Messages.getString("MetadataPreferencePage.essential")); //$NON-NLS-1$
 		essentialsViewer = createViewerGroup(essentialsGroup, null, new MetadataLabelProvider(), null);
 		final Composite hoverGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.hover_metadata"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.hover_tooltip")); //$NON-NLS-1$
 		hoverGroup.setLayout(new GridLayout(2, false));
+		label = new Label(hoverGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2,  1));
+		label.setText(Messages.getString("MetadataPreferencePage.hover")); //$NON-NLS-1$
 		hoverViewer = createViewerGroup(hoverGroup, null, new MetadataLabelProvider(), null);
 		final Composite tolerancesGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.tolerances"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.tolerance_tooltip")); //$NON-NLS-1$
 		tolerancesGroup.setLayout(new GridLayout());
+		label = new Label(tolerancesGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2,  1));
+		label.setText(Messages.getString("MetadataPreferencePage.comparing")); //$NON-NLS-1$
 		tolerancesViewer = createTolerancesViewer(tolerancesGroup);
 		final Composite exportGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.export"), //$NON-NLS-1$
@@ -168,13 +177,16 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		Composite viewerGroup = new Composite(exportGroup, SWT.NONE);
 		viewerGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewerGroup.setLayout(new GridLayout(2, false));
+		label = new Label(viewerGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		label.setText(Messages.getString("MetadataPreferencePage.generated")); //$NON-NLS-1$
 		exportViewer = createViewerGroup(viewerGroup, null, new MetadataLabelProvider(), null);
 		jpegGroup = new JpegMetaGroup(exportGroup, SWT.NONE);
 		final Composite tuningGroup = UiUtilities.createTabPage(tabFolder,
 				Messages.getString("MetadataPreferencePage.tuning"), //$NON-NLS-1$
 				Messages.getString("MetadataPreferencePage.tuning_tooltip")); //$NON-NLS-1$
 		tuningGroup.setLayout(new GridLayout(2, false));
-		Label label = new Label(tuningGroup, SWT.NONE);
+		label = new Label(tuningGroup, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
 		label.setText(Messages.getString("MetadataPreferencePage.tuning_msg")); //$NON-NLS-1$
 		tuningViewer = createViewerGroup(tuningGroup, new ViewerFilter() {
@@ -194,26 +206,12 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				return super.getForeground(element);
 			}
 		}, alwaysIndexed);
-		tuningViewer.addCheckStateListener(new ICheckStateListener() {
-			@Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				if (!event.getChecked()) {
-					Object element = event.getElement();
-					if (element instanceof QueryField && alwaysIndexed.contains(element))
-						tuningViewer.setChecked(element, true);
-				}
-			}
-		});
+		tuningViewer.addCheckStateListener(this);
 		jpegGroup.setSelection(getPreferenceStore().getBoolean(PreferenceConstants.JPEGMETADATA));
 		initTabFolder(0);
 		createExtensions(tabFolder, ID);
 		fillValues();
-		tabFolder.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fillValues();
-			}
-		});
+		tabFolder.addListener(SWT.Selection, this);
 	}
 
 	protected void doFillValues() {
@@ -395,9 +393,9 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 		} });
 		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
-		new AllNoneGroup(comp, new SelectionAdapter() {
+		new AllNoneGroup(comp, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				if (e.widget.getData() == AllNoneGroup.ALL) {
 					viewer.setGrayedElements(EMPTY);
 					viewer.setCheckedElements(QueryField.getQueryFields().toArray());
@@ -511,6 +509,20 @@ public class MetadataPreferencePage extends AbstractPreferencePage {
 				}
 			preferenceStore.setValue(pkey, sb.toString());
 		}
+	}
+
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		if (!event.getChecked()) {
+			Object element = event.getElement();
+			if (element instanceof QueryField && alwaysIndexed.contains(element))
+				tuningViewer.setChecked(element, true);
+		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		fillValues();
 	}
 
 }

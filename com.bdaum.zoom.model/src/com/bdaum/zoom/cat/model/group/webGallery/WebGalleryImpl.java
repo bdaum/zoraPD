@@ -1,12 +1,24 @@
 package com.bdaum.zoom.cat.model.group.webGallery;
 
-import com.bdaum.zoom.cat.model.group.Group;
-import com.bdaum.zoom.cat.model.WebGallery_typeImpl;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import com.bdaum.aoModeling.runtime.AomList;
+import com.bdaum.aoModeling.runtime.AomMap;
+import com.bdaum.aoModeling.runtime.Aspect;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.ErrorMessages;
+import com.bdaum.aoModeling.runtime.FastArrayList;
+import com.bdaum.aoModeling.runtime.FastHashMap;
+import com.bdaum.aoModeling.runtime.Instrumentation;
+import com.bdaum.aoModeling.runtime.ModelMessages;
 import com.bdaum.zoom.cat.model.Font_type;
-import java.lang.String;
 import com.bdaum.zoom.cat.model.Rgb_type;
-import com.bdaum.aoModeling.runtime.*;
+import com.bdaum.zoom.cat.model.WebGallery_typeImpl;
 
 /**
  * Generated with KLEEN Java Generator V.1.3
@@ -89,7 +101,7 @@ public class WebGalleryImpl extends WebGallery_typeImpl implements WebGallery {
 			Font_type captionFont, Font_type descriptionFont,
 			Font_type footerFont, Font_type controlsFont,
 			String selectedEngine, String outputFolder, String ftpDir,
-			boolean isFtp, String pageName, String poweredByText,
+			boolean isFtp, String pageName, String poweredByText, int imageFormat,
 			boolean applySharpening, float radius, float amount, int threshold,
 			String headHtml, String topHtml, String footerHtml,
 			int jpegQuality, int scalingMethod, Date lastAccessDate,
@@ -100,7 +112,7 @@ public class WebGalleryImpl extends WebGallery_typeImpl implements WebGallery {
 				hideFooter, bgImage, bgRepeat, bgColor, shadeColor,
 				borderColor, linkColor, titleFont, sectionFont, captionFont,
 				descriptionFont, footerFont, controlsFont, selectedEngine,
-				outputFolder, ftpDir, isFtp, pageName, poweredByText,
+				outputFolder, ftpDir, isFtp, pageName, poweredByText, imageFormat,
 				applySharpening, radius, amount, threshold, headHtml, topHtml,
 				footerHtml, jpegQuality, scalingMethod, lastAccessDate,
 				perspective, safety);

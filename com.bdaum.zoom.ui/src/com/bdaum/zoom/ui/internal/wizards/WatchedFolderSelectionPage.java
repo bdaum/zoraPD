@@ -24,13 +24,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
@@ -42,7 +41,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class WatchedFolderSelectionPage extends ColoredWizardPage {
+public class WatchedFolderSelectionPage extends ColoredWizardPage implements Listener {
 
 	private Text folderField;
 	private final WatchedFolderImpl watchedFolder;
@@ -68,25 +67,8 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 		final GridData gd_text = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_text.widthHint = 200;
 		folderField.setLayoutData(gd_text);
-		final Button browseButton = WidgetFactory.createPushButton(comp, Messages.ImportFromDeviceWizard_browse,
-				SWT.BEGINNING);
-		browseButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
-				dialog.setText(Messages.WatchedFolderSelectionPage_watched_folder);
-				dialog.setMessage(Messages.WatchedFolderSelectionPage_Select_a_folder);
-				String lastTargetDir = folderField.getText();
-				dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
-				String dir = dialog.open();
-				if (dir != null) {
-					if (!dir.endsWith(File.separator))
-						dir += File.separator;
-					folderField.setText(dir);
-					validatePage();
-				}
-			}
-		});
+		WidgetFactory.createPushButton(comp, Messages.ImportFromDeviceWizard_browse,
+				SWT.BEGINNING).addListener(SWT.Selection, this);
 		subfolderButton = WidgetFactory.createCheckButton(comp, Messages.WatchedFolderSelectionPage_include_subfolders,
 				new GridData(SWT.BEGINNING, SWT.FILL, true, false, 3, 1));
 		typeButtonGroup = new RadioButtonGroup(comp, Messages.WatchedFolderSelectionPage_folder_type, SWT.HORIZONTAL,
@@ -141,6 +123,22 @@ public class WatchedFolderSelectionPage extends ColoredWizardPage {
 
 	public boolean isTransfer() {
 		return typeButtonGroup.getSelection() == 1;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		DirectoryDialog dialog = new DirectoryDialog(folderField.getShell());
+		dialog.setText(Messages.WatchedFolderSelectionPage_watched_folder);
+		dialog.setMessage(Messages.WatchedFolderSelectionPage_Select_a_folder);
+		String lastTargetDir = folderField.getText();
+		dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
+		String dir = dialog.open();
+		if (dir != null) {
+			if (!dir.endsWith(File.separator))
+				dir += File.separator;
+			folderField.setText(dir);
+			validatePage();
+		}
 	}
 
 }

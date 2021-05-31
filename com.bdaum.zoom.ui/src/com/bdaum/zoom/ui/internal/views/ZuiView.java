@@ -73,25 +73,6 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		private PGalleryItem[] items;
 		private final AbstractGalleryView view;
 
-		private Runnable itemRunnable = new Runnable() {
-			public void run() {
-				if (!gallery.isDisposed())
-					items = gallery.getItems();
-			}
-		};
-		private Runnable assetRunnable = new Runnable() {
-			public void run() {
-				for (PGalleryItem item : items) {
-					if (item != null && !gallery.isDisposed()) {
-						Asset asset = item.getAsset();
-						if (asset != null)
-							asset.setFileState(volumeManager.determineFileState(asset));
-					}
-				}
-				items = null;
-			}
-		};
-
 		public ZuiGalleryDecorateJob(AbstractGalleryView view, AnimatedGallery gallery) {
 			super(Messages.getString("ZuiView.decorate_gallery")); //$NON-NLS-1$
 			this.view = view;
@@ -107,9 +88,20 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		protected void doRun(IProgressMonitor monitor) {
 			if (!gallery.isDisposed()) {
 				Display display = gallery.getDisplay();
-				display.syncExec(itemRunnable);
+				display.syncExec(() -> {
+					if (!gallery.isDisposed())
+						items = gallery.getItems();
+				});
 				if (items != null && items.length > 0 && items[0] != null && mayRun())
-					display.asyncExec(assetRunnable);
+					display.asyncExec(() -> {
+						for (PGalleryItem item : items)
+							if (item != null && !gallery.isDisposed()) {
+								Asset asset = item.getAsset();
+								if (asset != null)
+									asset.setFileState(volumeManager.determineFileState(asset));
+							}
+						items = null;
+					});
 			}
 		}
 
@@ -216,15 +208,14 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 							setCanvasCursor(zoomin ? CURSOR_MPLUS : CURSOR_GRABBING, -1);
 						}
 					}
-					break;
-
+					return;
 				case SWT.MouseUp:
 					mouseDown = false;
 					if (e.button != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
 						setCanvasCursor(null, SWT.CURSOR_ARROW);
 					else
 						setCanvasCursor(CURSOR_OPEN_HAND, -1);
-					break;
+					return;
 				case SWT.MouseMove:
 					if (mouseButton != 2 && ((e.stateMask & SWT.ALT) == 0) && cursorOverImage(e.x, e.y))
 						setCanvasCursor(null, SWT.CURSOR_ARROW);
@@ -252,7 +243,6 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 							hookContextMenu();
 						}
 					}
-					break;
 				}
 			}
 		};
@@ -352,25 +342,23 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		if (assetProvider != null)
 			animatedGallery.setContext(assetProvider.getCurrentCollection());
 		if (assets == null) {
-			if (assetProvider != null) {
-				if (fetchAssets()) {
-					SmartCollectionImpl selectedCollection = getNavigationHistory().getSelectedCollection();
-					boolean reset = currentCollection != selectedCollection;
-					currentCollection = selectedCollection;
-					animatedGallery.setPersonFilter(selectedCollection == null ? null
-							: selectedCollection.getSystem() && selectedCollection.getAlbum()
-									? selectedCollection.getStringId()
-									: null);
-					scoreFormatter = assetProvider.getScoreFormatter();
-					animatedGallery.setScoreFormatter(scoreFormatter);
-					if (forceExternalSelection && selection instanceof AssetSelection) {
-						forceExternalSelection = false;
-						animatedGallery.setSelection((AssetSelection) selection, assetProvider);
-					} else
-						animatedGallery.setCollection(assetProvider.getAssets(), reset);
-					if (currentSystemCursor == SWT.CURSOR_APPSTARTING)
-						setCanvasCursor(null, SWT.CURSOR_ARROW);
-				}
+			if (assetProvider != null && fetchAssets()) {
+				SmartCollectionImpl selectedCollection = getNavigationHistory().getSelectedCollection();
+				boolean reset = currentCollection != selectedCollection;
+				currentCollection = selectedCollection;
+				animatedGallery.setPersonFilter(selectedCollection == null ? null
+						: selectedCollection.getSystem() && selectedCollection.getAlbum()
+								? selectedCollection.getStringId()
+								: null);
+				scoreFormatter = assetProvider.getScoreFormatter();
+				animatedGallery.setScoreFormatter(scoreFormatter);
+				if (forceExternalSelection && selection instanceof AssetSelection) {
+					forceExternalSelection = false;
+					animatedGallery.setSelection((AssetSelection) selection, assetProvider);
+				} else
+					animatedGallery.setCollection(assetProvider.getAssets(), reset);
+				if (currentSystemCursor == SWT.CURSOR_APPSTARTING)
+					setCanvasCursor(null, SWT.CURSOR_ARROW);
 			}
 			setFocus();
 		} else
@@ -399,7 +387,7 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		if (control != null && !control.isDisposed())
 			control.addListener(SWT.Traverse, this);
 	}
-	
+
 	@Override
 	protected void onKeyUp(Event event) {
 		switch (event.keyCode) {
@@ -430,14 +418,14 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 		switch (event.type) {
 		case SWT.MouseDoubleClick:
 			viewImageAction.runWithEvent(event);
-			break;
+			return;
 		case SWT.Selection:
 			if (refreshing <= 0) {
 				stopAudio();
 				selection = animatedGallery.getSelection();
 				fireSelection();
 			}
-			break;
+			return;
 		case SWT.SetData:
 			int value = event.keyCode;
 			if (event.detail == AnimatedGallery.REGION)
@@ -448,16 +436,16 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 					switch (event.detail) {
 					case AnimatedGallery.RATE:
 						ZoomActionFactory.rate(Collections.singletonList(asset), this, value);
-						break;
+						return;
 					case AnimatedGallery.CODE:
 						colorCode(asset, value);
-						break;
+						return;
 					case AnimatedGallery.SHOWLOCATION:
 						showLocation(asset, (event.stateMask & SWT.SHIFT) == SWT.SHIFT);
-						break;
+						return;
 					case AnimatedGallery.ROTATE:
 						rotate(asset, value);
-						break;
+						return;
 					case AnimatedGallery.VOICENOTE:
 						if (AssetEnsemble.hasVoiceNote(asset))
 							UiActivator.getDefault().playVoicenote(asset);
@@ -466,21 +454,39 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 							if (voiceFileURI != null && !voiceFileURI.isEmpty())
 								addVoiceNoteAction.run();
 						}
-						break;
+						return;
 					case AnimatedGallery.STATUS:
 						setStatus(asset, value);
-						break;
 					}
 			}
-			break;
+			return;
 		case SWT.Modify:
 			OperationJob.executeOperation(new RenameAssetOperation((Asset) event.data, event.text, true), this);
-			break;
+			return;
 		case SWT.Verify:
 			setStatusMessage(event.text, true);
-			break;
+			return;
 		default:
 			super.handleEvent(event);
+		}
+	}
+
+	@Override
+	protected void addStatusLineExtension(StringBuilder sb) {
+		sb.append("   -    "); //$NON-NLS-1$
+		switch (UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.ZOOMKEY)) {
+		case PreferenceConstants.ZOOMALT:
+			sb.append(Messages.getString("ZuiView.alt_zoom")); //$NON-NLS-1$
+			break;
+		case PreferenceConstants.ZOOMRIGHT:
+			sb.append(Messages.getString("ZuiView.right_zoom")); //$NON-NLS-1$
+			break;
+		case PreferenceConstants.ZOOMSHIFT:
+			sb.append(Messages.getString("ZuiView.shift_zoom")); //$NON-NLS-1$
+			break;
+		default:
+			sb.append(animatedGallery.getDisplay().getTouchEnabled() ? Messages.getString("ZuiView.two_finger_zoom") //$NON-NLS-1$
+					: Messages.getString("ZuiView.wheel_zoom")); //$NON-NLS-1$
 		}
 	}
 
@@ -563,13 +569,13 @@ public class ZuiView extends AbstractGalleryView implements Listener, IPropertyC
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		String property = event.getProperty();
-		if (PreferenceConstants.SHOWLABEL.equals(property)
-				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+		if (PreferenceConstants.SHOWLABEL.equals(property) || PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
 				|| PreferenceConstants.LABELALIGNMENT.equals(property)
 				|| PreferenceConstants.LABELFONTSIZE.equals(property)) {
 			animatedGallery.getCaptionProcessor().updateGlobalConfiguration();
 			refresh();
-		}
+		} else if (PreferenceConstants.ZOOMKEY.equals(property))
+			updateStatusLine();
 	}
 
 }

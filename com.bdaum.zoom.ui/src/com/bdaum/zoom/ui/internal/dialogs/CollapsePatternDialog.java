@@ -25,16 +25,14 @@ import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Core;
@@ -46,7 +44,7 @@ import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class CollapsePatternDialog extends ZTitleAreaDialog {
+public class CollapsePatternDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String HISTORY = "history"; //$NON-NLS-1$
 	private static final String DEFAULTPATTERN = "/*.*"; //$NON-NLS-1$
@@ -61,12 +59,10 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 	private boolean stack;
 	private IDialogSettings dialogSettings;
 
-	public CollapsePatternDialog(Shell parentShell, String helpId,
-			String pattern) {
+	public CollapsePatternDialog(Shell parentShell, String helpId, String pattern) {
 		super(parentShell, helpId);
 		this.pattern = pattern;
-		dialogSettings = getDialogSettings(
-				UiActivator.getDefault(), SETTINGSID);
+		dialogSettings = getDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		histList = Core.fromStringList(dialogSettings.get(HISTORY), "\n"); //$NON-NLS-1$
 		stack = !dialogSettings.getBoolean(NOSTACK);
 	}
@@ -77,8 +73,7 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 		setTitle(Messages.CollapsePatternDialog_collapse_pattern);
 		setMessage(Messages.CollapsePatternDialog_define_filename);
 		patternField.setVisibleItemCount(8);
-		Collection<IRelationDetector> relationDetectors = UiActivator
-				.getDefault().getRelationDetectors();
+		Collection<IRelationDetector> relationDetectors = UiActivator.getDefault().getRelationDetectors();
 		for (IRelationDetector detector : relationDetectors) {
 			String pattern = detector.getCollapsePattern();
 			if (pattern != null && !histList.contains(pattern))
@@ -100,24 +95,12 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 		Composite composite = new Composite(area, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		new Label(composite, SWT.NONE)
-				.setText(Messages.CollapsePatternDialog_pattern);
+		new Label(composite, SWT.NONE).setText(Messages.CollapsePatternDialog_pattern);
 		patternField = new Combo(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		patternField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false));
-		patternField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
-		patternField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtons();
-			}
-		});
-		stackButton = WidgetFactory.createCheckButton(composite,
-				Messages.CollapsePatternDialog_collapse_named_stacks,
+		patternField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		patternField.addListener(SWT.Modify, this);
+		patternField.addListener(SWT.Selection, this);
+		stackButton = WidgetFactory.createCheckButton(composite, Messages.CollapsePatternDialog_collapse_named_stacks,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		return area;
 	}
@@ -179,12 +162,17 @@ public class CollapsePatternDialog extends ZTitleAreaDialog {
 		stack = stackButton.getSelection();
 		dialogSettings.put(NOSTACK, !stack);
 		if (stack)
-			pattern = pattern.isEmpty() ?  UiConstants.STACKPATTERN : UiConstants.STACKPATTERN + ';' + pattern;
+			pattern = pattern.isEmpty() ? UiConstants.STACKPATTERN : UiConstants.STACKPATTERN + ';' + pattern;
 		super.okPressed();
 	}
 
 	public String getPattern() {
 		return pattern;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		updateButtons();
 	}
 
 }

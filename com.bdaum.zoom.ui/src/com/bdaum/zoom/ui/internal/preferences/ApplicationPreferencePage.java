@@ -35,7 +35,7 @@ import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class ApplicationPreferencePage extends AbstractPreferencePage {
+public class ApplicationPreferencePage extends AbstractPreferencePage implements Listener {
 
 	private CheckboxButton menuButton;
 	private CheckboxButton statusButton;
@@ -116,17 +116,17 @@ public class ApplicationPreferencePage extends AbstractPreferencePage {
 				Messages.getString("ApplicationPreferencePage.with_prompt")); //$NON-NLS-1$
 		trashButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("ApplicationPreferencePage.delete_trashcan"), null); //$NON-NLS-1$
-		trayButtonGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateButtons();
-			}
-		});
+		trayButtonGroup.addListener(SWT.Selection, this);
 	}
 
 	@Override
 	protected void updateButtons() {
 		trashButton.setEnabled(trayButtonGroup.getSelection() == 0);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

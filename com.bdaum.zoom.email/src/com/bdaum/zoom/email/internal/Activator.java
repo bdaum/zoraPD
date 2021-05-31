@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal;
 
@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.core.IEmailService;
@@ -41,27 +42,11 @@ public class Activator extends ZUiPlugin implements IEmailService {
 
 	private File tempFolder;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
-	 * )
-	 */
-
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
-	 * )
-	 */
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -77,23 +62,23 @@ public class Activator extends ZUiPlugin implements IEmailService {
 		getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, e));
 	}
 
-	public IStatus sendMail(List<String> to, List<String> cc, List<String> bcc,
-			String subject, String message, List<String> attachments) {
+	public IStatus sendMail(List<String> to, List<String> cc, List<String> bcc, String subject, String message,
+			List<String> attachments) {
 		return sendMail(to, cc, bcc, subject, message, attachments, null);
 	}
 
-	public IStatus sendMail(List<String> to, List<String> cc, List<String> bcc,
-			String subject, String message, List<String> attachments,
-			List<String> originalNames) {
+	public IStatus sendMail(List<String> to, List<String> cc, List<String> bcc, String subject, String message,
+			List<String> attachments, List<String> originalNames) {
 		try {
-			IMailer mailer = (IMailer) ((Class<?>) Class
-					.forName("com.bdaum.zoom.email.internal.Mailer")) //$NON-NLS-1$
+			IMailer mailer = (IMailer) ((Class<?>) Class.forName("com.bdaum.zoom.email.internal.Mailer")) //$NON-NLS-1$
 					.newInstance();
-			return mailer.sendMail(Messages.Activator_email, to, cc, bcc, subject,
-					message, attachments, originalNames);
+			IPreferenceStore store = getPreferenceStore();
+			String vcard = store.getBoolean(PreferenceConstants.PLATFORMCLIENT) ? null
+					: store.getString(PreferenceConstants.VCARD);
+			return mailer.sendMail(Messages.Activator_email, to, cc, bcc, subject, message, attachments, originalNames,
+					vcard);
 		} catch (Exception e1) {
-			return new Status(IStatus.ERROR, PLUGIN_ID,
-					Messages.Activator_error_sending_email, e1);
+			return new Status(IStatus.ERROR, PLUGIN_ID, Messages.Activator_error_sending_email, e1);
 		}
 	}
 
@@ -102,8 +87,7 @@ public class Activator extends ZUiPlugin implements IEmailService {
 		int p = name.lastIndexOf('.');
 		if (p >= 0)
 			name = name.substring(0, p);
-		name += suffix;
-		File renamedFile = new File(tempFile.getParent(), name);
+		File renamedFile = new File(tempFile.getParent(), name + suffix);
 		if (tempFile.renameTo(renamedFile))
 			tempFile = renamedFile;
 		tempFile.deleteOnExit();
@@ -112,10 +96,8 @@ public class Activator extends ZUiPlugin implements IEmailService {
 
 	private File getTempFolder() {
 		if (tempFolder == null || !tempFolder.exists()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(System.getProperty("java.io.tmpdir")).append('/') //$NON-NLS-1$
-					.append(ImageConstants.APPNAME).append("_mailAttachments"); //$NON-NLS-1$
-			tempFolder = new File(sb.toString());
+			tempFolder = new File(new StringBuilder().append(System.getProperty("java.io.tmpdir/")) //$NON-NLS-1$
+					.append(ImageConstants.APPNAME).append("_mailAttachments").toString()); //$NON-NLS-1$
 			tempFolder.mkdirs();
 			BatchUtilities.deleteFolderContent(tempFolder);
 			tempFolder.deleteOnExit();

@@ -327,7 +327,7 @@ public class XMPUtilities {
 				} else {
 					Object value = getFieldValue(queryField, asset);
 					if (value instanceof Double && queryField.getType() == QueryField.T_POSITIVEFLOAT)
-						value = new Double(Math.abs(((Double)value).doubleValue()));
+						value = new Double(Math.abs(((Double) value).doubleValue()));
 					int p = path.indexOf('/');
 					if (p >= 0) {
 						String group = path.substring(0, p);
@@ -436,10 +436,8 @@ public class XMPUtilities {
 	private static Object getStructValue(QueryField qfield, Object obj, boolean useFormatter) {
 		try {
 			Object o = qfield.obtainPlainFieldValue(obj);
-			if (!useFormatter)
-				return o;
-			IFormatter formatter = qfield.getFormatter();
-			return formatter != null ? formatter.toString(o) : o;
+			IFormatter formatter = useFormatter ? qfield.getFormatter() : null;
+			return formatter != null ? formatter.format(o) : o;
 		} catch (Exception e) {
 			Core.getCore().logError(NLS.bind(Messages.XMPUtilities_Internal_error_accessing_field, qfield.getKey()), e);
 		}
@@ -490,7 +488,7 @@ public class XMPUtilities {
 	}
 
 	private static int readWord(byte[] buf, int i) {
-		return ((buf[i] & 0x000000ff) << 8) + (buf[i + 1] & 0x000000ff);
+		return i < buf.length - 1 ? ((buf[i] & 0x000000ff) << 8) + (buf[i + 1] & 0x000000ff) : 0;
 	}
 
 	private static void writeWord(byte[] buf, int i, int v) {
@@ -500,6 +498,96 @@ public class XMPUtilities {
 
 	private static boolean hasExif(byte[] jpeg) {
 		return jpeg.length > APP1.length && jpeg[6] == 'E' && jpeg[7] == 'x' && jpeg[8] == 'i' && jpeg[9] == 'f';
+	}
+
+	public static byte[] getXmpFromWEBP(byte[] webp) {
+		int pos = findChunk(webp, "XMP "); //$NON-NLS-1$
+		if (pos > 0) {
+			int len = readWord4(webp, pos + 4);
+			if (len > 0) {
+				byte[] meta = new byte[len];
+				System.arraycopy(webp, pos, meta, 0, len);
+				return meta;
+			}
+		}
+		return null;
+	}
+
+	public static byte[] insertXmpIntoWEBP(byte[] webp, byte[] metadata) {
+		if (webp[0] == 'R' && webp[1] == 'I' && webp[2] == 'F' && webp[3] == 'F' && webp[8] == 'W' && webp[9] == 'E'
+				&& webp[10] == 'B' && webp[11] == 'P') {
+			int ml = metadata.length;
+			while (ml > 0)
+				if (metadata[--ml] != 0) {
+					++ml;
+					break;
+				}
+			int pad = ml & 1;
+			int pos1 = findChunk(webp, "EXIF"); //$NON-NLS-1$
+			int len1 = pos1 > 0 ? readWord4(webp, pos1 + 4) : 0;
+			int pos2 = findChunk(webp, "XMP "); //$NON-NLS-1$
+			int len2 = pos1 > 0 ? readWord4(webp, pos2 + 4) : 0;
+			if (pos1 > pos2) {
+				int w = pos2;
+				pos2 = pos1;
+				pos1 = w;
+				w = len2;
+				len2 = len1;
+				len1 = w;
+			}
+			int wl = webp.length;
+			int wp;
+			byte[] newWebp = new byte[wl - len1 - len2 + ml + pad + 8];
+			if (pos1 == 0) {
+				if (pos2 == 0)
+					System.arraycopy(webp, 0, newWebp, 0, wp = wl);
+				else {
+					System.arraycopy(webp, 0, newWebp, 0, pos2);
+					wp = wl - len2;
+					System.arraycopy(webp, pos2 + len2, newWebp, pos2, wp - pos2);
+				}
+			} else {
+				System.arraycopy(webp, 0, newWebp, 0, pos1);
+				System.arraycopy(webp, pos1 + len1, newWebp, pos1, pos2 - pos1 - len1);
+				System.arraycopy(webp, pos2 + len2, newWebp, pos2 - len1, wl - pos2 - len2);
+				wp = wl - len1 - len2;
+			}
+			newWebp[wp++] = 'X';
+			newWebp[wp++] = 'M';
+			newWebp[wp++] = 'P';
+			newWebp[wp++] = ' ';
+			writeWord4(newWebp, wp, ml);
+			wp += 4;
+			System.arraycopy(metadata, 0, newWebp, wp, ml);
+			return newWebp;
+		}
+		return webp;
+	}
+
+	private static int findChunk(byte[] webp, String key) {
+		int rp = 12;
+		while (rp < webp.length - 7) {
+			if (webp[rp] == key.charAt(0) && webp[rp + 1] == key.charAt(1) && webp[rp + 2] == key.charAt(2)
+					&& webp[rp + 3] == key.charAt(3))
+				return rp;
+			int len = readWord4(webp, rp + 4);
+			if (len == 0)
+				break;
+			rp += len + 8;
+		}
+		return 0;
+	}
+
+	private static int readWord4(byte[] buf, int i) {
+		return i < buf.length - 3 ? ((buf[i + 3] & 0x000000ff) << 24) + ((buf[i + 2] & 0x000000ff) << 16)
+				+ ((buf[i + 1] & 0x000000ff) << 8) + (buf[i] & 0x000000ff) : 0;
+	}
+
+	private static void writeWord4(byte[] buf, int i, int v) {
+		buf[i++] = (byte) v;
+		buf[i++] = (byte) (v >> 8);
+		buf[i++] = (byte) (v >> 16);
+		buf[i] = (byte) (v >> 24);
 	}
 
 }

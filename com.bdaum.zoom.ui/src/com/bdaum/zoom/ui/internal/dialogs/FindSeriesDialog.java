@@ -23,14 +23,14 @@ import java.util.Date;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.group.CriterionImpl;
@@ -45,7 +45,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class FindSeriesDialog extends ZTitleAreaDialog {
+public class FindSeriesDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SEPARATE_FORMATS = "separateFormats"; //$NON-NLS-1$
 
@@ -110,12 +110,7 @@ public class FindSeriesDialog extends ZTitleAreaDialog {
 		typeField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		typeField.setItems(TYPES);
 		typeField.setVisibleItemCount(6);
-		typeField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtons();
-			}
-		});
+		typeField.addListener(SWT.Selection, this);
 		new Label(comp, SWT.NONE).setText(Messages.FindSeriesDialog_maximum_interval);
 		intervalField = new NumericControl(comp, NumericControl.LOGARITHMIC);
 		intervalField.setMinimum(0);
@@ -216,6 +211,11 @@ public class FindSeriesDialog extends ZTitleAreaDialog {
 
 	public int getType() {
 		return type;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

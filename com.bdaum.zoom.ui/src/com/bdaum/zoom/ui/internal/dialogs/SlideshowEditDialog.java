@@ -20,7 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import java.text.NumberFormat;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -62,6 +61,7 @@ import com.bdaum.zoom.ui.internal.CaptionProcessor;
 import com.bdaum.zoom.ui.internal.CaptionProcessor.CaptionConfiguration;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
+import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.views.SlideshowView;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.CheckedText;
@@ -70,24 +70,19 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class SlideshowEditDialog extends ZTitleAreaDialog {
+public class SlideshowEditDialog extends ZTitleAreaDialog implements ISelectionChangedListener, Listener {
 
 	public static final String SETTINGSID = "com.bdaum.zoom.slideshowProperties"; //$NON-NLS-1$
-
 	public static final String DELAY = "delay"; //$NON-NLS-1$
-
 	public static final String FADING = "fading"; //$NON-NLS-1$
-
 	public static final String ZOOM = "zoom"; //$NON-NLS-1$
-
 	public static final String TITLEDISPLAY = "titleDisplay"; //$NON-NLS-1$
-
 	public static final String TITLECONTENT = "titleContent"; //$NON-NLS-1$
-
+	public static final String TITLESCHEME = "titleScheme"; //$NON-NLS-1$
+	public static final String TITLETRANSPARENCY = "titleAlpha"; //$NON-NLS-1$
+	public static final String COLORSCHEME = "colorScheme"; //$NON-NLS-1$
 	public static final String FROMPREVIEW = "fromPreview"; //$NON-NLS-1$
-
 	public static final String VOICENOTES = "voicenotes"; //$NON-NLS-1$
-
 	private static final String SKIP_DUBLETTES = "skipDublettes"; //$NON-NLS-1$
 
 	public static final String[] EFFECTS = new String[] { Messages.SlideshowEditDialog_expand,
@@ -107,55 +102,31 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			Messages.SlideshowEditDialog_seqno_only, Messages.SlideshowEditDialog_caption_seqno,
 			Messages.SlideshowEditDialog_captions_unequal };
 
-	private static NumberFormat af = (NumberFormat.getNumberInstance());
+	private static final String[] TITLESCHEMEITEMS = new String[] { Messages.SlideshowEditDialog_black_on_white,
+			Messages.SlideshowEditDialog_white_on_black };
+	private static final String[] COLORSCHEMEITEMS = new String[] { Messages.SlideshowEditDialog_dark_gray,
+			Messages.SlideshowEditDialog_gray, Messages.SlideshowEditDialog_black, Messages.SlideshowEditDialog_white };
 
-	private SlideShowImpl current;
+	private SlideShowImpl current, result;
 	private String title;
-	private boolean adhoc;
-	private SlideShowImpl result;
+	private boolean adhoc, canUndo, fromPreview, voiceNotes;
 	private Text nameField;
 	private CheckedText descriptionField;
-	private NumericControl durationField;
-	private NumericControl fadingField;
-	private boolean fromPreview = false;
-	private boolean voiceNotes = false;
-	private int fading = 1000;
+	private NumericControl durationField, fadingField, titleDisplayField, zoomField, titleTransparencyField;
+	private int fading = 1000, duration = 7000, titleDisplay = 1500; //msec
 	private int effect = Constants.SLIDE_TRANSITION_RANDOM;
-	private int duration = 7000;
-
-	private Combo titleContentField;
-
-	private CheckboxButton voiceButton;
-
-	private CheckboxButton fromPreviewButton;
-
-	private int titleDisplay = 1500;
-
+	private Combo titleContentField, titleSchemeField, effectField, colorSchemeField;
+	private CheckboxButton voiceButton, fromPreviewButton, skipDubletteswButton;
+	private int titleScheme = UiConstants.BLACKONWHITE;
+	private int titleTransparency = 0;
+	private int colorScheme = UiConstants.BG_DARK_GRAY;
 	private int titleContent = Constants.SLIDE_TITLEONLY;
-
-	private NumericControl titleDisplayField;
-
 	private GroupImpl group;
-
-	private Combo effectField;
-
 	private ImportGalleryGroup importGroup;
-
 	private IDialogSettings settings;
-
-	private CheckboxButton skipDubletteswButton;
-
 	private boolean skipDublettes = true;
-
-	private boolean canUndo;
-
-	private int privacy;
-
+	private int privacy, zoom;
 	private PrivacyGroup privacyGroup;
-
-	private NumericControl zoomField;
-
-	private int zoom;
 
 	public SlideshowEditDialog(Shell parentShell, GroupImpl group, SlideShowImpl current, String title, boolean adhoc,
 			boolean canUndo) {
@@ -171,7 +142,8 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	public void create() {
 		super.create();
 		setTitle(title);
-		setMessage(adhoc ? Messages.SlideshowEditDialog_specify_properties : Messages.SlideshowEditDialog_specify_properties_nonadhoc);
+		setMessage(adhoc ? Messages.SlideshowEditDialog_specify_properties
+				: Messages.SlideshowEditDialog_specify_properties_nonadhoc);
 		updateButtons();
 		updateFields();
 		if (nameField != null)
@@ -179,21 +151,15 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void updateFields() {
-		titleContentField.setEnabled(titleDisplayField.getSelection() > 0);
+		boolean enabled = titleDisplayField.getSelection() > 0;
+		titleContentField.setEnabled(enabled);
+		titleSchemeField.setEnabled(enabled);
 	}
-
-	private final Listener listener = new Listener() {
-		@Override
-		public void handleEvent(Event event) {
-			updateButtons();
-		}
-	};
 
 	@SuppressWarnings("unused")
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-
 		final Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(2, false));
@@ -201,19 +167,12 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			if (current == null) {
 				importGroup = new ImportGalleryGroup(comp, new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1),
 						Messages.SlideshowEditDialog_slideshow);
-				importGroup.addChangeListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						IdentifiableObject fromItem = importGroup.getFromItem();
-						if (fromItem instanceof SlideShowImpl)
-							fillValues((SlideShowImpl) fromItem, true);
-						descriptionField.setText(importGroup.getDescription());
-					}
-				});
+				importGroup.addChangeListener(this);
 			}
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_name);
 			nameField = new Text(comp, SWT.BORDER);
 			nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-			nameField.addListener(SWT.Modify, listener);
+			nameField.addListener(SWT.Modify, this);
 			new Label(comp, SWT.NONE).setText(Messages.SlideshowEditDialog_description);
 			final GridData gd_descriptionField = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gd_descriptionField.widthHint = 250;
@@ -221,49 +180,78 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			descriptionField = new CheckedText(comp, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI | SWT.BORDER);
 			descriptionField.setLayoutData(gd_descriptionField);
 		}
-		final Composite pcomp = new Composite(comp, SWT.NONE);
-		pcomp.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
-		pcomp.setLayout(new GridLayout(3, false));
-		fromPreviewButton = WidgetFactory.createCheckButton(pcomp,
+		final CGroup contentGroup = new CGroup(comp, SWT.NONE);
+		contentGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		contentGroup.setLayout(new GridLayout());
+		contentGroup.setText(Messages.SlideshowEditDialog_contents);
+		fromPreviewButton = WidgetFactory.createCheckButton(contentGroup,
 				Messages.SlideshowEditDialog_use_preview_where_possible, null);
 		if (adhoc)
-			skipDubletteswButton = WidgetFactory.createCheckButton(pcomp, Messages.SlideshowEditDialog_skip_duplkcates,
-					null);
-		voiceButton = WidgetFactory.createCheckButton(pcomp, Messages.SlideshowEditDialog_voicenotes, null);
-		final CGroup parms = new CGroup(comp, SWT.NONE);
-		parms.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false, 2, 1));
-		parms.setLayout(new GridLayout(4, false));
-		parms.setText(Messages.SlideshowEditDialog_default_timing);
-		durationField = createNumericField(parms, 36000, Messages.SlideshowEditDialog_duration, 3);
-		fadingField = createNumericField(parms, 300, Messages.SlideshowEditDialog_fading, 1);
-		final Label effectLabel = new Label(parms, SWT.NONE);
+			skipDubletteswButton = WidgetFactory.createCheckButton(contentGroup,
+					Messages.SlideshowEditDialog_skip_duplkcates, null);
+		voiceButton = WidgetFactory.createCheckButton(contentGroup, Messages.SlideshowEditDialog_voicenotes, null);
+		if (adhoc)
+			privacyGroup = new PrivacyGroup(contentGroup, Messages.SlideshowEditDialog_privacy, null);
+
+		final CGroup timingGroup = new CGroup(comp, SWT.NONE);
+		timingGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		timingGroup.setLayout(new GridLayout(4, false));
+		timingGroup.setText(Messages.SlideshowEditDialog_default_timing);
+		durationField = createNumericField(timingGroup, 36000, Messages.SlideshowEditDialog_duration, 3);
+		fadingField = createNumericField(timingGroup, 300, Messages.SlideshowEditDialog_fading, 1);
+		final Label effectLabel = new Label(timingGroup, SWT.NONE);
 		GridData data = new GridData(SWT.END, SWT.CENTER, false, false);
 		data.horizontalIndent = 15;
 		effectLabel.setLayoutData(data);
 		effectLabel.setText(Messages.SlideshowEditDialog_transition_effect);
-		effectField = new Combo(parms, SWT.DROP_DOWN);
+		effectField = new Combo(timingGroup, SWT.DROP_DOWN);
 		effectField.setLayoutData(new GridData(150, SWT.DEFAULT));
 		effectField.setItems(EFFECTS);
 		effectField.setVisibleItemCount(EFFECTS.length / 2);
-		new Label(parms, SWT.NONE).setText(Messages.SlideshowEditDialog_zoom_in);
-		zoomField = new NumericControl(parms, SWT.NONE);
+		new Label(timingGroup, SWT.NONE).setText(Messages.SlideshowEditDialog_zoom_in);
+		zoomField = new NumericControl(timingGroup, SWT.NONE);
 		zoomField.setMaximum(100);
 		zoomField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
-		titleDisplayField = createNumericField(parms, 36000, Messages.SlideshowEditDialog_title_display, 1);
-		final Label titleContentLabel = new Label(parms, SWT.NONE);
+		titleDisplayField = createNumericField(timingGroup, 36000, Messages.SlideshowEditDialog_title_display, 1);
+		final Label titleContentLabel = new Label(timingGroup, SWT.NONE);
 		data = new GridData(SWT.END, SWT.CENTER, false, false);
 		data.horizontalIndent = 15;
 		titleContentLabel.setLayoutData(data);
 		titleContentLabel.setText(Messages.SlideshowEditDialog_content);
-		titleContentField = new Combo(parms, SWT.DROP_DOWN);
+		titleContentField = new Combo(timingGroup, SWT.DROP_DOWN);
 		titleContentField.setLayoutData(new GridData(150, SWT.DEFAULT));
 		titleContentField.setItems(TITLECONTENTITEMS);
 		titleContentField.setVisibleItemCount(TITLECONTENTITEMS.length);
-		if (adhoc)
-			privacyGroup = new PrivacyGroup(comp, Messages.SlideshowEditDialog_privacy, null);
-		new Label(parms, SWT.NONE);
+
+		final CGroup designGroup = new CGroup(comp, SWT.NONE);
+		designGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		designGroup.setLayout(new GridLayout(2, false));
+		designGroup.setText(Messages.SlideshowEditDialog_design);
+		new Label(designGroup, SWT.NONE).setText(Messages.SlideshowEditDialog_bg_color);
+		colorSchemeField = new Combo(designGroup, SWT.DROP_DOWN);
+		colorSchemeField.setLayoutData(new GridData(150, SWT.DEFAULT));
+		colorSchemeField.setItems(COLORSCHEMEITEMS);
+		colorSchemeField.setVisibleItemCount(COLORSCHEMEITEMS.length);
+		new Label(designGroup, SWT.NONE).setText(Messages.SlideshowEditDialog_color_scheme);
+		titleSchemeField = new Combo(designGroup, SWT.DROP_DOWN);
+		titleSchemeField.setLayoutData(new GridData(150, SWT.DEFAULT));
+		titleSchemeField.setItems(TITLESCHEMEITEMS);
+		titleSchemeField.setVisibleItemCount(TITLESCHEMEITEMS.length);
+		new Label(designGroup, SWT.NONE).setText(Messages.SlideshowEditDialog_title_transparency);
+		titleTransparencyField = new NumericControl(designGroup, SWT.BORDER);
+		titleTransparencyField.setMaximum(100);
+		titleTransparencyField.setIncrement(5);
+		titleTransparencyField.setPageIncrement(50);
+		new Label(timingGroup, SWT.NONE);
 		fillValues(current, false);
 		return area;
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		IdentifiableObject fromItem = importGroup.getFromItem();
+		if (fromItem instanceof SlideShowImpl)
+			fillValues((SlideShowImpl) fromItem, true);
+		descriptionField.setText(importGroup.getDescription());
 	}
 
 	private NumericControl createNumericField(final Composite comp, int max, String text, int columns) {
@@ -274,7 +262,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 		field.setMaximum(max);
 		field.setIncrement(5);
 		field.setPageIncrement(50);
-		field.addListener(SWT.Selection, listener);
+		field.addListener(SWT.Selection, this);
 		field.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, columns, 1));
 		return field;
 	}
@@ -339,6 +327,21 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			// ignore
 		}
 		try {
+			titleScheme = settings.getInt(TITLESCHEME);
+		} catch (NumberFormatException e) {
+			// ignore
+		}
+		try {
+			titleTransparency = settings.getInt(TITLETRANSPARENCY);
+		} catch (NumberFormatException e) {
+			// ignore
+		}
+		try {
+			colorScheme = settings.getInt(COLORSCHEME);
+		} catch (NumberFormatException e) {
+			// ignore
+		}
+		try {
 			fromPreview = settings.getBoolean(FROMPREVIEW);
 		} catch (Exception e) {
 			// ignore
@@ -360,17 +363,22 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 			zoom = show.getZoom();
 			effect = show.getEffect();
 			titleDisplay = show.getTitleDisplay();
+			titleScheme = show.getTitleScheme();
+			titleTransparency = show.getTitleTransparency();
+			colorScheme = show.getColorScheme();
 			titleContent = show.getTitleContent();
 			fromPreview = show.getFromPreview();
 			voiceNotes = show.getVoiceNotes();
 		}
-		af.setMaximumFractionDigits(1);
 		durationField.setSelection(duration / 100);
 		effectField.select(effect - Constants.SLIDE_TRANSITION_START);
 		zoomField.setSelection(zoom);
 		fadingField.setSelection(fading / 100);
 		titleDisplayField.setSelection(titleDisplay / 100);
 		titleContentField.select(titleContent);
+		titleSchemeField.select(titleScheme);
+		titleTransparencyField.setSelection(titleTransparency);
+		colorSchemeField.select(colorScheme);
 		fromPreviewButton.setSelection(fromPreview);
 		voiceButton.setSelection(voiceNotes);
 		if (skipDubletteswButton != null) {
@@ -387,6 +395,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
+		apply();
+		super.okPressed();
+	}
+
+	private void apply() {
 		BusyIndicator.showWhile(getShell().getDisplay(), () -> {
 			// Must create a new instance if named or cannot undo
 			if ((adhoc || canUndo) && current != null)
@@ -405,10 +418,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				result.setName(NLS.bind(Messages.SlideshowEditDialog_adhoc_slideshow_n, current.getName()));
 			else
 				result.setName(Messages.SlideshowEditDialog_adhoc_slideshow);
-			if (descriptionField != null)
-				result.setDescription(descriptionField.getText());
-			else
-				result.setDescription(""); //$NON-NLS-1$
+			result.setDescription(descriptionField != null ? descriptionField.getText() : ""); //$NON-NLS-1$
 			if (adhoc)
 				privacy = privacyGroup.getSelection();
 			duration = durationField.getSelection() * 100;
@@ -431,6 +441,19 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				titleContent = Constants.SLIDE_TITLEONLY;
 			result.setTitleContent(titleContent);
 			settings.put(TITLECONTENT, titleContent);
+			titleScheme = titleSchemeField.getSelectionIndex();
+			if (titleScheme < 0)
+				titleScheme = UiConstants.BLACKONWHITE;
+			result.setTitleScheme(titleScheme);
+			settings.put(TITLESCHEME, titleScheme);
+			titleTransparency = titleTransparencyField.getSelection();
+			result.setTitleTransparency(titleTransparency);
+			settings.put(TITLETRANSPARENCY, titleTransparency);
+			colorScheme = colorSchemeField.getSelectionIndex();
+			if (colorScheme < 0)
+				colorScheme = UiConstants.BG_DARK_GRAY;
+			result.setColorScheme(colorScheme);
+			settings.put(COLORSCHEME, colorScheme);
 			fromPreview = fromPreviewButton.getSelection();
 			voiceNotes = voiceButton.getSelection();
 			settings.put(FROMPREVIEW, fromPreview);
@@ -471,7 +494,6 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 				});
 			}
 		});
-		super.okPressed();
 	}
 
 	public int getPrivacy() {
@@ -483,7 +505,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 	}
 
 	private void importIntoGallery(SlideShowImpl show, IdentifiableObject obj) {
-		if (obj instanceof SlideShowImpl) {
+		if (obj instanceof SlideShowImpl)
 			for (String slideId : ((SlideShowImpl) obj).getEntry()) {
 				SlideImpl slide = dbManager.obtainById(SlideImpl.class, slideId);
 				if (slide != null) {
@@ -492,7 +514,7 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 					show.addEntry(newSlide.getStringId());
 				}
 			}
-		} else if (obj instanceof ExhibitionImpl) {
+		else if (obj instanceof ExhibitionImpl) {
 			int seqNo = 1;
 			for (Wall wall : ((ExhibitionImpl) obj).getWall()) {
 				SlideImpl newSlide = new SlideImpl(wall.getLocation(), seqNo++, "", Constants.SLIDE_NO_THUMBNAILS, //$NON-NLS-1$
@@ -558,5 +580,11 @@ public class SlideshowEditDialog extends ZTitleAreaDialog {
 
 	public SlideShowImpl getResult() {
 		return result;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
+		updateFields();
 	}
 }

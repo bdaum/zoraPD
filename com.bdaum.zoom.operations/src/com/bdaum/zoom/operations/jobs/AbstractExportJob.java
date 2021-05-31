@@ -77,7 +77,6 @@ public abstract class AbstractExportJob extends CustomJob {
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
 	private int jpegQuality;
-//	private int scalingMethod;
 	private int sizing;
 
 	/**
@@ -97,8 +96,7 @@ public abstract class AbstractExportJob extends CustomJob {
 	 * @param jpegQuality
 	 *            - the JPEG compression quality (1..100)
 	 * @param xmpFilter
-	 *            - set of XMP properties to be exported with each image, or
-	 *            null
+	 *            - set of XMP properties to be exported with each image, or null
 	 * @param createWatermark
 	 *            - true if watermark is to be created
 	 * @param copyright
@@ -153,12 +151,6 @@ public abstract class AbstractExportJob extends CustomJob {
 	 */
 	protected abstract IStatus doRun(IProgressMonitor monitor);
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.core.runtime.jobs.Job#belongsTo(java.lang.Object)
-	 */
-
 	@Override
 	public boolean belongsTo(Object family) {
 		return Constants.OPERATIONJOBFAMILY == family || Constants.CRITICAL == family;
@@ -201,7 +193,7 @@ public abstract class AbstractExportJob extends CustomJob {
 		} else {
 			zimage = new ZImage(ImageUtilities.loadThumbnail(Display.getDefault(), asset.getJpegThumbnail(), cms,
 					SWT.IMAGE_JPEG, true), null);
-			s = zimage.setScaling(maxSize, maxSize, true, 0, null); //, ZImage.SCALE_DEFAULT);
+			s = zimage.setScaling(maxSize, maxSize, true, 0, null); // , ZImage.SCALE_DEFAULT);
 			progress.worked(1000);
 		}
 		if (zimage != null) {
@@ -228,10 +220,11 @@ public abstract class AbstractExportJob extends CustomJob {
 					outfile = ImageActivator.getDefault().createTempFile("Img", //$NON-NLS-1$
 							mode == Constants.FORMAT_WEBP ? ".webp" : ".jpg"); //$NON-NLS-1$ //$NON-NLS-2$
 				try (FileOutputStream out = new FileOutputStream(outfile)) {
-					if (xmpFilter != null && !xmpFilter.isEmpty() && mode == Constants.FORMAT_JPEG) {
+					boolean isJpeg = mode == Constants.FORMAT_JPEG;
+					int format = isJpeg ? SWT.IMAGE_JPEG : ZImage.IMAGE_WEBP;
+					if (xmpFilter != null && !xmpFilter.isEmpty() && (isJpeg || mode == Constants.FORMAT_WEBP)) {
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
-						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, bout, SWT.IMAGE_JPEG,
-								jpegQuality);
+						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, bout, format, jpegQuality);
 						byte[] bytes = bout.toByteArray();
 						try {
 							XMPUtilities.configureXMPFactory();
@@ -240,15 +233,15 @@ public abstract class AbstractExportJob extends CustomJob {
 							XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
 							XMPMetaFactory.serialize(xmpMeta, mout);
 							byte[] metadata = mout.toByteArray();
-							bytes = XMPUtilities.insertXmpIntoJPEG(bytes, metadata);
+							bytes = isJpeg ? XMPUtilities.insertXmpIntoJPEG(bytes, metadata)
+									: XMPUtilities.insertXmpIntoWEBP(bytes, metadata);
 						} catch (XMPException e) {
 							addErrorStatus(status, NLS.bind(Messages.getString("AbstractExportJob.xmp_error"), file), //$NON-NLS-1$
 									e);
 						}
 						out.write(bytes);
 					} else
-						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, out,
-								mode == Constants.FORMAT_WEBP ? ZImage.IMAGE_WEBP : SWT.IMAGE_JPEG, jpegQuality);
+						zimage.saveToStream(null, true, cropMode, SWT.DEFAULT, SWT.DEFAULT, out, format, jpegQuality);
 					return new SourceAndTarget(asset, outfile, bounds);
 				}
 			} catch (FileNotFoundException e) {

@@ -22,7 +22,6 @@ package com.bdaum.zoom.ui.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -45,17 +44,11 @@ public class CLink extends Composite implements Listener {
 	private ListenerList<Listener> listeners = new ListenerList<>();
 	private Color inactiveColor;
 
-	/**
-	 * Constructor
-	 * 
-	 * @param parent
-	 *            - parent container
-	 * @param style
-	 *            - style bits
-	 */
 	public CLink(Composite parent, int style) {
 		super(parent, style & SWT.BORDER);
-		setLayout(new GridLayout());
+		GridLayout layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		setLayout(layout);
 		label = new Label(this, style & (~SWT.BORDER));
 		label.setData(CSSProperties.ID, CSSProperties.CLINK);
 		label.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
@@ -82,12 +75,10 @@ public class CLink extends Composite implements Listener {
 	}
 
 	public void removeListener(int type, Listener listener) {
-		if (type == SWT.Selection) {
-			checkWidget();
-			if (listener == null)
-				SWT.error(SWT.ERROR_NULL_ARGUMENT);
-			listeners.remove(listener);
-		}
+		checkWidget();
+		if (listener == null)
+			SWT.error(SWT.ERROR_NULL_ARGUMENT);
+		listeners.remove(listener);
 	}
 
 	public void setText(String text) {
@@ -114,15 +105,14 @@ public class CLink extends Composite implements Listener {
 		case SWT.MouseEnter:
 			inactiveColor = label.getForeground();
 			label.setForeground(getForeground());
-			break;
+			return;
 		case SWT.MouseExit:
 			label.setForeground(inactiveColor);
 			inactiveColor = null;
-			break;
+			return;
 		case SWT.MouseUp:
 			if (e.button == 1)
 				fireEvent(e);
-			break;
 		}
 	}
 
@@ -131,18 +121,6 @@ public class CLink extends Composite implements Listener {
 		event.type = SWT.Selection;
 		for (Listener listener : listeners)
 			listener.handleEvent(event);
-	}
-
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.
-	 * MouseEvent)
-	 */
-	public void mouseHover(MouseEvent e) {
-		// do nothing
 	}
 
 }

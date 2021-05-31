@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal.job;
@@ -54,6 +54,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.core.db.IDbManager;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.email.internal.Activator;
+import com.bdaum.zoom.email.internal.EmailData;
 import com.bdaum.zoom.image.ImageConstants;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.ZImage;
@@ -93,45 +94,24 @@ public class PdfJob extends CustomJob {
 	private List<Asset> assets;
 	private PageLayout_typeImpl layout;
 	private File targetFile;
-	private final int quality;
-	private final int jpegQuality;
-	private float keyLine;
-	private float fontLead;
-	private int titlePixelSize;
-	private int subtitlePixelSize;
-	private int subtitleLead;
-	private int titleTextSize;
-	private float leftMargins;
-	private float rightMargins;
-	private float topMargins;
-	private float bottomMargins;
+	private final int quality, jpegQuality, cms;
+	private float keyLine, fontLead;
+	private int titlePixelSize, subtitlePixelSize, subtitleLead, titleTextSize, titleLead, footerLead;
+	private float leftMargins, rightMargins, topMargins, bottomMargins, cellWidth, cellHeight, upperWaste, verticalGap, horizontalGap;
 	private Rectangle format;
-	private float cellWidth;
-	private double imageWidth;
-	private double imageHeight;
-	private float cellHeight;
-	private float upperWaste;
-	private int imagesPerPage;
-	private int pages;
+	private double imageWidth, imageHeight;
+	private int imagesPerPage, pages, rows;
 	private Date now;
 	private Meta meta;
-	private String fileName;
-	private final int cms;
-	private String collection;
-	private int rows;
-	private float verticalGap;
+	private String fileName, collection;
 	private int seqNo = 0;
 	private ZImage zimage;
-	private float horizontalGap;
-	private int titleLead;
-	private int footerLead;
-	private String subject;
-	private String message;
 	private List<File> tempFiles = new ArrayList<File>();
 	private final UnsharpMask unsharpMask;
 	protected String opId = java.util.UUID.randomUUID().toString();
 	protected IFileWatcher fileWatcher = CoreActivator.getDefault().getFileWatchManager();
 	private final TemplateProcessor captionProcessor = new TemplateProcessor(Constants.PI_ALL);
+	private EmailData emailData;
 
 	public PdfJob(List<Asset> assets, PageLayout_typeImpl layout, File targetFile, int quality, int jpegQuality,
 			int cms, UnsharpMask unsharpMask, String collection) {
@@ -160,14 +140,15 @@ public class PdfJob extends CustomJob {
 		Document document = createDocument();
 		writeDocument(document, status, monitor);
 		OperationJob.signalJobEnd(startTime);
-		if (subject != null && message != null && !monitor.isCanceled()) {
-			IStatus sendStatus = Activator.getDefault().sendMail(null, null, null, subject, message,
+		if (emailData != null && !monitor.isCanceled()) {
+			IStatus sendStatus = Activator.getDefault().sendMail(emailData.getTo(), emailData.getCc(),
+					emailData.getBcc(), emailData.getSubject(), emailData.getMessage(),
 					Collections.singletonList(targetFile.toURI().toString()));
 			if (!sendStatus.isOK())
 				status.add(sendStatus);
 		}
 		cleanUp();
-		if (subject == null)
+		if (emailData == null)
 			Program.launch(targetFile.getAbsolutePath());
 		return status;
 	}
@@ -435,7 +416,8 @@ public class PdfJob extends CustomJob {
 				if (a >= assets.size())
 					cell = new PdfPCell();
 				else {
-					String cc = captionProcessor.processTemplate(caption, assets.get(a), collection, seqNo + j + 1, pageItem + j + 1);
+					String cc = captionProcessor.processTemplate(caption, assets.get(a), collection, seqNo + j + 1,
+							pageItem + j + 1);
 					Paragraph p = new Paragraph(cc,
 							FontFactory.getFont(FontFactory.HELVETICA, fontSize, Font.NORMAL, BaseColor.DARK_GRAY));
 					p.setSpacingBefore(0);
@@ -448,11 +430,7 @@ public class PdfJob extends CustomJob {
 		}
 	}
 
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
+	public void setEmailData(EmailData emailData) {
+		this.emailData = emailData;
 	}
 }

@@ -44,7 +44,7 @@ public class ViewTextCellEditor extends TextCellEditor {
 					IFormatter formatter = qfield.getFormatter();
 					if (formatter != null) {
 						try {
-							formatter.fromString(value.toString());
+							formatter.parse(value.toString());
 							return null;
 						} catch (ParseException e) {
 							return Messages.getString("ViewTextCellEditor.bad_field_format"); //$NON-NLS-1$

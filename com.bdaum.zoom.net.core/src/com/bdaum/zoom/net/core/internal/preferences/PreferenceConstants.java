@@ -14,8 +14,41 @@
  */
 package com.bdaum.zoom.net.core.internal.preferences;
 
-public interface PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry;
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+import com.bdaum.zoom.net.core.internal.Activator;
+
+public class PreferenceConstants implements IPreferenceConstants {
 
 	public static final String FTPACCOUNTS = "com.bdaum.zoom.ftpAccounts"; //$NON-NLS-1$
+	
+	public static final String FTP = "FTP"; //$NON-NLS-1$
+
+	@Override
+	public List<Object> getRootElements() {
+		return Arrays.asList(PreferenceRegistry.INTERNET);
+	}
+
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == PreferenceRegistry.INTERNET)
+			return Arrays.asList(FTP);
+		if (group == FTP)
+			return Arrays.asList(FTPACCOUNTS);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
+	}
+
 
 }

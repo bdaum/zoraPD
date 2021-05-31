@@ -26,10 +26,6 @@ import java.util.StringTokenizer;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -42,7 +38,9 @@ import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -55,10 +53,10 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiConstants;
 
-public class WebFontDialog extends ZTitleAreaDialog {
+public class WebFontDialog extends ZTitleAreaDialog implements Listener {
 
-	private static final String[] FAMILIES = new String[] {
-			"Arial, Helvetica, sans-serif", "Arial Black, Gadget, sans-serif", //$NON-NLS-1$ //$NON-NLS-2$
+	private static final String[] FAMILIES = new String[] { "Arial, Helvetica, sans-serif", //$NON-NLS-1$
+			"Arial Black, Gadget, sans-serif", //$NON-NLS-1$
 			"Comic Sans MS, Comic Sans MS5, cursive", //$NON-NLS-1$
 			"Courier New, Courier6, monospace", "Georgia1, Georgia, serif", //$NON-NLS-1$ //$NON-NLS-2$
 			"Impact, Impact5, Charcoal6, sans-serif", //$NON-NLS-1$
@@ -71,9 +69,10 @@ public class WebFontDialog extends ZTitleAreaDialog {
 			"MS Sans Serif4, Geneva, sans-serif", "MS Serif4, New York6, serif" }; //$NON-NLS-1$ //$NON-NLS-2$
 	public static final String[] STYLES = new String[] { Messages.WebFontDialog_normal, Messages.WebFontDialog_italic,
 			Messages.WebFontDialog_oblique };
-	public static final String[] WEIGHT = new String[] {  Messages.WebFontDialog_normal, Messages.WebFontDialog_bold,
+	public static final String[] WEIGHT = new String[] { Messages.WebFontDialog_normal, Messages.WebFontDialog_bold,
 			Messages.WebFontDialog_bolder, Messages.WebFontDialog_lighter };
-	public static final String[] VARIANT = new String[] {  Messages.WebFontDialog_normal, Messages.WebFontDialog_smallCaps };
+	public static final String[] VARIANT = new String[] { Messages.WebFontDialog_normal,
+			Messages.WebFontDialog_smallCaps };
 	private Font_type current;
 	private final String text;
 	private Text familyField;
@@ -83,6 +82,7 @@ public class WebFontDialog extends ZTitleAreaDialog {
 	private Combo variantField;
 	private Combo weightField;
 	protected Rgb_type currentColor;
+	private Combo addCombo;
 
 	public WebFontDialog(Shell parentShell, String text, Font_type current) {
 		super(parentShell);
@@ -109,12 +109,10 @@ public class WebFontDialog extends ZTitleAreaDialog {
 			style = Math.max(0, Math.min(style, styleField.getItemCount() - 1));
 			styleField.select(style);
 			int weight = current.getWeight();
-			weight = Math.max(0, Math.min(weight,
-					weightField.getItemCount() - 1));
+			weight = Math.max(0, Math.min(weight, weightField.getItemCount() - 1));
 			weightField.select(weight);
 			int variant = current.getVariant();
-			variant = Math.max(0, Math.min(variant,
-					variantField.getItemCount() - 1));
+			variant = Math.max(0, Math.min(variant, variantField.getItemCount() - 1));
 			variantField.select(variant);
 			currentColor = current.getColor();
 		} else {
@@ -147,65 +145,44 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		comp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		comp.setLayout(new GridLayout(2, false));
 		Label familyLabel = new Label(comp, SWT.NONE);
-		familyLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		familyLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		familyLabel.setText(Messages.WebFontDialog_font_families);
-		familyField = new Text(comp, SWT.MULTI | SWT.LEAD | SWT.BORDER
-				| SWT.V_SCROLL);
+		familyField = new Text(comp, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.V_SCROLL);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.heightHint = 70;
 		layoutData.widthHint = 200;
 		familyField.setLayoutData(layoutData);
 		new Label(comp, SWT.NONE);
 		Composite addComp = new Composite(comp, SWT.NONE);
-		addComp.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false,
-				false));
+		addComp.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		addComp.setLayout(new GridLayout(2, false));
 
 		Button addButton = new Button(addComp, SWT.PUSH);
-		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false));
+		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addButton.setText(Messages.WebFontDialog_set);
-		final Combo addCombo = new Combo(addComp, SWT.DROP_DOWN);
+		addCombo = new Combo(addComp, SWT.DROP_DOWN);
 		addCombo.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		addCombo.setItems(FAMILIES);
 		addCombo.setVisibleItemCount(8);
 		addCombo.select(0);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				StringBuilder sb = new StringBuilder();
-				StringTokenizer st = new StringTokenizer(addCombo.getText(),
-						","); //$NON-NLS-1$
-				while (st.hasMoreTokens()) {
-					if (sb.length() > 0)
-						sb.append('\n');
-					sb.append(st.nextToken().trim());
-				}
-				familyField.setText(sb.toString());
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_height);
 		heightField = new Spinner(comp, SWT.BORDER);
-		heightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		heightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		heightField.setMaximum(500);
 		heightField.setMinimum(10);
 		heightField.setIncrement(5);
 		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_style);
 		styleField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
-		styleField
-				.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
+		styleField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		styleField.setItems(STYLES);
 		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_weight);
 		weightField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
-		weightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-				false));
+		weightField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		weightField.setItems(WEIGHT);
 		new Label(comp, SWT.NONE).setText(Messages.WebFontDialog_variant);
 		variantField = new Combo(comp, SWT.DROP_DOWN | SWT.READ_ONLY);
-		variantField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-				false));
+		variantField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		variantField.setItems(VARIANT);
 		colorButton = createColorButton(comp, Messages.WebFontDialog_color);
 		return area;
@@ -215,29 +192,26 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		if (s != null)
 			new Label(comp, SWT.NONE).setText(s);
 		final Button button = new Button(comp, SWT.PUSH | SWT.BORDER);
-		final GridData gd_bgButton = new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false);
+		final GridData gd_bgButton = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 		gd_bgButton.widthHint = 20;
 		gd_bgButton.heightHint = 20;
 		button.setLayoutData(gd_bgButton);
 		final Image image = new Image(getShell().getDisplay(), 20, 20);
 		button.setImage(image);
-		button.addSelectionListener(new SelectionAdapter() {
+		button.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				ColorDialog dialog = new ColorDialog(getShell());
 				dialog.setText(s);
 				if (currentColor != null)
-					dialog.setRGB(new RGB(currentColor.getR(), currentColor
-							.getG(), currentColor.getB()));
+					dialog.setRGB(new RGB(currentColor.getR(), currentColor.getG(), currentColor.getB()));
 				RGB rgb = dialog.open();
 				if (rgb != null)
-					paintButton(button, currentColor = new Rgb_typeImpl(rgb.red, rgb.green,
-							rgb.blue));
+					paintButton(button, currentColor = new Rgb_typeImpl(rgb.red, rgb.green, rgb.blue));
 			}
 		});
-		button.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
+		button.addListener(SWT.Dispose, new Listener() {
+			public void handleEvent(Event e) {
 				image.dispose();
 			}
 		});
@@ -248,8 +222,7 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		Image image = button.getImage();
 		Rectangle bounds = image.getBounds();
 		GC gc = new GC(image);
-		Color c = new Color(getShell().getDisplay(), rgb.getR(), rgb.getG(),
-				rgb.getB());
+		Color c = new Color(getShell().getDisplay(), rgb.getR(), rgb.getG(), rgb.getB());
 		gc.setBackground(c);
 		gc.fillRectangle(bounds);
 		c.dispose();
@@ -257,7 +230,6 @@ public class WebFontDialog extends ZTitleAreaDialog {
 		button.setImage(image);
 		button.setData(UiConstants.RGB, rgb);
 	}
-
 
 	@Override
 	protected void okPressed() {
@@ -282,6 +254,18 @@ public class WebFontDialog extends ZTitleAreaDialog {
 
 	public Font_type getResult() {
 		return current;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		StringBuilder sb = new StringBuilder();
+		StringTokenizer st = new StringTokenizer(addCombo.getText(), ","); //$NON-NLS-1$
+		while (st.hasMoreTokens()) {
+			if (sb.length() > 0)
+				sb.append('\n');
+			sb.append(st.nextToken().trim());
+		}
+		familyField.setText(sb.toString());
 	}
 
 }

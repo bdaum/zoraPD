@@ -12,4 +12,7 @@
       <description>Create a HTML page from selected images</description>
       <topic href="html/html.html" label="Create HTML wizard"/>
    </context>
+   <context id="mail_page_context" title="Email preferences">
+      <topic href="html/emailPrefs.html" label="Email preferences"/>
+   </context>
 </contexts>

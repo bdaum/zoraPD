@@ -25,10 +25,7 @@ import java.util.Arrays;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -40,10 +37,11 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
+import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
-public class FileEditor extends Composite implements Listener {
+public class FileEditor extends Composite {
 
 	private static final String FILEHISTORY = "fileHistory"; //$NON-NLS-1$
 	private static final String LASTFILENAME = "lastFilename"; //$NON-NLS-1$
@@ -155,61 +153,47 @@ public class FileEditor extends Composite implements Listener {
 			fileNameField.setText(this.fileName = filenameProposal);
 			this.path = path;
 		}
-		fileNameField.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				int selectionIndex = fileNameField.getSelectionIndex();
-				if (!overwrite || !new File(fileNameField.getItem(selectionIndex)).exists() || MessageDialog
-						.openQuestion(getShell(), Messages.FileEditor_file_exists, Messages.FileEditor_overwrite))
-					lastSelectionIndex = selectionIndex;
-				else
-					fileNameField.select(lastSelectionIndex);
-				fireEvent(event);
-			}
-		});
-		if ((style & SWT.READ_ONLY) == 0)
-			fileNameField.addListener(SWT.Modify, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					fireEvent(event);
-				}
-			});
-		Button button = new Button(this, SWT.PUSH);
-		button.setText(Messages.FileEditor_browse);
-		button.setToolTipText(Messages.FileEditor_browse_tooltip);
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				openBrowseDialog(style, lab, filterExtensions, filterNames, FileEditor.this.path,
-						FileEditor.this.fileName, overwrite);
-			}
-		});
+		Button browseButton = new Button(this, SWT.PUSH);
+		browseButton.setText(Messages.FileEditor_browse);
+		browseButton.setToolTipText(Messages.FileEditor_browse_tooltip);
 		if (clear) {
 			clearButton = new Button(this, SWT.PUSH);
 			clearButton.setImage(Icons.delete.getImage());
 			clearButton.setToolTipText(Messages.FileEditor_clear_tooltip);
-			clearButton.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					String text = getText();
-					setText(""); //$NON-NLS-1$
-					if (!text.isEmpty())
-						fireEvent(event);
-				}
-			});
-			addListener(SWT.Modify, this);
 		}
+		Listener listener = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				if (e.type == SWT.Selection) {
+					if (e.widget == fileNameField) {
+						int selectionIndex = fileNameField.getSelectionIndex();
+						if (!overwrite || !new File(fileNameField.getItem(selectionIndex)).exists() || askOverwrite())
+							lastSelectionIndex = selectionIndex;
+						else
+							fileNameField.select(lastSelectionIndex);
+					} else if (e.widget == browseButton)
+						openBrowseDialog(style, lab, filterExtensions, filterNames, FileEditor.this.path,
+								FileEditor.this.fileName, overwrite);
+					else if (e.widget == clearButton)
+						setText(""); //$NON-NLS-1$
+				}
+				updateButtons();
+				fireEvent(e);
+			}
+
+		};
+		fileNameField.addListener(SWT.Selection, listener);
+		if ((style & SWT.READ_ONLY) == 0)
+			fileNameField.addListener(SWT.Modify, listener);
+		browseButton.addListener(SWT.Selection, listener);
+		if (clearButton != null)
+			clearButton.addListener(SWT.Selection, listener);
 	}
 
-	public void handleEvent(Event e) {
-		clearButton.setEnabled(!getText().isEmpty());
+	private boolean askOverwrite() {
+		return AcousticMessageDialog.openQuestion(getShell(), Messages.FileEditor_file_exists, Messages.FileEditor_overwrite);
 	}
 
-	/**
-	 * Add listener. Transmitted event maybe null
-	 * 
-	 * @param listener
-	 */
 	public void addListener(int type, Listener listener) {
 		if (type == SWT.Modify)
 			listeners.add(listener);
@@ -240,8 +224,7 @@ public class FileEditor extends Composite implements Listener {
 			fileNameField.setItems(newItems);
 		}
 		fileNameField.setText(string);
-		if (clearButton != null)
-			clearButton.setEnabled(!getText().isEmpty());
+		updateButtons();
 	}
 
 	public String getFilterPath() {
@@ -274,7 +257,6 @@ public class FileEditor extends Composite implements Listener {
 				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), file));
 				fileNameField.setText(file);
 				this.path = dialog.getFilterPath();
-				fireEvent(null);
 			}
 		} else {
 			DirectoryDialog dialog = new DirectoryDialog(getShell());
@@ -292,14 +274,27 @@ public class FileEditor extends Composite implements Listener {
 				fileNameField.setItems(UiUtilities.addToHistoryList(fileNameField.getItems(), folder));
 				fileNameField.setText(folder);
 				this.path = dialog.getFilterPath();
-				fireEvent(null);
 			}
 		}
+	}
+
+	private void updateButtons() {
+		if (clearButton != null)
+			clearButton.setEnabled(!getText().isEmpty());
 	}
 
 	@Override
 	public boolean setFocus() {
 		return fileNameField.setFocus();
+	}
+
+	public boolean testSave() {
+		if ((getStyle() & SWT.SAVE) != 0) {
+			File file = new File(getText());
+			if (file.exists())
+				return askOverwrite();
+		}
+		return true;
 	}
 
 	public void saveValues() {

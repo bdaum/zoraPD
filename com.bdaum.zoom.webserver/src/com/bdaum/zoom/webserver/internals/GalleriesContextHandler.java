@@ -198,7 +198,7 @@ final class GalleriesContextHandler extends AbstractLightboxContextHandler {
 		return gallery.getSafety() <= preferenceStore.getInt(PreferenceConstants.PRIVACY);
 	}
 
-	private boolean isOnline(WebGallery gallery) {
+	private static boolean isOnline(WebGallery gallery) {
 		if (!gallery.getIsFtp())
 			return (new File(gallery.getOutputFolder(), gallery.getPageName()).exists());
 		String ftpDir = gallery.getFtpDir();

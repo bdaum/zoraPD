@@ -22,8 +22,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -55,7 +53,7 @@ import com.bdaum.zoom.ui.internal.dialogs.TemplateEditDialog;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class RenameGroup extends Composite implements Listener {
+public class RenameGroup extends Composite implements Listener, IDoubleClickListener, ISelectionChangedListener {
 
 	public class TemplateLabelProvider extends ZColumnLabelProvider {
 		@Override
@@ -141,12 +139,7 @@ public class RenameGroup extends Composite implements Listener {
 							: ((QueryField) element).getLabel();
 				}
 			});
-			fieldViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-				public void selectionChanged(SelectionChangedEvent event) {
-					field = ((QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement());
-					templateViewer.refresh(true);
-				}
-			});
+			fieldViewer.addSelectionChangedListener(this);
 			fieldViewer.setInput(new QueryField[] { QueryField.URI, QueryField.IPTC_TITLE });
 		} else {
 			final Label fileRenamingLabel = new Label(labelGroup, SWT.NONE);
@@ -167,58 +160,20 @@ public class RenameGroup extends Composite implements Listener {
 		templateViewer.getControl().setLayoutData(layoutData);
 		templateViewer.setContentProvider(ArrayContentProvider.getInstance());
 		templateViewer.setLabelProvider(new TemplateLabelProvider());
-		Listener tableListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (event.type == SWT.Selection) {
-					updateButtons();
-					if (cntrlDwn) {
-						if (editButton.isEnabled())
-							editTemplate();
-						cntrlDwn = false;
-					}
-					updateParameterFields();
-					updatePreview();
-					fireEvent(event);
-				} else if (event.keyCode == SWT.CTRL)
-					cntrlDwn = event.type == SWT.KeyDown;
-			}
-		};
-		templateViewer.getTable().addListener(SWT.KeyDown, tableListener);
-		templateViewer.getTable().addListener(SWT.KeyUp, tableListener);
-		templateViewer.getTable().addListener(SWT.Selection, tableListener);
+		templateViewer.getTable().addListener(SWT.KeyDown, this);
+		templateViewer.getTable().addListener(SWT.KeyUp, this);
+		templateViewer.getTable().addListener(SWT.Selection, this);
 
 		final Composite buttonComp = new Composite(this, SWT.NONE);
 		buttonComp.setLayout(new GridLayout());
 
 		addButton = WidgetFactory.createPushButton(buttonComp, Messages.RenameGroup_add, SWT.FILL);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				RenamingTemplate t = openEditDialog(getParent(), null);
-				if (t != null)
-					templateViewer.add(t);
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		editButton = WidgetFactory.createPushButton(buttonComp, Messages.RenameGroup_edit, SWT.FILL);
-		editButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				editTemplate();
-			}
-		});
+		editButton.addListener(SWT.Selection, this);
 		removeButton = WidgetFactory.createPushButton(buttonComp, Messages.RenameGroup_remove, SWT.FILL);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				templateViewer.remove(templateViewer.getStructuredSelection().getFirstElement());
-			}
-		});
-		templateViewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				editTemplate();
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
+		templateViewer.addDoubleClickListener(this);
 		Label sep = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
 		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		Label label = new Label(this, SWT.NONE);
@@ -234,10 +189,47 @@ public class RenameGroup extends Composite implements Listener {
 
 	@Override
 	public void handleEvent(Event event) {
-		if (event.widget == startField)
-			start = startField.getSelection();
-		updateTemplateViewer();
-		fireEvent(event);
+		switch (event.type) {
+		case SWT.KeyDown:
+			if (event.keyCode == SWT.CTRL)
+				cntrlDwn = true;
+			return;
+		case SWT.KeyUp:
+			if (event.keyCode == SWT.CTRL)
+				cntrlDwn = false;
+			return;
+		case SWT.Modify:
+			updateTemplateViewer();
+			fireEvent(event);
+			return;
+		case SWT.Selection:
+			if (event.widget == templateViewer.getControl()) {
+				updateButtons();
+				if (cntrlDwn) {
+					if (editButton.isEnabled())
+						editTemplate();
+					cntrlDwn = false;
+				}
+				updateParameterFields();
+				updatePreview();
+				fireEvent(event);
+			} else if (event.widget == addButton) {
+				RenamingTemplate t = openEditDialog(getParent(), null);
+				if (t != null)
+					templateViewer.add(t);
+			} else if (event.widget == removeButton) {
+				templateViewer.remove(templateViewer.getStructuredSelection().getFirstElement());
+			} else if (event.widget == editButton) {
+				editTemplate();
+			} else if (event.widget == startField) {
+				start = startField.getSelection();
+				updateTemplateViewer();
+				fireEvent(event);
+			} else {
+				updateTemplateViewer();
+				fireEvent(event);
+			}
+		}
 	}
 
 	protected void updatePreview() {
@@ -476,6 +468,17 @@ public class RenameGroup extends Composite implements Listener {
 				setCue(cue);
 			cueField.setVisible(visible);
 		}
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		field = ((QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement());
+		templateViewer.refresh(true);
+	}
+
+	@Override
+	public void doubleClick(DoubleClickEvent event) {
+		editTemplate();
 	}
 
 }

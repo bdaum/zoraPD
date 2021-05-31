@@ -32,9 +32,9 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchPart;
@@ -76,7 +76,7 @@ import com.bdaum.zoom.ui.internal.operations.SlideshowPropertiesOperation;
 import com.bdaum.zoom.ui.internal.operations.WebGalleryPropertiesOperation;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractCatalogView extends BasicView implements IOperationHistoryListener {
+public abstract class AbstractCatalogView extends BasicView implements IOperationHistoryListener, IMenuListener, Listener {
 
 	protected class SelectionJob extends Job {
 
@@ -222,13 +222,13 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	protected void hookContextMenu(Viewer viewer) {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				AbstractCatalogView.this.fillContextMenu(manager);
-			}
-		});
+		menuMgr.addMenuListener(this);
 		viewer.getControl().setMenu(menuMgr.createContextMenu(viewer.getControl()));
 		getSite().registerContextMenu(menuMgr, viewer);
+	}
+	
+	public void menuAboutToShow(IMenuManager manager) {
+		AbstractCatalogView.this.fillContextMenu(manager);
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
@@ -292,7 +292,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 					ExhibitionImpl current = (ExhibitionImpl) obj;
 					Object parent = ((ITreeContentProvider) viewer.getContentProvider()).getParent(obj);
 					ExhibitionImpl backup = ExhibitionPropertiesOperation.cloneExhibition(current);
-					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), null, current,
+					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), null, null, current,
 							Messages.getString("CatalogView.edit_exhibition"), true, null); //$NON-NLS-1$
 					if (show != null) {
 						performOperation(new ExhibitionPropertiesOperation(backup, show));
@@ -304,7 +304,7 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 					WebGalleryImpl current = (WebGalleryImpl) obj;
 					Object parent = ((ITreeContentProvider) viewer.getContentProvider()).getParent(obj);
 					WebGalleryImpl backup = WebGalleryPropertiesOperation.cloneGallery(current);
-					WebGalleryImpl result = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null,
+					WebGalleryImpl result = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null,
 							current, Messages.getString("CatalogView.edit_web_gallery"), false, true, null); //$NON-NLS-1$
 					if (result != null) {
 						viewer.refresh(parent);
@@ -419,19 +419,14 @@ public abstract class AbstractCatalogView extends BasicView implements IOperatio
 	}
 
 	protected void addCtrlKeyListener() {
-		getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
+		getControl().addListener(SWT.KeyDown, this);
+		getControl().addListener(SWT.KeyUp, this);
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		if (e.keyCode == SWT.CTRL)
+			cntrlDwn = e.type == SWT.KeyDown;
 	}
 
 	protected IStatus performOperation(IUndoableOperation op) {

@@ -23,15 +23,15 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -45,7 +45,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.DescriptionGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class EditStoryBoardDialog extends ZTitleAreaDialog {
+public class EditStoryBoardDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String IMAGE_SIZE = "imageSize"; //$NON-NLS-1$
 	private static final String HIDE_DESCRIPTION = "hideDescription"; //$NON-NLS-1$
@@ -55,12 +55,6 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 	private StoryboardImpl current;
 	private Text titleField;
 
-	private final ModifyListener modifyListener = new ModifyListener() {
-
-		public void modifyText(ModifyEvent e) {
-			updateButtons();
-		}
-	};
 	private CheckboxButton showCaptionButton;
 	private CheckboxButton showDescriptionButton;
 	private Combo imagesizeField;
@@ -95,7 +89,7 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 		new Label(comp, SWT.NONE).setText(Messages.EditStoryBoardDialog_section_title);
 		titleField = new Text(comp, SWT.BORDER);
 		titleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		titleField.addModifyListener(modifyListener);
+		titleField.addListener(SWT.Modify, this);
 		new Label(comp, SWT.NONE);
 		showCaptionButton = WidgetFactory.createCheckButton(comp, Messages.EditStoryBoardDialog_show_captions, null);
 		descriptionGroup = new DescriptionGroup(comp, SWT.NONE);
@@ -112,7 +106,7 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 		imagesizeField = new Combo(sizeGroup, SWT.READ_ONLY);
 		imagesizeField.setItems(new String[] { Messages.EditStoryBoardDialog_medium,
 				Messages.EditStoryBoardDialog_large, Messages.EditStoryBoardDialog_vary_large,
-				Messages.EditStoryBoardDialog_small, Messages.EditStoryBoardDialog_very_small });
+				Messages.EditStoryBoardDialog_small, Messages.EditStoryBoardDialog_very_small, "HD", "4k" });  //$NON-NLS-1$//$NON-NLS-2$
 		GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		data.horizontalIndent = 15;
 		enlargeButton = WidgetFactory.createCheckButton(sizeGroup, Messages.EditStoryBoardDialog_enlarge_small_images,
@@ -191,6 +185,11 @@ public class EditStoryBoardDialog extends ZTitleAreaDialog {
 		settings.put(HIDE_CAPTION, !sb.getShowCaptions());
 		settings.put(HIDE_DESCRIPTION, !sb.getShowDescriptions());
 		settings.put(IMAGE_SIZE, sb.getImageSize());
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

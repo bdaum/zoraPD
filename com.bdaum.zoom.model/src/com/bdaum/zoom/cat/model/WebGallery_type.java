@@ -1,10 +1,10 @@
 package com.bdaum.zoom.cat.model;
 
-import java.util.*;
+import java.util.Date;
 
-import java.lang.String;
-
-import com.bdaum.aoModeling.runtime.*;
+import com.bdaum.aoModeling.runtime.AomValueChangedNotifier;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 
 /**
  * Generated with KLEEN Java Generator V.1.3
@@ -642,6 +642,20 @@ public interface WebGallery_type extends AomValueChangedNotifier,
 	 * @return - value of field poweredByText
 	 */
 	public String getPoweredByText();
+	
+	/**
+	 * Set value of property imageFormat
+	 *
+	 * @param _value - new field value
+	 */
+	public void setImageFormat(int _value);
+
+	/**
+	 * Get value of property imageFormat
+	 *
+	 * @return - value of field imageFormat
+	 */
+	public int getImageFormat();
 
 	/**
 	 * Set value of property applySharpening

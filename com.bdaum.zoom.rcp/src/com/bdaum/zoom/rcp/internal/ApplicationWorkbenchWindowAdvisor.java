@@ -543,6 +543,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 	public void deviceInserted() {
 		String watch = Platform.getPreferencesService().getString(UI_NAMESPACE, PreferenceConstants.DEVICEWATCH,
 				"false", null); //$NON-NLS-1$
+		if ("false".equals(watch)) //$NON-NLS-1$
+			return;
 		final AbstractCommandHandler command = PreferenceConstants.TETHERED.equals(watch)
 				? new TetheredShootingCommand()
 				: new ImportDeviceCommand();

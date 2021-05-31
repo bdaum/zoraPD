@@ -1,16 +1,26 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
-Bundle-SymbolicName: com.bdaum.zoom.net.core
-Bundle-Version: 3.6.2
+Bundle-SymbolicName: com.bdaum.zoom.net.core;singleton:=true
+Bundle-Version: 3.7.0
 Bundle-Activator: com.bdaum.zoom.net.core.internal.Activator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.operations;bundle-version="3.6.2";visibility:=reexport,
+Require-Bundle: com.bdaum.zoom.operations;bundle-version="3.7.0";visibility:=reexport,
  org.apache.commons.httpclient;bundle-version="3.1.0";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
+Bundle-Localization: OSGI-INF/i10n/bundle
+Bundle-ClassPath: .
 Export-Package: com.bdaum.zoom.net.core.ftp,
  com.bdaum.zoom.net.core.internal,
+ com.bdaum.zoom.net.core.internal.preferences,
  com.bdaum.zoom.net.core.job,
  org.apache.commons.net,
- org.apache.commons.net.ftp
+ org.apache.commons.net.chargen,
+ org.apache.commons.net.discard,
+ org.apache.commons.net.echo,
+ org.apache.commons.net.ftp,
+ org.apache.commons.net.ftp.parser,
+ org.apache.commons.net.io,
+ org.apache.commons.net.nntp,
+ org.apache.commons.net.util

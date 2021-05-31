@@ -164,7 +164,7 @@ public class RadioButtonGroup extends Composite implements Listener {
 					event.detail = i;
 					event.doit = true;
 					fireEvent(event);
-					break;
+					return;
 				}
 			}
 		else {

@@ -7,13 +7,13 @@ import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
@@ -24,7 +24,7 @@ import com.bdaum.zoom.ui.internal.codes.CodeParser;
 import com.bdaum.zoom.ui.internal.codes.Topic;
 
 @SuppressWarnings("restriction")
-public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
+public class CodeCellEditorDialog extends AbstractListCellEditorDialog implements ISelectionChangedListener, Listener {
 
 	private ListViewer viewer;
 	private final CodeParser codeParser;
@@ -89,106 +89,100 @@ public class CodeCellEditorDialog extends AbstractListCellEditorDialog {
 			}
 		});
 		viewer.setInput(value);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 		buttonGroup.setLayout(new GridLayout());
 		Button addButton = new Button(buttonGroup, SWT.PUSH);
 		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		addButton.setText(Messages.CodeCellEditorDialog_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				String[] old = (String[]) value;
-				CodesDialog dialog = new CodesDialog(getShell(), qfield, null, old);
-				if (dialog.open() == OK) {
-					String newCode = dialog.getResult();
-					viewer.setInput(value = Utilities.addToStringArray(newCode, old, false));
-					viewer.setSelection(new StructuredSelection(newCode));
-					updateButtons();
-				}
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		removeButton = new Button(buttonGroup, SWT.PUSH);
 		removeButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		removeButton.setText(Messages.CodeCellEditorDialog_remove);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					String element = (String) selection.getFirstElement();
-					String[] old = (String[]) value;
-					for (int i = 0; i < old.length; i++) {
-						if (element.equals(old[i])) {
-							String[] newValue = new String[old.length - 1];
-							System.arraycopy(old, 0, newValue, 0, i);
-							System.arraycopy(old, i + 1, newValue, i, newValue.length - i);
-							viewer.setInput(value = newValue);
-							updateButtons();
-							break;
-						}
-					}
-				}
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
 		upButton = new Button(buttonGroup, SWT.PUSH);
 		upButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		upButton.setText(Messages.CodeCellEditorDialog_up);
-		upButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					String element = (String) selection.getFirstElement();
-					String[] old = (String[]) value;
-					for (int i = 0; i < old.length; i++) {
-						if (element.equals(old[i])) {
-							if (i > 0) {
-								String replaced = old[i - 1];
-								old[i - 1] = old[i];
-								old[i] = replaced;
-								viewer.setInput(value = old);
-								viewer.setSelection(selection);
-								updateButtons();
-							}
-							break;
-						}
-					}
-				}
-			}
-		});
+		upButton.addListener(SWT.Selection, this);
 		downButton = new Button(buttonGroup, SWT.PUSH);
 		downButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		downButton.setText(Messages.CodeCellEditorDialog_down);
-		downButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					String element = (String) selection.getFirstElement();
-					String[] old = (String[]) value;
-					for (int i = 0; i < old.length; i++) {
-						if (element.equals(old[i])) {
-							if (i < old.length - 1) {
-								String replaced = old[i + 1];
-								old[i + 1] = old[i];
-								old[i] = replaced;
-								viewer.setInput(value = old);
-								viewer.setSelection(selection);
-								updateButtons();
-							}
-							break;
-						}
+		downButton.addListener(SWT.Selection, this);
+		return area;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == removeButton) {
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			if (!selection.isEmpty()) {
+				String element = (String) selection.getFirstElement();
+				String[] old = (String[]) value;
+				for (int i = 0; i < old.length; i++) {
+					if (element.equals(old[i])) {
+						String[] newValue = new String[old.length - 1];
+						System.arraycopy(old, 0, newValue, 0, i);
+						System.arraycopy(old, i + 1, newValue, i, newValue.length - i);
+						viewer.setInput(value = newValue);
+						updateButtons();
+						return;
 					}
 				}
 			}
-		});
-		return area;
+		} else if (e.widget == downButton) {
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			if (!selection.isEmpty()) {
+				String element = (String) selection.getFirstElement();
+				String[] old = (String[]) value;
+				for (int i = 0; i < old.length; i++) {
+					if (element.equals(old[i])) {
+						if (i < old.length - 1) {
+							String replaced = old[i + 1];
+							old[i + 1] = old[i];
+							old[i] = replaced;
+							viewer.setInput(value = old);
+							viewer.setSelection(selection);
+							updateButtons();
+						}
+						return;
+					}
+				}
+			}
+		} else if (e.widget == upButton) {
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			if (!selection.isEmpty()) {
+				String element = (String) selection.getFirstElement();
+				String[] old = (String[]) value;
+				for (int i = 0; i < old.length; i++) {
+					if (element.equals(old[i])) {
+						if (i > 0) {
+							String replaced = old[i - 1];
+							old[i - 1] = old[i];
+							old[i] = replaced;
+							viewer.setInput(value = old);
+							viewer.setSelection(selection);
+							updateButtons();
+						}
+						return;
+					}
+				}
+			}
+		} else {
+			String[] old = (String[]) value;
+			CodesDialog dialog = new CodesDialog(getShell(), qfield, null, old);
+			if (dialog.open() == OK) {
+				String newCode = dialog.getResult();
+				viewer.setInput(value = Utilities.addToStringArray(newCode, old, false));
+				viewer.setSelection(new StructuredSelection(newCode));
+				updateButtons();
+			}
+		}
+		
 	}
 
 }

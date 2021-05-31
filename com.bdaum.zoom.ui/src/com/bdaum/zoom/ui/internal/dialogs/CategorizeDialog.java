@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  
+ * (c) 2016-2021 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
@@ -54,8 +54,6 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TableDragSourceEffect;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -115,7 +113,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 
 @SuppressWarnings("restriction")
-public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject, Listener {
+public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject, Listener, ISelectionChangedListener {
 
 	private final class PairLabelProvider extends ZColumnLabelProvider {
 		@Override
@@ -191,7 +189,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				String mapped = vManager.getVocab(label);
 				if (mapped == null)
 					return Icons.warning.getImage();
-				else if (!mapped.equals(label))
+				if (!mapped.equals(label))
 					return Icons.info.getImage();
 			}
 			return null;
@@ -261,7 +259,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		public void dragEnter(DropTargetEvent event) {
 			int detail = event.detail;
 			event.detail = DND.DROP_NONE;
-			for (int i = 0; i < event.dataTypes.length; i++) {
+			for (int i = 0; i < event.dataTypes.length; i++)
 				if (selectionTransfer.isSupportedType(event.dataTypes[i])) {
 					event.currentDataType = event.dataTypes[i];
 					if ((detail & ops) != 0) {
@@ -269,7 +267,6 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						break;
 					}
 				}
-			}
 			super.dragEnter(event);
 		}
 
@@ -283,11 +280,8 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			if (selectionTransfer.isSupportedType(event.currentDataType)) {
 				Point p = control.toControl(event.x, event.y);
 				Node found = root.findNode(p.x, p.y);
-				if (found != null) {
-					if (event.detail != DND.DROP_COPY)
-						return DND.DROP_MOVE;
-					return DND.DROP_COPY;
-				}
+				if (found != null)
+					return event.detail != DND.DROP_COPY ? DND.DROP_MOVE : DND.DROP_COPY;
 				if (event.detail == DND.DROP_COPY)
 					return DND.DROP_COPY;
 			}
@@ -419,7 +413,6 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				break;
 			default:
 				sb.append(Messages.CategorizeDialog_nilClick);
-				break;
 			}
 			return sb.toString();
 		}
@@ -448,9 +441,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			if (event.widget == imageCanvas)
 				return new HoverInfo(currentAsset, (ImageRegion[]) null);
 			Node found = root.findNode(event.x, event.y);
-			if (found != null)
-				return new CatHoverInfo(found);
-			return null;
+			return found != null ? new CatHoverInfo(found) : null;
 		}
 
 	}
@@ -464,13 +455,10 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 
 	private class Node {
 		private Category cat;
-		private int level;
-		private int pos;
-		private int checked;
+		private int level, pos, checked;
 		private Node parent;
 		private List<Node> children;
-		private Rectangle rect;
-		private Rectangle covered;
+		private Rectangle rect, covered;
 
 		public Node(Node parent, Category cat) {
 			this.parent = parent;
@@ -865,12 +853,6 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		stack.setLayout(stackLayout);
 		PairLabelProvider pairLabelProvider = new PairLabelProvider();
 		CategoryLabelProvider catLabelProvider = new CategoryLabelProvider(getVocabManager());
-		ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		};
 		// Unsplit version
 		propComp = new Composite(stack, SWT.NONE);
 		propComp.setLayout(new GridLayout(2, false));
@@ -892,19 +874,13 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		proposalViewer.setContentProvider(ArrayContentProvider.getInstance());
 		proposalViewer.addDragSupport(DND.DROP_MOVE | DND.DROP_COPY, new Transfer[] { selectionTransfer },
 				new ProposalDragSourceListener(proposalViewer));
-		proposalViewer.addSelectionChangedListener(selectionChangedListener);
+		proposalViewer.addSelectionChangedListener(this);
 		ZColumnViewerToolTipSupport.enableFor(proposalViewer);
 
 		Composite buttonArea = new Composite(propComp, SWT.NONE);
 		buttonArea.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 		buttonArea.setLayout(new GridLayout(1, false));
-		new AllNoneGroup(buttonArea, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				proposalViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-				updateButtons();
-			}
-		});
+		new AllNoneGroup(buttonArea, this);
 		unpairedButton = new Button(buttonArea, SWT.PUSH);
 		unpairedButton.setText(Messages.CategorizeDialog_select_unpaired);
 		unpairedButton.addListener(SWT.Selection, this);
@@ -933,19 +909,13 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		proposalViewer1.setContentProvider(ArrayContentProvider.getInstance());
 		proposalViewer1.addDragSupport(DND.DROP_MOVE | DND.DROP_COPY, new Transfer[] { selectionTransfer },
 				new ProposalDragSourceListener(proposalViewer1));
-		proposalViewer1.addSelectionChangedListener(selectionChangedListener);
+		proposalViewer1.addSelectionChangedListener(this);
 		ColumnViewerToolTipSupport.enableFor(proposalViewer1);
 
 		Composite buttonArea1 = new Composite(splitComp, SWT.NONE);
 		buttonArea1.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		buttonArea1.setLayout(new GridLayout(1, false));
-		new AllNoneGroup(buttonArea1, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				proposalViewer1.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-				updateButtons();
-			}
-		});
+		new AllNoneGroup(buttonArea1, this);
 		unpairedButton2 = new Button(buttonArea1, SWT.PUSH);
 		unpairedButton2.setText(Messages.CategorizeDialog_select_unpaired);
 		unpairedButton2.addListener(SWT.Selection, this);
@@ -960,24 +930,18 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		proposalViewer2.getTable().setLayoutData(layoutData);
 		proposalViewer2.setLabelProvider(new ColumnLabelProvider());
 		proposalViewer2.setContentProvider(ArrayContentProvider.getInstance());
-		proposalViewer2.addSelectionChangedListener(selectionChangedListener);
+		proposalViewer2.addSelectionChangedListener(this);
 
 		Composite buttonArea2 = new Composite(splitComp, SWT.NONE);
 		buttonArea2.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		buttonArea2.setLayout(new GridLayout(1, false));
-		new AllNoneGroup(buttonArea2, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				proposalViewer2.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-				updateButtons();
-			}
-		});
+		new AllNoneGroup(buttonArea2, this);
 		// Messages
 		msgComp = new Composite(stack, SWT.NONE);
 		msgComp.setLayout(new GridLayout(1, false));
 		msgLabel = new Label(msgComp, SWT.CENTER | SWT.WRAP);
 		GridData ldata = new GridData(SWT.FILL, SWT.CENTER, true, true);
-		ldata.heightHint = 30;
+		ldata.heightHint = 50;
 		msgLabel.setLayoutData(ldata);
 
 		aiLink = new CLink(proposalArea, SWT.NONE);
@@ -990,7 +954,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 	protected void createCategoryArea() {
 		Composite catArea = new Composite(comp, SWT.NONE);
 		catArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		catArea.setLayout(new GridLayout(1, false));
+		catArea.setLayout(new GridLayout());
 		Label catLabel = new Label(catArea, SWT.NONE);
 		catLabel.setFont(JFaceResources.getHeaderFont());
 		catLabel.setText(Messages.CategorizeDialog_categories);
@@ -1070,7 +1034,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 		descriptionField.setText(imageDescription == null ? "" : imageDescription); //$NON-NLS-1$
 		if (aiService != null && aiService.isEnabled()) {
 			markKnownOnly = aiService.getMarkKnownOnly(null);
-			markAbove = aiService.getMarkAbove(null);
+			markAbove = aiService.getMarkAbove(null) / 100f;
 			prediction = predictions.get(currentAsset.getStringId());
 			if (prediction == null) {
 				msgLabel.setText(Messages.CategorizeDialog_query_pending);
@@ -1153,14 +1117,13 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				if (keywords != null) {
 					Token[] tokens = prediction.getConcepts();
 					for (String kw : keywords)
-						for (Token token : tokens) {
+						for (Token token : tokens)
 							if (kw.equals(token.getLabel())) {
 								proposalViewer.setChecked(token, true);
 								proposalViewer1.setChecked(token, true);
 								proposalViewer2.setChecked(token, true);
 								break;
 							}
-						}
 				}
 			}
 			newFaces = currentResult.getNewFaces();
@@ -1169,29 +1132,38 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			Node primaryNode = null;
 			Token[] tokens = prediction.getConcepts();
 			Set<String> keywords = meta.getKeywords();
-			for (Token token : tokens) {
-				String label = token.getLabel();
-				Node found = root.find(label);
-				if (found != null && found.getChecked() != CHECKED && found.getChecked() != SUPPLEMENTAL) {
-					if (hasPrimary || primaryNode != null && primaryNode != found) {
-						found.setChecked(SUPPROPOSED, false);
-						token.setMatch(SUPPROPOSED);
-					} else {
-						found.setChecked(PROPOSED, false);
-						token.setMatch(PROPOSED);
-						primaryNode = found;
+			if (tokens != null)
+				for (Token token : tokens) {
+					String label = token.getLabel();
+					Node found = root.find(label);
+					if (found != null && found.getChecked() != CHECKED && found.getChecked() != SUPPLEMENTAL) {
+						if (hasPrimary || primaryNode != null && primaryNode != found) {
+							found.setChecked(SUPPROPOSED, false);
+							token.setMatch(SUPPROPOSED);
+						} else {
+							found.setChecked(PROPOSED, false);
+							token.setMatch(PROPOSED);
+							primaryNode = found;
+						}
+						token.setCategory(found.getCat().getLabel());
+						proposalViewer.update(token, null);
+						proposalViewer1.update(token, null);
 					}
-					token.setCategory(found.getCat().getLabel());
-					proposalViewer.update(token, null);
-					proposalViewer1.update(token, null);
-				}
-				if (!markKnownOnly || keywords.contains(label) || newKeywords.contains(label)) {
-					if (token.score > markAbove) {
-						proposalViewer.setChecked(token, true);
-						proposalViewer1.setChecked(token, true);
+					if (!markKnownOnly || keywords.contains(label) || newKeywords.contains(label)) {
+						if (token.score > markAbove) {
+							proposalViewer.setChecked(token, true);
+							proposalViewer1.setChecked(token, true);
+						}
 					}
 				}
-			}
+			tokens = prediction.getKeywords();
+			if (tokens != null)
+				for (Token token : tokens) {
+					String label = token.getLabel();
+					if ((!markKnownOnly || keywords.contains(label) || newKeywords.contains(label))
+							&& token.score > markAbove)
+						proposalViewer2.setChecked(token, true);
+				}
 			newFaces = prediction.getFaces();
 		}
 		drawImage();
@@ -1345,7 +1317,8 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				faceButton.setVisible(false);
 		} else {
 			acceptLink.setVisible(false);
-			faceButton.setVisible(false);
+			if (faceButton != null)
+				faceButton.setVisible(false);
 		}
 	}
 
@@ -1407,16 +1380,16 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 			switch (e.character) {
 			case SWT.CR:
 				buttonPressed(DONE_ID);
-				break;
+				return;
 			case SWT.ESC:
 				buttonPressed(IDialogConstants.CANCEL_ID);
-				break;
+				return;
 			default:
 				switch (e.keyCode & SWT.KEY_MASK) {
 				case SWT.ARROW_LEFT:
 					if (current > 1)
 						buttonPressed(BACK_ID);
-					break;
+					return;
 				case SWT.ARROW_RIGHT:
 					if (current < size - 1) {
 						if ((e.stateMask & SWT.CTRL) == SWT.CTRL) {
@@ -1425,12 +1398,9 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						} else
 							buttonPressed(NEXT_ID);
 					}
-					break;
 				}
-				break;
 			}
-			break;
-
+			return;
 		case SWT.MouseDown:
 			boolean alt = (e.stateMask & SWT.ALT) == SWT.ALT;
 			Node found = findObject(e);
@@ -1449,10 +1419,10 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						root.degrade(CHECKED, SUPPLEMENTAL);
 						found.setChecked(CHECKED, false);
 					}
-					break;
+					return;
 				case SUPPROPOSED:
 					found.setChecked(alt ? UNCHECKED : SUPPLEMENTAL, false);
-					break;
+					return;
 				default:
 					if (alt || forcePrimary) {
 						root.degrade(PROPOSED, SUPPROPOSED);
@@ -1460,12 +1430,11 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						found.setChecked(CHECKED, false);
 					} else
 						found.setChecked(SUPPLEMENTAL, false);
-					break;
 				}
 				drawCat();
 				forcePrimary = false;
 			}
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == unpairedButton) {
 				Token[] tokens = (Token[]) proposalViewer.getInput();
@@ -1481,7 +1450,6 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 					if (wasEnabled)
 						Job.getJobManager().cancel(this);
 					if (aiService.configure(getShell())) {
-						boolean enabled = aiService.isEnabled();
 						setProposalTitel();
 						List<Asset> reordered;
 						int p = assets.indexOf(currentAsset);
@@ -1489,9 +1457,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						for (Asset asset : reordered)
 							predictions.remove(asset.getStringId());
 						fillValues(false);
-						// TODO could be improved when language can be
-						// controlled through API
-						if (enabled)
+						if (aiService.isEnabled())
 							startPredictionJob(reordered);
 					}
 				}
@@ -1523,8 +1489,11 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 				root.acceptProposals(root.has(CHECKED));
 				drawCat();
 				updateButtons();
+			} else {
+				proposalViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
+				updateButtons();
 			}
-			break;
+			return;
 		case SWT.Paint:
 			if (e.widget == catCanvas) {
 				Rectangle clientArea = catCanvas.getClientArea();
@@ -1533,9 +1502,7 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 						Math.max(15, (clientArea.height - 2 * MARGINS) / (width + 1)));
 			} else
 				paintImage(e);
-			break;
 		}
-
 	}
 
 	private void paintImage(Event e) {
@@ -1601,6 +1568,11 @@ public class CategorizeDialog extends ZTitleAreaDialog implements IHoverSubject,
 
 	public Map<String, Category> getCatBackup() {
 		return catBackup;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 }

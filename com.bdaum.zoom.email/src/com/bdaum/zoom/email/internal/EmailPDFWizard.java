@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -41,13 +41,14 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.internal.wizards.AbstractAssetSelectionWizard;
 
 @SuppressWarnings("restriction")
-public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExportWizard, IPdfWizard {
+public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExportWizard, IPdfWizard, IMailWizard {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.emailPdfProperties"; //$NON-NLS-1$
 	private static int count = 0;
 	private CreatePDFPage layoutPage;
-	private SendEmailPage mainPage;
+	private ProcessingPage mainPage;
 	private File pdfFile;
+	private MailPage mailPage;
 
 	public EmailPDFWizard() {
 		setHelpAvailable(true);
@@ -71,6 +72,8 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	public boolean performFinish() {
 		boolean finish = layoutPage.finish();
 		saveDialogSettings();
+		mailPage.saveSettings();
+		mainPage.saveSettings();
 		return finish;
 	}
 
@@ -95,12 +98,12 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 		ImageDescriptor imageDescriptor = AbstractUIPlugin
 				.imageDescriptorFromPlugin(Activator.PLUGIN_ID,
 						"icons/banner/pdfemail64.png"); //$NON-NLS-1$
-		layoutPage = new CreatePDFPage(assets, "PDF"); //$NON-NLS-1$
+		addPage(layoutPage = new CreatePDFPage(assets, "PDF")); //$NON-NLS-1$
 		layoutPage.setImageDescriptor(imageDescriptor);
-		addPage(layoutPage);
-		mainPage = new SendEmailPage(assets, true);
+		addPage(mainPage = new ProcessingPage(assets, true));
 		mainPage.setImageDescriptor(imageDescriptor);
-		addPage(mainPage);
+		addPage(mailPage = new MailPage());
+		mailPage.setImageDescriptor(imageDescriptor);
 	}
 
 	public int getQuality() {
@@ -112,23 +115,14 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 	}
 
 	public File getTargetFile() {
-		if (pdfFile == null) {
+		if (pdfFile == null)
 			try {
 				pdfFile = Activator.getDefault().createTempFile(Constants.APPNAME + "_pdf" + (++count) + ".pdf", //$NON-NLS-1$//$NON-NLS-2$
 						".pdf"); //$NON-NLS-1$
 			} catch (IOException e) {
 				Activator.getDefault().logError(Messages.EmailPDFWizard_cannot_create_temp_PDF_file, e);
 			}
-		}
 		return pdfFile;
-	}
-
-	public String getSubject() {
-		return mainPage.getSubject();
-	}
-
-	public String getMessage() {
-		return mainPage.getMailMessage();
 	}
 
 	public float getImageSize() {
@@ -157,6 +151,16 @@ public class EmailPDFWizard extends AbstractAssetSelectionWizard implements IExp
 
 	public int getMode() {
 		return Constants.FORMAT_JPEG;
+	}
+
+	public EmailData getEmailData() {
+		EmailData emailData = mainPage.getEmailData();
+		mailPage.completeEmailData(emailData);
+		return emailData;
+	}
+
+	public String getImageList() {
+		return mainPage.getImageList();
 	}
 
 }

@@ -149,12 +149,14 @@ public class ExportToCommunityPage extends AbstractExportToCommunityPage impleme
 	public void handleEvent(Event e) {
 		switch (e.type) {
 		case SWT.Selection:
-			getWizard().getContainer().updateButtons();
-			break;
+			if (e.widget == metaButton)
+				getWizard().getContainer().updateButtons();
+			else
+				super.handleEvent(e);
+			return;
 		case SWT.Modify:
 			updateControls();
 			checkImages();
-			break;
 		}
 	}
 

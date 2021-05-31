@@ -91,8 +91,8 @@ public class Rt3Activator extends Plugin {
 			try {
 				String result = null;
 				try {
-					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, Messages.Rt3Activator_locate_rt,
-							IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8", null); //$NON-NLS-1$
+					result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, null,
+							Messages.Rt3Activator_locate_rt, IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8", null); //$NON-NLS-1$
 				} catch (IOException e) {
 					// not found
 				}
@@ -132,11 +132,12 @@ public class Rt3Activator extends Plugin {
 					return name.startsWith(RAW_THERAPEE) || name.startsWith(RAW_THERAPEE2);
 				}
 			});
-			for (File rtFile : rtFiles) {
-				File profile = new File(rtFile, CACHEDPROFILES);
-				if (profile.exists())
-					profileList.add(profile);
-			}
+			if (rtFiles != null)
+				for (File rtFile : rtFiles) {
+					File profile = new File(rtFile, CACHEDPROFILES);
+					if (profile.exists())
+						profileList.add(profile);
+				}
 		}
 
 	}

@@ -387,7 +387,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 		data.heightHint = PROGRESS_THICKNESS;
 		progressBar.setLayoutData(data);
 		addKeyListener();
-		getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory()
+		PlatformUI.getWorkbench().getOperationSupport().getOperationHistory()
 				.addOperationHistoryListener(new IOperationHistoryListener() {
 					public void historyNotification(OperationHistoryEvent event) {
 						refresh();
@@ -395,7 +395,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 				});
 		UiActivator.getDefault().getPreferenceStore().addPropertyChangeListener(this);
 	}
-	
+
 	@Override
 	public void handleEvent(Event e) {
 		switch (e.type) {
@@ -408,22 +408,24 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 						CURSOR_MMINUS);
 			} else
 				setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
-			break;
+			return;
 		case SWT.MouseDown:
 			mouseDown = true;
 			mouseButton = e.button;
 			mouseX = lastMouseX = e.x;
 			mouseY = e.y;
 			setCursorForObject(e, CURSOR_GRABBING, CURSOR_MPLUS, CURSOR_MPLUS);
-			break;
+			return;
 		case SWT.MouseUp:
 			mouseX = e.x;
 			mouseY = e.y;
 			mouseDown = false;
 			setCursorForObject(e, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND, CURSOR_OPEN_HAND);
-			break;
+			return;
+		default:
+			super.handleEvent(e);
 		}
-		super.handleEvent(e);
+
 	}
 
 	public void hasStarted() {
@@ -480,7 +482,6 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 		};
 		cutAction.setToolTipText(Messages.getString("AbstractPresentationView.cut_tooltip")); //$NON-NLS-1$
 		pasteAction = new Action(Messages.getString("AbstractPresentationView.paste"), Icons.paste.getDescriptor()) { //$NON-NLS-1$
-
 			@Override
 			public void runWithEvent(Event event) {
 				if (event.type != SWT.Selection)
@@ -634,7 +635,8 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 
 	public String createSlideTitle(CaptionConfiguration captionConfiguration, Asset asset) {
 		if (captionConfiguration.getLabelTemplate() != null)
-			return captionProcessor.computeImageCaption(asset, null, null, null, captionConfiguration.getLabelTemplate(), true);
+			return captionProcessor.computeImageCaption(asset, null, null, null,
+					captionConfiguration.getLabelTemplate(), true);
 		return UiUtilities.createSlideTitle(asset);
 	}
 
@@ -873,6 +875,7 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 
 	protected void fillLocalPullDown(IMenuManager manager) {
 		manager.add(new Separator());
+		manager.add(synchronizeAction);
 		manager.add(propertiesAction);
 	}
 
@@ -1329,9 +1332,25 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 
 	@Override
 	protected void updateStatusLine() {
+		StringBuilder sb = new StringBuilder();
 		String statusMessage = getStatusMessage();
 		if (statusMessage != null)
-			setStatusMessage(statusMessage, false);
+			sb.append(statusMessage).append("   -    "); //$NON-NLS-1$
+		switch (UiActivator.getDefault().getPreferenceStore().getInt(PreferenceConstants.ZOOMKEY)) {
+		case PreferenceConstants.ZOOMALT:
+			sb.append(Messages.getString("ZuiView.alt_zoom")); //$NON-NLS-1$
+			break;
+		case PreferenceConstants.ZOOMRIGHT:
+			sb.append(Messages.getString("ZuiView.right_zoom")); //$NON-NLS-1$
+			break;
+		case PreferenceConstants.ZOOMSHIFT:
+			sb.append(Messages.getString("ZuiView.shift_zoom")); //$NON-NLS-1$
+			break;
+		default:
+			sb.append(canvas.getDisplay().getTouchEnabled() ? Messages.getString("ZuiView.two_finger_zoom") //$NON-NLS-1$
+					: Messages.getString("ZuiView.wheel_zoom")); //$NON-NLS-1$
+		}
+		setStatusMessage(sb.toString(), false);
 	}
 
 	protected abstract String getStatusMessage();
@@ -1339,15 +1358,16 @@ public abstract class AbstractPresentationView extends BasicView implements IExt
 	protected abstract void refreshAfterHistoryEvent(IUndoableOperation operation);
 
 	public abstract String getId();
-	
+
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		String property = event.getProperty();
-		if (PreferenceConstants.SHOWLABEL.equals(property)
-				|| PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
+		if (PreferenceConstants.SHOWLABEL.equals(property) || PreferenceConstants.THUMBNAILTEMPLATE.equals(property)
 				|| PreferenceConstants.LABELALIGNMENT.equals(property)
 				|| PreferenceConstants.LABELFONTSIZE.equals(property))
 			captionProcessor.updateGlobalConfiguration();
+		else if (PreferenceConstants.ZOOMKEY.equals(property))
+			updateStatusLine();
 	}
 
 }

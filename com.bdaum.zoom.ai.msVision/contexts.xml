@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contexts>
    <context id="pref_page_context">
-      <description>Preferences for the Microsoft Computer Vision web service</description>
       <topic href="html/msVision.html" label="Microsoft Vision preferences"/>
    </context>
 </contexts>

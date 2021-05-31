@@ -29,13 +29,13 @@ import java.util.StringTokenizer;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
@@ -53,7 +53,7 @@ import com.bdaum.zoom.ui.internal.widgets.JpegMetaGroup;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class MetaSelectionPage extends ColoredWizardPage {
+public class MetaSelectionPage extends ColoredWizardPage implements Listener {
 
 	private static final Object[] EMPTY = new Object[0];
 	private static final String JPEGMETA = "jpegmeta"; //$NON-NLS-1$
@@ -125,21 +125,21 @@ public class MetaSelectionPage extends ColoredWizardPage {
 		buttonBar.setLayout(new GridLayout(1, false));
 		Button selectAllButton = new Button(buttonBar, SWT.PUSH);
 		selectAllButton.setText(Messages.MetaSelectionPage_select_all);
-		selectAllButton.addSelectionListener(new SelectionAdapter() {
+		selectAllButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				viewer.setGrayedElements(EMPTY);
 				viewer.setCheckedElements(QueryField.getQueryFields().toArray());
 			}
 		});
 		Button selectNoneButton = new Button(buttonBar, SWT.PUSH);
 		selectNoneButton.setText(Messages.MetaSelectionPage_select_none);
-		selectNoneButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				viewer.setCheckedElements(EMPTY);
-			}
-		});
+		selectNoneButton.addListener(SWT.Selection, this);
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		viewer.setCheckedElements(EMPTY);
 	}
 
 	private void fillViewer() {
@@ -158,6 +158,7 @@ public class MetaSelectionPage extends ColoredWizardPage {
 					if (qfield != null)
 						fields.add(qfield);
 				}
+				viewer.setCheckedElements(fields.toArray());
 			}
 		}
 	}

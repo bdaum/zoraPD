@@ -33,11 +33,11 @@ import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.VerifyKeyListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 
 public class HtmlSourceViewer extends SourceViewer implements
 		ITextOperationTarget {
@@ -57,26 +57,15 @@ public class HtmlSourceViewer extends SourceViewer implements
 					event.doit = false;
 			}
 		});
-		styleTextWidget.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent event) {
-//				if (event.character == 13) {
-//					ITextSelection selection = (ITextSelection) getSelection();
-//					if (selection != null)
-//						try {
-//							getDocument().replace(selection.getOffset(), 0, "<br/>"); //$NON-NLS-1$
-//							setSelectedRange(selection.getOffset()+5, 0);
-//						} catch (BadLocationException e) {
-//							// should never happen
-//						}
-//					return;
-//				}
+		styleTextWidget.addListener(SWT.KeyDown, new Listener() {
+			public void handleEvent(Event event) {
 				if (event.stateMask != SWT.CTRL)
 					return;
 				int operation = 0;
-				if (contentAssistant != null && event.character == ' ') {
+				if (contentAssistant != null && event.character == ' ')
 					// STRG+Leer: Content Assist
 					operation = ISourceViewer.CONTENTASSIST_PROPOSALS;
-				} else {
+				else
 					switch (event.character | '\u0040') {
 					case 'Z':
 						operation = ITextOperationTarget.UNDO;
@@ -108,13 +97,8 @@ public class HtmlSourceViewer extends SourceViewer implements
 						setTextStyle(SWT.UNDERLINE_SINGLE);
 						break;
 					}
-				}
 				if (operation != 0 && canDoOperation(operation))
 					doOperation(operation);
-			}
-
-			public void keyReleased(KeyEvent e) {
-				// do nothing
 			}
 		});
 	}

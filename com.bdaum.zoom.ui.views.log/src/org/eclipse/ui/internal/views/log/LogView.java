@@ -82,8 +82,6 @@ import org.eclipse.swt.dnd.DragSourceAdapter;
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -126,7 +124,7 @@ import com.ibm.icu.text.DateFormat;
 import com.ibm.icu.text.SimpleDateFormat;
 
 @SuppressWarnings("restriction")
-public class LogView extends ViewPart implements ILogListener {
+public class LogView extends ViewPart implements ILogListener, Listener, ISelectionChangedListener, IMenuListener {
 	public static final String P_LOG_WARNING = "warning"; //$NON-NLS-1$
 	public static final String P_LOG_ERROR = "error"; //$NON-NLS-1$
 	public static final String P_LOG_INFO = "info"; //$NON-NLS-1$
@@ -459,25 +457,24 @@ public class LogView extends ViewPart implements ILogListener {
 		mgr.add(fActivateViewAction);
 
 		MenuManager popupMenuManager = new MenuManager("#PopupMenu"); //$NON-NLS-1$
-		IMenuListener listener = new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				manager.add(fCopyAction);
-				manager.add(new Separator());
-				manager.add(fDeleteLogAction);
-				manager.add(new Separator());
-				manager.add(fExportLogAction);
-				manager.add(new Separator());
-				manager.add(fExportLogEntryAction);
-				manager.add(new Separator());
-				manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-			}
-		};
-		popupMenuManager.addMenuListener(listener);
+		popupMenuManager.addMenuListener(this);
 		popupMenuManager.setRemoveAllWhenShown(true);
 		getSite().registerContextMenu(popupMenuManager, getSite().getSelectionProvider());
 		Tree fTree = viewer.getTree();
 		Menu menu = popupMenuManager.createContextMenu(fTree);
 		fTree.setMenu(menu);
+	}
+	
+	public void menuAboutToShow(IMenuManager manager) {
+		manager.add(fCopyAction);
+		manager.add(new Separator());
+		manager.add(fDeleteLogAction);
+		manager.add(new Separator());
+		manager.add(fExportLogAction);
+		manager.add(new Separator());
+		manager.add(fExportLogEntryAction);
+		manager.add(new Separator());
+		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	private Action createActivateViewAction() {
@@ -565,8 +562,8 @@ public class LogView extends ViewPart implements ILogListener {
 	 */
 
 	/**
-	 * Shows/hides the filter text control from the filtered tree. This method
-	 * also sets the P_SHOW_FILTER_TEXT preference to the visible state
+	 * Shows/hides the filter text control from the filtered tree. This method also
+	 * sets the P_SHOW_FILTER_TEXT preference to the visible state
 	 *
 	 * @param visible
 	 *            if the filter text control should be shown or not
@@ -588,16 +585,16 @@ public class LogView extends ViewPart implements ILogListener {
 		ViewerComparator comparator = getViewerComparator(DATE);
 		viewer.setComparator(comparator);
 		UiUtilities.installDoubleClickExpansion(viewer);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent e) {
-				handleSelectionChanged(e.getSelection());
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		viewer.setInput(this);
 		addMouseListeners();
 		addDragSource();
 	}
 
+	public void selectionChanged(SelectionChangedEvent e) {
+		handleSelectionChanged(e.getSelection());
+	}
+	
 	@Override
 	public void dispose() {
 		writeSettings();
@@ -609,9 +606,6 @@ public class LogView extends ViewPart implements ILogListener {
 		super.dispose();
 	}
 
-	/**
-	 * Import log from file selected in FileDialog.
-	 */
 	void handleImport() {
 		FileDialog dialog = new FileDialog(getViewSite().getShell());
 		dialog.setFilterExtensions(new String[] { "*.log" }); //$NON-NLS-1$
@@ -762,15 +756,13 @@ public class LogView extends ViewPart implements ILogListener {
 	}
 
 	protected void handleClear() {
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(), new Runnable() {
-			public void run() {
-				elements.clear();
-				groups.clear();
-				if (currentSession != null) {
-					currentSession.removeAllChildren();
-				}
-				asyncRefresh(false);
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> {
+			elements.clear();
+			groups.clear();
+			if (currentSession != null) {
+				currentSession.removeAllChildren();
 			}
+			asyncRefresh(false);
 		});
 	}
 
@@ -984,23 +976,20 @@ public class LogView extends ViewPart implements ILogListener {
 		Display display = fTree.getDisplay();
 		final ViewPart view = this;
 		if (display != null) {
-			display.asyncExec(new Runnable() {
-				public void run() {
-					if (!fTree.isDisposed()) {
-						// TreeViewer viewer = fFilteredTree.getViewer();
-						viewer.refresh();
-						viewer.expandAll();
-						fDeleteLogAction.setEnabled(
-								fInputFile.exists() && fInputFile.equals(Platform.getLogFileLocation().toFile()));
-						// fOpenLogAction.setEnabled(fInputFile.exists());
-						fExportLogAction.setEnabled(fInputFile.exists());
-						fExportLogEntryAction.setEnabled(!viewer.getSelection().isEmpty());
-						if (activate && fActivateViewAction.isChecked()) {
-							IWorkbenchPage page = Activator.getDefault().getWorkbench().getActiveWorkbenchWindow()
-									.getActivePage();
-							if (page != null)
-								page.bringToTop(view);
-						}
+			display.asyncExec(() -> {
+				if (!fTree.isDisposed()) {
+					viewer.refresh();
+					viewer.expandAll();
+					fDeleteLogAction.setEnabled(
+							fInputFile.exists() && fInputFile.equals(Platform.getLogFileLocation().toFile()));
+					// fOpenLogAction.setEnabled(fInputFile.exists());
+					fExportLogAction.setEnabled(fInputFile.exists());
+					fExportLogEntryAction.setEnabled(!viewer.getSelection().isEmpty());
+					if (activate && fActivateViewAction.isChecked()) {
+						IWorkbenchPage page = Activator.getDefault().getWorkbench().getActiveWorkbenchWindow()
+								.getActivePage();
+						if (page != null)
+							page.bringToTop(view);
 					}
 				}
 			});
@@ -1037,8 +1026,8 @@ public class LogView extends ViewPart implements ILogListener {
 	/**
 	 * Converts selected log view element to string.
 	 * 
-	 * @return textual log entry representation or null if selection doesn't
-	 *         contain log entry
+	 * @return textual log entry representation or null if selection doesn't contain
+	 *         log entry
 	 */
 	private static String selectionToString(ISelection selection) {
 		try (StringWriter writer = new StringWriter(); PrintWriter pwriter = new PrintWriter(writer)) {
@@ -1116,13 +1105,12 @@ public class LogView extends ViewPart implements ILogListener {
 				case SWT.MouseExit:
 				case SWT.MouseMove:
 					onMouseMove(e);
-					break;
+					return;
 				case SWT.MouseHover:
 					onMouseHover(e);
-					break;
+					return;
 				case SWT.MouseDown:
 					onMouseDown(e);
-					break;
 				}
 			}
 		};
@@ -1195,14 +1183,10 @@ public class LogView extends ViewPart implements ILogListener {
 		c = fTextShell.getDisplay().getSystemColor(SWT.COLOR_INFO_FOREGROUND);
 		fTextLabel.setForeground(c);
 		fTextLabel.setEditable(false);
-		fTextShell.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				onTextShellDispose(e);
-			}
-		});
+		fTextShell.addListener(SWT.Dispose, this);
 	}
 
-	void onTextShellDispose(DisposeEvent e) {
+	void onTextShellDispose(Event e) {
 		fCanOpenTextShell = true;
 		setFocus();
 	}
@@ -1366,7 +1350,6 @@ public class LogView extends ViewPart implements ILogListener {
 		// }
 	}
 
-
 	/**
 	 * Returns the filter dialog settings object used to maintain state between
 	 * filter dialogs
@@ -1416,15 +1399,15 @@ public class LogView extends ViewPart implements ILogListener {
 	 * default width is returned iff:
 	 * <ul>
 	 * <li>There is no preference for the given key</li>
-	 * <li>The returned preference value is too small, making the columns
-	 * invisible by width.</li>
+	 * <li>The returned preference value is too small, making the columns invisible
+	 * by width.</li>
 	 * </ul>
 	 * 
 	 * @param preferences
 	 * @param key
 	 * @param defaultwidth
-	 * @return the stored width for the a column described by the given key or
-	 *         the default width
+	 * @return the stored width for the a column described by the given key or the
+	 *         default width
 	 *
 	 * @since 3.6
 	 */
@@ -1510,5 +1493,9 @@ public class LogView extends ViewPart implements ILogListener {
 	 */
 	public void setPlatformLog() {
 		setLogFile(Platform.getLogFileLocation().toFile());
+	}
+
+	public void handleEvent(Event e) {
+		onTextShellDispose(e);
 	}
 }

@@ -47,13 +47,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.GestureEvent;
-import org.eclipse.swt.events.GestureListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
@@ -114,15 +107,14 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
 public abstract class BasicView extends ViewPart
-		implements ISelectionProvider, EducatedSelectionListener, IThemeListener, Listener, ImageStore, 
-		IHoverSubject, UiConstants, IPartListener2, VolumeListener, IUndoHost {
+		implements ISelectionProvider, EducatedSelectionListener, IThemeListener, Listener, ImageStore, IHoverSubject,
+		UiConstants, IPartListener2, VolumeListener, IUndoHost, IPreferenceChangeListener {
 
 	private boolean isVisible = false; // true;
 	protected boolean isDirty = false;
 	private INavigationHistory navigationHistory;
 	protected ListenerList<ISelectionChangedListener> listeners = new ListenerList<ISelectionChangedListener>();
 	protected HoveringController hoveringController;
-	private IPreferenceChangeListener colorProfilePreferenceListener;
 	private DecorateJob decorator;
 	private List<IHandlerActivation> activations = new ArrayList<IHandlerActivation>();
 	private List<IViewAction> extraViewActions;
@@ -136,16 +128,15 @@ public abstract class BasicView extends ViewPart
 
 	public BasicView() {
 		configureCache();
-		colorProfilePreferenceListener = new IPreferenceChangeListener() {
-			public void preferenceChange(PreferenceChangeEvent event) {
-				if (PreferenceConstants.COLORPROFILE.equals(event.getKey())) {
-					configureCache();
-					refresh();
-				}
-			}
-		};
-		Ui.getUi().addPreferenceChangeListener(colorProfilePreferenceListener);
+		Ui.getUi().addPreferenceChangeListener(this);
 		CssActivator.getDefault().addThemeListener(this);
+	}
+
+	public void preferenceChange(PreferenceChangeEvent event) {
+		if (PreferenceConstants.COLORPROFILE.equals(event.getKey())) {
+			configureCache();
+			refresh();
+		}
 	}
 
 	protected static void cancelJobs(Object family) {
@@ -317,15 +308,11 @@ public abstract class BasicView extends ViewPart
 		}
 	}
 
-	private Runnable refresher = new Runnable() {
-		public void run() {
+	protected void refreshBusy() {
+		BusyIndicator.showWhile(getSite().getShell().getDisplay(), () -> {
 			refresh();
 			updateActions(false);
-		}
-	};
-
-	protected void refreshBusy() {
-		BusyIndicator.showWhile(getSite().getShell().getDisplay(), refresher);
+		});
 	}
 
 	public void postSelection(Object object) {
@@ -385,8 +372,7 @@ public abstract class BasicView extends ViewPart
 					true);
 		for (RetargetAction action : actions)
 			action.dispose();
-		if (colorProfilePreferenceListener != null)
-			Ui.getUi().removePreferenceChangeListener(colorProfilePreferenceListener);
+		Ui.getUi().removePreferenceChangeListener(this);
 		CssActivator.getDefault().removeThemeListener(this);
 		if (navigationHistory != null)
 			navigationHistory.removeSelectionListener(this);
@@ -556,19 +542,21 @@ public abstract class BasicView extends ViewPart
 	public Control[] getControls() {
 		return null;
 	}
-	
+
 	@Override
 	public void handleEvent(Event e) {
 		switch (e.type) {
 		case SWT.Traverse:
 			onTraverse(e);
-			break;
+			return;
 		case SWT.KeyDown:
 			onKeyDown(e);
-			break;
+			return;
 		case SWT.KeyUp:
 			onKeyUp(e);
-			break;
+			return;
+		case SWT.MouseEnter:
+			launchDecorator();
 		}
 	}
 
@@ -612,10 +600,10 @@ public abstract class BasicView extends ViewPart
 	}
 
 	protected void addGestureListener(final Scrollable gallery) {
-		gallery.addGestureListener(new GestureListener() {
+		gallery.addListener(SWT.Gesture, new Listener() {
 			double previousMagnification = 1d;
 
-			public void gesture(GestureEvent e) {
+			public void handleEvent(Event e) {
 				if (e.detail == SWT.GESTURE_PAN) {
 					ScrollBar horizontalBar = gallery.getHorizontalBar();
 					if (horizontalBar != null)
@@ -747,27 +735,22 @@ public abstract class BasicView extends ViewPart
 	 */
 	public void setDecorator(Control control, DecorateJob decorator) {
 		this.decorator = decorator;
-		control.addMouseTrackListener(new MouseTrackAdapter() {
-			@Override
-			public void mouseEnter(MouseEvent e) {
-				launchDecorator();
-			}
-		});
+		control.addListener(SWT.MouseEnter, this);
 		if (control instanceof Scrollable) {
 			Scrollable scrollable = (Scrollable) control;
 			ScrollBar verticalBar = scrollable.getVerticalBar();
 			ScrollBar horizontalBar = scrollable.getHorizontalBar();
 			if (verticalBar != null || horizontalBar != null) {
-				SelectionListener scrollListener = new SelectionAdapter() {
+				Listener scrollListener = new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						launchDecorator();
 					}
 				};
 				if (verticalBar != null)
-					verticalBar.addSelectionListener(scrollListener);
+					verticalBar.addListener(SWT.Selection, scrollListener);
 				if (horizontalBar != null)
-					horizontalBar.addSelectionListener(scrollListener);
+					horizontalBar.addListener(SWT.Selection, scrollListener);
 			}
 		}
 	}

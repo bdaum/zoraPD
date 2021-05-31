@@ -28,9 +28,7 @@ import com.bdaum.zoom.ui.Ui;
 public abstract class SynchronizeCatJob extends Job {
 
 	protected static final int PERCENTCPU = 40;
-
 	protected static final long MAXDELAY = 100;
-
 	protected static final long MINDELAY = 20;
 
 	protected static final ISchedulingRule exclusiveSchedulingRule = new ISchedulingRule() {

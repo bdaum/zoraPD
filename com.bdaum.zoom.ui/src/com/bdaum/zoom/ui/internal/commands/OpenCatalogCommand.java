@@ -46,14 +46,12 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 			if (catFile == null) {
 				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
 				dialog.setText(Messages.OpenCatAction_Open_existing);
-				UiActivator activator = UiActivator.getDefault();
-				dialog.setFilterExtensions(activator.getCatFileExtensions());
-				dialog.setFilterNames(activator.getSupportedCatFileNames());
+				dialog.setFilterExtensions(UiActivator.getDefault().getCatFileExtensions());
+				dialog.setFilterNames(UiActivator.getDefault().getSupportedCatFileNames());
 				String path = dialog.open();
 				if (path != null) {
 					catFile = new File(path);
-					File currentFile = CoreActivator.getDefault().getDbManager().getFile();
-					if (currentFile != null && currentFile.equals(catFile)) {
+					if (catFile.equals(CoreActivator.getDefault().getDbManager().getFile())) {
 						AcousticMessageDialog.openWarning(getShell(), Messages.OpenCatAction_Open_existing,
 								Messages.OpenCatalogCommand_already_open);
 						return;
@@ -85,13 +83,11 @@ public class OpenCatalogCommand extends AbstractCatCommandHandler {
 	public static void checkPausedFolderWatch(Shell shell, IDbManager dbManager) {
 		if (dbManager.getFile() != null && shell != null && !shell.isDisposed()) {
 			Meta meta = dbManager.getMeta(true);
-			if (meta.getPauseFolderWatch()) {
-				if (new TimedMessageDialog(shell, null, Messages.OpenCatalogCommand_paused, null,
-						Messages.OpenCatalogCommand_resume_watch, AcousticMessageDialog.QUESTION,
-						new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0, 1, 30000L).open() == 0) {
-					meta.setPauseFolderWatch(false);
-					dbManager.storeAndCommit(meta);
-				}
+			if (meta.getPauseFolderWatch() && new TimedMessageDialog(shell, null, Messages.OpenCatalogCommand_paused,
+					null, Messages.OpenCatalogCommand_resume_watch, AcousticMessageDialog.QUESTION,
+					new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL }, 0, 1, 30000L).open() == 0) {
+				meta.setPauseFolderWatch(false);
+				dbManager.storeAndCommit(meta);
 			}
 		}
 

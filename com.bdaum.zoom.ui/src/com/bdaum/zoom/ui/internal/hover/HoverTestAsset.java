@@ -16,10 +16,7 @@ public class HoverTestAsset extends HoverTestObject {
 				break;
 			case QueryField.T_POSITIVEINTEGER:
 			case QueryField.T_INTEGER:
-				if (enumeration instanceof int[])
-					value = ((int[]) enumeration)[1];
-				else
-					value = 60;
+				value = enumeration instanceof int[] ? ((int[]) enumeration)[1] : 60;
 				break;
 			case QueryField.T_POSITIVEFLOAT:
 			case QueryField.T_FLOAT:
@@ -35,20 +32,14 @@ public class HoverTestAsset extends HoverTestObject {
 				value = 60L;
 				break;
 			default:
-				if (enumeration instanceof String[])
-					value = ((String[]) enumeration)[1];
-				else
-					value = computeExampleFromName(queryField.getLabel());
+				value = enumeration instanceof String[] ? ((String[]) enumeration)[1] : computeExampleFromName(queryField.getLabel());
 				break;
 			}
 		} else
 			switch (queryField.getType()) {
 			case QueryField.T_POSITIVEINTEGER:
 			case QueryField.T_INTEGER:
-				if (enumeration instanceof int[])
-					value = new int[] { ((int[]) enumeration)[1] };
-				else
-					value = new int[] { 60 };
+				value = enumeration instanceof int[] ? new int[] { ((int[]) enumeration)[1] } : new int[] { 60 };
 				break;
 			case QueryField.T_POSITIVELONG:
 			case QueryField.T_LONG:
@@ -59,10 +50,7 @@ public class HoverTestAsset extends HoverTestObject {
 				value = new double[] { 60d };
 				break;
 			default:
-				if (enumeration instanceof String[])
-					value = new String[] { ((String[]) enumeration)[1] };
-				else
-					value = new String[] { computeExampleFromName(queryField.getLabel()) };
+				value = enumeration instanceof String[] ? new String[] { ((String[]) enumeration)[1] } : new String[] { computeExampleFromName(queryField.getLabel()) };
 				break;
 			}
 		if (value == null)

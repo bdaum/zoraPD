@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.framework.BundleContext;
 
@@ -41,61 +42,37 @@ import com.bdaum.zoom.ai.internal.translator.TranslatorClient;
 import com.bdaum.zoom.core.internal.lire.AiAlgorithm;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 @SuppressWarnings({ "restriction" })
 public class AiActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.ai"; //$NON-NLS-1$
 
-	// The shared instanceO
 	private static AiActivator plugin;
 
 	private Map<String, IAiServiceProvider> providerMap;
 
 	private TranslatorClient client;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.
-	 * BundleContext)
-	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-
 	}
 
 	public TranslatorClient getClient() {
-		if (client == null) {
+		if (client == null)
 			client = new TranslatorClient();
-			String translatorKey = getPreferenceStore().getString(PreferenceConstants.TRANSLATORKEY);
-			if (translatorKey != null && !translatorKey.isEmpty())
-				client.setKey(translatorKey);
-		}
-		return client;
+		IPreferenceStore preferenceStore = getPreferenceStore();
+		return client.withLanguage(preferenceStore.getString(PreferenceConstants.LANGUAGE))
+				.withEndpoint(preferenceStore.getString(PreferenceConstants.TRANSLATORENDPOINT))
+				.withKey(preferenceStore.getString(PreferenceConstants.TRANSLATORKEY));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.
-	 * BundleContext)
-	 */
 	public void stop(BundleContext context) throws Exception {
-		disposeClient();
+		client = null;
 		plugin = null;
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static AiActivator getDefault() {
 		return plugin;
 	}
@@ -104,10 +81,13 @@ public class AiActivator extends ZUiPlugin {
 		getAiServiceProviders();
 		if (serviceId == null) {
 			String label = getPreferenceStore().getString(PreferenceConstants.ACTIVEPROVIDER);
-			if (label != null)
+			if (label != null) {
+				if (label.startsWith("&")) //$NON-NLS-1$
+					label = label.substring(1);
 				for (IAiServiceProvider provider : providerMap.values())
 					if (label.equals(provider.getName()))
 						return provider;
+			}
 			serviceId = "*"; //$NON-NLS-1$
 		}
 		IAiServiceProvider provider = providerMap.get(serviceId);
@@ -151,7 +131,7 @@ public class AiActivator extends ZUiPlugin {
 						List<AiAlgorithm> algorithms = new ArrayList<>(5);
 						for (IConfigurationElement feature : config.getChildren("feature")) //$NON-NLS-1$
 							algorithms.add(new AiAlgorithm(getInt(feature, "id", -1), feature.getAttribute("name"), //$NON-NLS-1$ //$NON-NLS-2$
-									feature.getAttribute("label"), feature.getAttribute("description"),  //$NON-NLS-1$//$NON-NLS-2$
+									feature.getAttribute("label"), feature.getAttribute("description"), //$NON-NLS-1$//$NON-NLS-2$
 									Boolean.parseBoolean(feature.getAttribute("essential")), namespaceIdentifier)); //$NON-NLS-1$
 						provider.setFeatures(algorithms.toArray(new AiAlgorithm[algorithms.size()]));
 					} catch (CoreException e) {
@@ -179,10 +159,6 @@ public class AiActivator extends ZUiPlugin {
 
 	public void logInfo(String message) {
 		getLog().log(new Status(IStatus.INFO, PLUGIN_ID, message));
-	}
-
-	public void disposeClient() {
-		client = null;
 	}
 
 }

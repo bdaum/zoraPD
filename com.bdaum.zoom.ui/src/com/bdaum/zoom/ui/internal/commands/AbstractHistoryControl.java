@@ -4,14 +4,11 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseTrackListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -29,7 +26,7 @@ import com.bdaum.zoom.ui.internal.NavigationHistory.HistoryItem;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 public abstract class AbstractHistoryControl extends WorkbenchWindowControlContribution
-		implements MouseListener, MouseTrackListener, HistoryListener {
+		implements HistoryListener, Listener {
 
 	private IWorkbenchWindow window;
 	protected INavigationHistory navigationHistory;
@@ -72,29 +69,13 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 		if (parent != null && !parent.isDisposed()) {
 			label = new Label(parent, SWT.NONE);
 			label.setImage(getIcon().getImage());
-			label.addMouseListener(this);
-			label.addMouseTrackListener(this);
+			label.addListener(SWT.MouseDown, this);
+			label.addListener(SWT.MouseHover, this);
 		}
 		return label;
-
 	}
 
 	protected abstract Icon getIcon();
-
-	@Override
-	public void mouseEnter(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
-	public void mouseExit(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
-	public void mouseHover(MouseEvent e) {
-		createDropDownMenu();
-	}
 
 	private void createDropDownMenu() {
 		disposeMenu();
@@ -117,9 +98,9 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 				Icon icon = UiUtilities.getSmartCollectionIcon(sm);
 				if (icon != null)
 					menuItem.setImage(icon.getImage());
-				menuItem.addSelectionListener(new SelectionAdapter() {
+				menuItem.addListener(SWT.Selection, new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						BusyIndicator.showWhile(window.getShell().getDisplay(), () -> goTo(historyItem));
 					}
 				});
@@ -135,27 +116,8 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 	protected abstract void goTo();
 
 	@Override
-	public void mouseDoubleClick(MouseEvent e) {
-		// Do nothing
-	}
-
-	@Override
-	public void mouseDown(MouseEvent e) {
-		if (e.button <= 1)
-			BusyIndicator.showWhile(window.getShell().getDisplay(), () -> goTo());
-		else
-			createDropDownMenu();
-	}
-
-	@Override
-	public void mouseUp(MouseEvent e) {
-		// do nothing
-	}
-
-	@Override
 	public void queryHistoryChanged(IdentifiableObject obj) {
 		// do nothing
-
 	}
 
 	@Override
@@ -169,6 +131,20 @@ public abstract class AbstractHistoryControl extends WorkbenchWindowControlContr
 		if (menu != null) {
 			dispose();
 			menu = null;
+		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseHover:
+			createDropDownMenu();
+			break;
+		case SWT.MouseDown:
+			if (e.button <= 1)
+				BusyIndicator.showWhile(window.getShell().getDisplay(), () -> goTo());
+			else
+				createDropDownMenu();
 		}
 	}
 

@@ -283,6 +283,7 @@ public class Icons {
 	public static final Icon keydef = new Icon("keydef.gif"); //$NON-NLS-1$
 	public static final Icon cluster = new Icon("cluster.png"); //$NON-NLS-1$
 	public static final Icon cue = new Icon("cue.png"); //$NON-NLS-1$
+	public static final Icon nocue = new Icon("nocue.png"); //$NON-NLS-1$
 	public static final Icon transparentCover = new Icon("cover.png"); //$NON-NLS-1$
 	public static final Icon expand = new Icon("expand.png"); //$NON-NLS-1$
 	public static final Icon collaps = new Icon("collaps.png"); //$NON-NLS-1$
@@ -345,6 +346,12 @@ public class Icons {
 	public static final Icon sync32 = new Icon("sync32.gif"); //$NON-NLS-1$
 	public static final Icon sync32d = new Icon("sync32d.gif"); //$NON-NLS-1$
 	public static final Icon histo = new Icon("histo.png"); //$NON-NLS-1$
+	public static final Icon quit = new Icon("quit.png"); //$NON-NLS-1$
+	public static final Icon prefs = new Icon("prefs.png"); //$NON-NLS-1$
+	public static final Icon bird = new Icon("bird16.png"); //$NON-NLS-1$
+	public static final Icon eye = new Icon("eye.png"); //$NON-NLS-1$
+	public static final Icon noeye = new Icon("noeye.png"); //$NON-NLS-1$
+	public static final Icon noinfo = new Icon("noinfo.gif"); //$NON-NLS-1$
 
 	public static Icon toColorIcon(int code) {
 		switch (code) {

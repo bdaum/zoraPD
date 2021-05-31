@@ -68,6 +68,15 @@ public interface UiConstants {
 	String ALIGNMENT = "alignment"; //$NON-NLS-1$
 	String[] BOOLEANLABELS = new String[] { Messages.UiConstants_true, Messages.UiConstants_false };
 	String INFINITE = Messages.UiConstants_infinite;
+	
+	// Slideshow color schemes
+	int WHITEONBLACK = 1;
+	int BLACKONWHITE = 0;
+	
+	int BG_DARK_GRAY = 0;
+	int BG_GRAY = 1;
+	int BG_BLACK = 2;
+	int BG_WHITE = 3;
 
 
 }

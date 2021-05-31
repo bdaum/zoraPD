@@ -60,6 +60,9 @@ public class Messages extends NLS {
 	public static String PeerPreferencePage_shared_cats_msg;
 	public static String PeerPreferencePage_status;
 	public static String PeerPreferencePage_toggle;
+	public static String PreferenceConstants_cat;
+	public static String PreferenceConstants_network;
+	public static String PreferenceConstants_peer;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

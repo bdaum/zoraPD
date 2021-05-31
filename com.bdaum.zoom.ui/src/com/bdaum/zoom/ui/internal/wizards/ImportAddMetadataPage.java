@@ -8,16 +8,14 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 
@@ -41,7 +39,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportAddMetadataPage extends ColoredWizardPage {
+public class ImportAddMetadataPage extends ColoredWizardPage implements Listener {
 
 	private static final String[] EMPTYSTRINGS = new String[0];
 	private static final String ARTISTS = "artists"; //$NON-NLS-1$
@@ -105,18 +103,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			timeShiftMinuteField.setPageIncrement(60);
 			Button computeButton = new Button(metaComp, SWT.PUSH);
 			computeButton.setText(Messages.ImportAddMetadataPage_compute);
-			computeButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					ComputeTimeshiftDialog dialog = new ComputeTimeshiftDialog(getShell(),
-							timeShiftMinuteField.getSelection(), Messages.ImportAddMetadataPage_enter_current_time,
-							Messages.ImportAddMetadataPage_system_time, Messages.ImportAddMetadataPage_camera_time);
-					dialog.create();
-					dialog.getShell().setLocation(timeShiftMinuteField.toDisplay(40, 20));
-					if (dialog.open() == ComputeTimeshiftDialog.OK)
-						timeShiftMinuteField.setSelection(dialog.getResult());
-				}
-			});
+			computeButton.addListener(SWT.Selection, this);
 			Label label = new Label(metaComp, SWT.NONE);
 			label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 			label.setText(Messages.ImportAddMetadataPage_timeshift_hint);
@@ -126,12 +113,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1);
 		layoutData.heightHint = 50;
 		keywordField.setLayoutData(layoutData);
-		keywordField.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseUp(MouseEvent e) {
-				openKeywordDialog();
-			}
-		});
+		keywordField.addListener(SWT.MouseUp, this);
 		new Label(metaComp, SWT.NONE).setText(QueryField.SAFETY.getLabel());
 		privacyGroup = new RadioButtonGroup(metaComp, null, SWT.HORIZONTAL, QueryField.SAFETY.getEnumLabels());
 		privacyGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 3, 1));
@@ -166,13 +148,7 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 			GridData data = new GridData(GridData.BEGINNING, GridData.CENTER, false, false);
 			data.widthHint = 50;
 			prefixField.setLayoutData(data);
-			prefixField.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseDoubleClick(MouseEvent e) {
-					if (prefixField.getText().isEmpty())
-						prefixField.setText("IMG_"); //$NON-NLS-1$
-				}
-			});
+			prefixField.addListener(SWT.MouseDoubleClick, this);
 			Label explanation = new Label(prefixComp, SWT.WRAP);
 			data = new GridData();
 			data.widthHint = 500;
@@ -314,6 +290,27 @@ public class ImportAddMetadataPage extends ColoredWizardPage {
 
 	public int getMaxRating() {
 		return autoGroup != null ? autoGroup.getMaxRating() : 3;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			ComputeTimeshiftDialog dialog = new ComputeTimeshiftDialog(getShell(),
+					timeShiftMinuteField.getSelection(), Messages.ImportAddMetadataPage_enter_current_time,
+					Messages.ImportAddMetadataPage_system_time, Messages.ImportAddMetadataPage_camera_time);
+			dialog.create();
+			dialog.getShell().setLocation(timeShiftMinuteField.toDisplay(40, 20));
+			if (dialog.open() == ComputeTimeshiftDialog.OK)
+				timeShiftMinuteField.setSelection(dialog.getResult());
+			return;
+		case SWT.MouseUp:
+			openKeywordDialog();
+			return;
+		case SWT.MouseDoubleClick:
+			if (prefixField.getText().isEmpty())
+				prefixField.setText("IMG_"); //$NON-NLS-1$
+		}	
 	}
 
 }

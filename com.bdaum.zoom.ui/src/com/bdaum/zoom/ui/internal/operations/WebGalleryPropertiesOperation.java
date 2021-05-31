@@ -31,8 +31,7 @@ import com.bdaum.zoom.core.Core;
 
 public class WebGalleryPropertiesOperation extends AbstractOperation {
 
-	private final WebGalleryImpl backup;
-	private final WebGalleryImpl gallery;
+	private final WebGalleryImpl backup, gallery;
 	private WebGalleryImpl redo;
 
 	public WebGalleryPropertiesOperation(WebGalleryImpl backup, WebGalleryImpl gallery) {
@@ -117,9 +116,9 @@ public class WebGalleryPropertiesOperation extends AbstractOperation {
 				show.getLinkColor(), show.getTitleFont(), show.getSectionFont(), show.getCaptionFont(),
 				show.getDescriptionFont(), show.getFooterFont(), show.getControlsFont(), show.getSelectedEngine(),
 				show.getOutputFolder(), show.getFtpDir(), show.getIsFtp(), show.getPageName(), show.getPoweredByText(),
-				show.getApplySharpening(), show.getRadius(), show.getAmount(), show.getThreshold(), show.getHeadHtml(),
-				show.getTopHtml(), show.getFooterHtml(), show.getJpegQuality(), show.getScalingMethod(),
-				show.getLastAccessDate(), show.getPerspective(), show.getSafety());
+				show.getImageFormat(), show.getApplySharpening(), show.getRadius(), show.getAmount(),
+				show.getThreshold(), show.getHeadHtml(), show.getTopHtml(), show.getFooterHtml(), show.getJpegQuality(),
+				show.getScalingMethod(), show.getLastAccessDate(), show.getPerspective(), show.getSafety());
 	}
 
 }

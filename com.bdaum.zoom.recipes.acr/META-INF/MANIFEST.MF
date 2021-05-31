@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.recipes.acr;singleton:=true
-Bundle-Version: 3.6.2
+Bundle-Version: 3.7.0
 Bundle-Activator: com.bdaum.zoom.recipes.acr.internal.AcrActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.core;bundle-version="3.6.2",
+Require-Bundle: com.bdaum.zoom.core;bundle-version="3.7.0",
  jama;bundle-version="1.0.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

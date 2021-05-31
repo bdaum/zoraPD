@@ -51,8 +51,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 @SuppressWarnings("restriction")
 public class ChangeProcessor extends Job {
 
-	private final List<File> outdatedFiles;
-	private final List<File> newFiles;
+	private final List<File> outdatedFiles, newFiles;
 	private final WatchedFolder observedFolder;
 	private final long timeOfUpdate;
 	private ImportConfiguration config;

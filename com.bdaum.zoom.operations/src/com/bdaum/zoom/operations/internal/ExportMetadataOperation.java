@@ -70,17 +70,17 @@ public class ExportMetadataOperation extends DbOperation {
 	private boolean ignoreAll;
 	private final Set<QueryField> xmpFilter;
 	private FileWatchManager fileWatcher = CoreActivator.getDefault().getFileWatchManager();
-	private final boolean jpeg;
+	private final boolean exportMeta;
 	private boolean silent;
 	private File firstExport;
 	private final boolean show;
 
-	public ExportMetadataOperation(List<Asset> assets, Set<QueryField> xmpFilter, boolean jpeg, boolean silent,
+	public ExportMetadataOperation(List<Asset> assets, Set<QueryField> xmpFilter, boolean exportMeta, boolean silent,
 			boolean show) {
 		super(Messages.getString("ExportMetadataOperation.Export_metadata")); //$NON-NLS-1$
 		this.assets = assets;
 		this.xmpFilter = xmpFilter;
-		this.jpeg = jpeg;
+		this.exportMeta = exportMeta;
 		this.silent = silent;
 		this.show = show;
 	}
@@ -227,7 +227,8 @@ public class ExportMetadataOperation extends DbOperation {
 							try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(xmpFile))) {
 								xmpMeta = XMPMetaFactory.parse(in);
 							} catch (XMPException e) {
-								addError(NLS.bind(Messages.getString("ExportMetadataOperation.invalid_xmp"), xmpFile), e); //$NON-NLS-1$
+								addError(NLS.bind(Messages.getString("ExportMetadataOperation.invalid_xmp"), xmpFile), //$NON-NLS-1$
+										e);
 								xmpMeta = XMPMetaFactory.create();
 							}
 						else
@@ -235,37 +236,47 @@ public class ExportMetadataOperation extends DbOperation {
 						try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newFile))) {
 							XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
 							XMPMetaFactory.serialize(xmpMeta, out);
-							if (jpeg && ImageConstants.isJpeg(Core.getFileExtension(uri.toString()))) {
-								File imageFile = new File(uri);
-								try (BufferedInputStream in1 = new BufferedInputStream(
-										new FileInputStream(imageFile))) {
-									byte[] bytes = new byte[(int) imageFile.length()];
-									if (in1.read(bytes) > 0)
-										try {
-											byte[] oldXmp = XMPUtilities.getXmpFromJPEG(bytes);
-											if (oldXmp != null)
-												try (BufferedInputStream in = new BufferedInputStream(
-														new ByteArrayInputStream(oldXmp))) {
-													xmpMeta = XMPMetaFactory.parse(in);
-												} catch (XMPException e) {
-													addError(NLS.bind(Messages.getString("ExportMetadataOperation.invalid_inline_xmp"), imageFile), e); //$NON-NLS-1$
+							if (exportMeta) {
+								String ext = Core.getFileExtension(uri.toString());
+								boolean isJpeg = ImageConstants.isJpeg(ext);
+								if (isJpeg || ImageConstants.isWebP(ext)) {
+									File imageFile = new File(uri);
+									try (BufferedInputStream in1 = new BufferedInputStream(
+											new FileInputStream(imageFile))) {
+										byte[] bytes = new byte[(int) imageFile.length()];
+										if (in1.read(bytes) > 0)
+											try {
+												byte[] oldXmp = isJpeg ? XMPUtilities.getXmpFromJPEG(bytes)
+														: XMPUtilities.getXmpFromWEBP(bytes);
+												if (oldXmp != null)
+													try (BufferedInputStream in = new BufferedInputStream(
+															new ByteArrayInputStream(oldXmp))) {
+														xmpMeta = XMPMetaFactory.parse(in);
+													} catch (XMPException e) {
+														addError(NLS.bind(
+																Messages.getString(
+																		"ExportMetadataOperation.invalid_inline_xmp"), //$NON-NLS-1$
+																imageFile), e);
+														xmpMeta = XMPMetaFactory.create();
+													}
+												else
 													xmpMeta = XMPMetaFactory.create();
-												}
-											else
-												xmpMeta = XMPMetaFactory.create();
-											ByteArrayOutputStream mout = new ByteArrayOutputStream();
-											XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
-											XMPMetaFactory.serialize(xmpMeta, mout);
-											bytes = XMPUtilities.insertXmpIntoJPEG(bytes, mout.toByteArray());
-										} catch (XMPException e) {
-											addError(NLS.bind(
-													Messages.getString("ExportMetadataOperation.unable_to_export"), //$NON-NLS-1$
-													imageFile), e);
+												ByteArrayOutputStream mout = new ByteArrayOutputStream();
+												XMPUtilities.writeProperties(xmpMeta, asset, xmpFilter, false);
+												XMPMetaFactory.serialize(xmpMeta, mout);
+												bytes = isJpeg
+														? XMPUtilities.insertXmpIntoJPEG(bytes, mout.toByteArray())
+														: XMPUtilities.insertXmpIntoWEBP(bytes, mout.toByteArray());
+											} catch (XMPException e) {
+												addError(NLS.bind(
+														Messages.getString("ExportMetadataOperation.unable_to_export"), //$NON-NLS-1$
+														imageFile), e);
+											}
+										fileWatcher.ignore(imageFile, opId);
+										try (BufferedOutputStream out1 = new BufferedOutputStream(
+												new FileOutputStream(imageFile))) {
+											out1.write(bytes);
 										}
-									fileWatcher.ignore(imageFile, opId);
-									try (BufferedOutputStream out1 = new BufferedOutputStream(
-											new FileOutputStream(imageFile))) {
-										out1.write(bytes);
 									}
 								}
 							}

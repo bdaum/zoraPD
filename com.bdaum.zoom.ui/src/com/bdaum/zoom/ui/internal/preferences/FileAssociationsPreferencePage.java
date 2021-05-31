@@ -44,8 +44,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -117,6 +115,8 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	private Set<EditorDescriptor> addedEditors = new HashSet<EditorDescriptor>(5);
 
 	private CGroup editorGroup;
+
+	private Button systemEditorButton;
 
 	public FileAssociationsPreferencePage() {
 		setDescription(Messages.getString("FileAssociationsPreferencePage.how_to_interact")); //$NON-NLS-1$
@@ -280,31 +280,12 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 		setButtonLayoutData(defaultEditorButton);
 		Label sepLabel = new Label(groupComponent, SWT.SEPARATOR | SWT.HORIZONTAL);
 		sepLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		Button systemEditorButton = new Button(groupComponent, SWT.PUSH);
+		systemEditorButton = new Button(groupComponent, SWT.PUSH);
 		systemEditorButton.setText(Messages.getString("FileAssociationsPreferencePage.apply_system_settings")); //$NON-NLS-1$
 		systemEditorButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		systemEditorButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FileEditorMapping selectedResourceType = getSelectedResourceType();
-				String[] extensions = selectedResourceType.getExtensions();
-				Set<Program> programs = new HashSet<Program>();
-				for (String ext : extensions) {
-					Program program = Program.findProgram(ext);
-					if (program != null)
-						programs.add(program);
-				}
-				for (Program program : programs) {
-					EditorDescriptor editor = new EditorDescriptor();
-					editor.setProgram(program);
-					addEditorToResourceType(editor);
-				}
-			}
-		});
-
+		systemEditorButton.addListener(SWT.Selection, this);
 		CGroup optionsGroup = UiUtilities.createGroup(innerComp, 1,
 				Messages.getString("FileAssociationsPreferencePage.options")); //$NON-NLS-1$
-
 		rememberLastButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("FileAssociationsPreferencePage.remember_last"), null); //$NON-NLS-1$
 		rememberLastButton.addListener(SWT.Selection, this);
@@ -612,7 +593,21 @@ public class FileAssociationsPreferencePage extends AbstractPreferencePage
 	}
 
 	public void handleEvent(Event event) {
-		if (event.widget == rememberLastButton) {
+		if (event.widget == systemEditorButton) {
+			FileEditorMapping selectedResourceType = getSelectedResourceType();
+			String[] extensions = selectedResourceType.getExtensions();
+			Set<Program> programs = new HashSet<Program>();
+			for (String ext : extensions) {
+				Program program = Program.findProgram(ext);
+				if (program != null)
+					programs.add(program);
+			}
+			for (Program program : programs) {
+				EditorDescriptor editor = new EditorDescriptor();
+				editor.setProgram(program);
+				addEditorToResourceType(editor);
+			}
+		} else if (event.widget == rememberLastButton) {
 			FileEditorMapping selectedResourceType = getSelectedResourceType();
 			selectedResourceType.setRememberLast(rememberLastButton.getSelection());
 		} else if (event.widget == addResourceTypeButton)

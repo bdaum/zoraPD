@@ -24,18 +24,18 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 
 @SuppressWarnings("restriction")
-public class LocationSelectionDialog extends ZDialog {
+public class LocationSelectionDialog extends ZDialog implements Listener {
 
 	private final Object[] items;
 	protected String result;
@@ -51,7 +51,7 @@ public class LocationSelectionDialog extends ZDialog {
 		Composite area = new Composite(parent, SWT.NONE);
 		area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		area.setLayout(new GridLayout(1, false));
-		ListViewer viewer = new ListViewer(area, SWT.V_SCROLL| SWT.SINGLE);
+		ListViewer viewer = new ListViewer(area, SWT.V_SCROLL | SWT.SINGLE);
 		viewer.add(items);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -59,17 +59,18 @@ public class LocationSelectionDialog extends ZDialog {
 				close();
 			}
 		});
-		viewer.getControl().addFocusListener(new FocusAdapter() {
-			public void focusLost(FocusEvent e) {
-				result = null;
-				close();
-			}
-		});
+		viewer.getControl().addListener(SWT.FocusOut, this);
 		Shell shell = getShell();
 		shell.pack();
 		shell.layout();
 		viewer.getControl().setFocus();
 		return area;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		result = null;
+		close();
 	}
 
 	public String getResult() {

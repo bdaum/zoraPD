@@ -157,18 +157,17 @@ public class SplitCatDialog extends ZTitleAreaDialog implements Listener {
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		deleteButton.addListener(SWT.Selection, this);
 	}
-	
+
 	@Override
 	public void handleEvent(Event e) {
 		switch (e.type) {
 		case SWT.Modify:
 			updateButtons();
-			break;
+			return;
 		case SWT.Selection:
 			if (deleteButton.getSelection() && !AcousticMessageDialog.openQuestion(getShell(),
 					Messages.SplitCatDialog_delete_exported, Messages.SplitCatDialog_delete_exported_msg))
 				deleteButton.setSelection(false);
-			break;
 		}
 	}
 

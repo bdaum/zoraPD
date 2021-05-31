@@ -132,7 +132,7 @@ public class DateTimeCellEditor extends DialogCellEditor {
 	protected void updateContents(Object v) {
 		IFormatter formatter = qfield.getFormatter();
 		super.updateContents(
-				v instanceof Date ? (formatter != null ? formatter.toString(v) : Format.DFDT.get().format((Date) v)) : v);
+				v instanceof Date ? (formatter != null ? formatter.format((Date) v) : Format.DFDT.get().format((Date) v)) : v);
 	}
 
 	@Override

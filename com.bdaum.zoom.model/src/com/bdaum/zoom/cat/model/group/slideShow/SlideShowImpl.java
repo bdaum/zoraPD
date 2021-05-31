@@ -1,8 +1,18 @@
 package com.bdaum.zoom.cat.model.group.slideShow;
 
-import com.bdaum.zoom.cat.model.group.Group;
-import java.util.*;
-import com.bdaum.aoModeling.runtime.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
+import com.bdaum.aoModeling.runtime.AomList;
+import com.bdaum.aoModeling.runtime.Aspect;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.ErrorMessages;
+import com.bdaum.aoModeling.runtime.FastArrayList;
+import com.bdaum.aoModeling.runtime.Instrumentation;
+import com.bdaum.aoModeling.runtime.ModelMessages;
 import com.bdaum.zoom.cat.model.SlideShow_typeImpl;
 
 /**
@@ -35,6 +45,9 @@ public class SlideShowImpl extends SlideShow_typeImpl implements SlideShow {
 	 * @param zoom - Property
 	 * @param titleDisplay - Property
 	 * @param titleContent - Property
+	 * @param titleScheme - Property
+	 * @param titleAlpha - Property
+	 * @param colorScheme - Property
 	 * @param adhoc - Property
 	 * @param skipDublettes - Property
 	 * @param voiceNotes - Property
@@ -43,10 +56,10 @@ public class SlideShowImpl extends SlideShow_typeImpl implements SlideShow {
 	 */
 	public SlideShowImpl(String name, String description, boolean fromPreview,
 			int duration, int effect, int fading, int zoom, int titleDisplay,
-			int titleContent, boolean adhoc, boolean skipDublettes,
+			int titleContent, int titleScheme, int titleAlpha, int colorScheme, boolean adhoc, boolean skipDublettes,
 			boolean voiceNotes, Date lastAccessDate, String perspective) {
 		super(name, description, fromPreview, duration, effect, fading, zoom,
-				titleDisplay, titleContent, adhoc, skipDublettes, voiceNotes,
+				titleDisplay, titleContent, titleScheme, titleAlpha, colorScheme, adhoc, skipDublettes, voiceNotes,
 				lastAccessDate, perspective);
 
 	}

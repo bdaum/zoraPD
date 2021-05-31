@@ -37,13 +37,13 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.aoModeling.runtime.AomMap;
 import com.bdaum.zoom.cat.model.meta.Category;
@@ -54,7 +54,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
-public class SupplementalCategoryGroup {
+public class SupplementalCategoryGroup implements Listener, ISelectionChangedListener {
 
 	private static class SupplementalCategoryContentProvider implements ITreeContentProvider {
 
@@ -109,7 +109,7 @@ public class SupplementalCategoryGroup {
 
 	@SuppressWarnings("unused")
 	public SupplementalCategoryGroup(final Composite parent, String[] supplemental) {
-		final Map<String, Category> categories = Core.getCore().getDbManager().getMeta(true).getCategory();
+		
 		this.supplemental = supplemental;
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -129,65 +129,19 @@ public class SupplementalCategoryGroup {
 			}
 		});
 		UiUtilities.installDoubleClickExpansion(treeViewer);
-		treeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		treeViewer.addSelectionChangedListener(this);
 		final Composite buttonGroup = new Composite(composite, SWT.NONE);
 		buttonGroup.setLayout(new GridLayout());
 		buttonGroup.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
-
 		addButton = new Button(buttonGroup, SWT.NONE);
 		addButton.setText(Messages.SupplementalCategoryGroup_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				EditCategoryDialog inputDialog = new EditCategoryDialog(parent.getShell(), null, categories,
-						supCategories, null, false);
-				if (inputDialog.open() == Window.OK) {
-					String label = inputDialog.getLabel();
-					Category category = new CategoryImpl(label);
-					category.setSynonyms(inputDialog.getSynonyms());
-					supCategories.add(category);
-					treeViewer.setInput(supCategories);
-					updateButtons();
-				}
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		refineButton = new Button(buttonGroup, SWT.NONE);
 		refineButton.setText(Messages.SupplementalCategoryGroup_refine);
-		refineButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Category parentNode = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
-				EditCategoryDialog inputDialog = new EditCategoryDialog(parent.getShell(), null, categories,
-						supCategories, parentNode, false);
-				if (inputDialog.open() == Window.OK) {
-					String label = inputDialog.getLabel();
-					Category subCategory = new CategoryImpl(label);
-					subCategory.setSynonyms(inputDialog.getSynonyms());
-					subCategory.setCategory_subCategory_parent(parentNode);
-					treeViewer.add(parentNode, subCategory);
-					treeViewer.expandToLevel(parentNode, 2);
-					updateButtons();
-				}
-			}
-		});
+		refineButton.addListener(SWT.Selection, this);
 		deleteButton = new Button(buttonGroup, SWT.NONE);
 		deleteButton.setText(Messages.SupplementalCategoryGroup_delete);
-		deleteButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Category node = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
-				if (node.getCategory_subCategory_parent() == null)
-					supCategories.remove(node);
-				else
-					node.getCategory_subCategory_parent().removeSubCategory(node.getLabel());
-				treeViewer.remove(node);
-				updateButtons();
-			}
-		});
+		deleteButton.addListener(SWT.Selection, this);
 		for (String supp : supplemental) {
 			Category root = expandCategory(supp);
 			if (root != null)
@@ -252,6 +206,51 @@ public class SupplementalCategoryGroup {
 
 	public BagChange<String> getResult() {
 		return result;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == addButton) {
+			final Map<String, Category> categories = Core.getCore().getDbManager().getMeta(true).getCategory();
+			EditCategoryDialog inputDialog = new EditCategoryDialog(addButton.getShell(), null, categories,
+					supCategories, null, false);
+			if (inputDialog.open() == Window.OK) {
+				String label = inputDialog.getLabel();
+				Category category = new CategoryImpl(label);
+				category.setSynonyms(inputDialog.getSynonyms());
+				supCategories.add(category);
+				treeViewer.setInput(supCategories);
+				updateButtons();
+			}
+		} else if (e.widget == refineButton) {
+			final Map<String, Category> categories = Core.getCore().getDbManager().getMeta(true).getCategory();
+			Category parentNode = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
+			EditCategoryDialog inputDialog = new EditCategoryDialog(refineButton.getShell(), null, categories,
+					supCategories, parentNode, false);
+			if (inputDialog.open() == Window.OK) {
+				String label = inputDialog.getLabel();
+				Category subCategory = new CategoryImpl(label);
+				subCategory.setSynonyms(inputDialog.getSynonyms());
+				subCategory.setCategory_subCategory_parent(parentNode);
+				treeViewer.add(parentNode, subCategory);
+				treeViewer.expandToLevel(parentNode, 2);
+				updateButtons();
+			}
+		} else {
+			Category node = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
+			if (node.getCategory_subCategory_parent() == null)
+				supCategories.remove(node);
+			else
+				node.getCategory_subCategory_parent().removeSubCategory(node.getLabel());
+			treeViewer.remove(node);
+			updateButtons();
+		}
+		
 	}
 
 }

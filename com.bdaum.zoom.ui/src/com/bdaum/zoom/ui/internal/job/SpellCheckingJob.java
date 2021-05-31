@@ -51,13 +51,8 @@ public class SpellCheckingJob extends Job {
 	};
 
 	List<ISpellIncident> incidents = new ArrayList<ISpellCheckingService.ISpellIncident>();
-
-	private final int options;
-
-	private final int nmax;
-
+	private final int options, nmax;
 	private final ISpellCheckingTarget target;
-
 	private final String text;
 
 	public SpellCheckingJob(ISpellCheckingTarget target, String text, int options, int nmax) {

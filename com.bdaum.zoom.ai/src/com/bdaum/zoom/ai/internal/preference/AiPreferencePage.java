@@ -30,9 +30,11 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -44,10 +46,12 @@ import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.internal.HelpContextIds;
+import com.bdaum.zoom.ai.internal.translator.TranslatorClient;
 import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.internal.CssActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.Password;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -58,12 +62,14 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 
 	public static final String ID = "com.bdaum.zoom.ai.aiPrefPage"; //$NON-NLS-1$
 	private CheckboxButton enableButton;
-	private Text keyField;
+	private Password keyField;
 	private Label statusField;
 	private Timer timer = new Timer();
 	private ComboViewer languageViewer;
 	private boolean enabled;
 	private TimerTask task;
+	private Label infoLabel;
+	private Text endpointField;
 
 	public AiPreferencePage() {
 		setDescription(Messages.AiPreferencePage_configure);
@@ -75,14 +81,22 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 		setPreferenceStore(AiActivator.getDefault().getPreferenceStore());
 	}
 
-	@SuppressWarnings("unused")
 	@Override
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.PREFERENCE_PAGE);
-		enableButton = WidgetFactory.createCheckButton(composite, Messages.AiPreferencePage_enable, null);
+		Composite enableComp = new Composite(composite, SWT.NONE);
+		enableComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		enableComp.setLayout(new GridLayout(2, false));
+		enableButton = WidgetFactory.createCheckButton(enableComp, Messages.AiPreferencePage_enable, null);
 		enableButton.addListener(SWT.Selection, this);
+		infoLabel = new Label(enableComp, SWT.NONE);
+		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		layoutData.horizontalIndent = 20;
+		infoLabel.setLayoutData(layoutData);
+
 		// Tab folder
 		createTabFolder(composite, "Services"); //$NON-NLS-1$
+		tabFolder.addListener(SWT.Selection, this);
 		createExtensions(tabFolder, "com.bdaum.zoom.ai.aiPrefPage"); //$NON-NLS-1$
 		String label = getPreferenceStore().getString(PreferenceConstants.ACTIVEPROVIDER);
 		boolean tabinit = false;
@@ -97,13 +111,16 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 				++i;
 			}
 		}
-		new Label(composite, SWT.NONE);
 		// Translator
 		CGroup eGroup = UiUtilities.createGroup(composite, 3, Messages.AiPreferencePage_0);
 		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_key1_or_key2);
-		keyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		keyField = new Password(eGroup, SWT.BORDER);
 		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		keyField.addListener(SWT.Modify, this);
+		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_endpoint);
+		endpointField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		endpointField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		endpointField.addListener(SWT.Modify, this);
 		new Label(eGroup, SWT.NONE).setText(Messages.AiPreferencePage_status);
 		statusField = new Label(eGroup, SWT.WRAP);
 		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -131,6 +148,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 			initTabFolder(0);
 		fillValues();
 		setEnabled(enableButton.getSelection());
+		updateInfoLabel();
 		updateButtons();
 	}
 
@@ -138,9 +156,12 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 	public void handleEvent(Event e) {
 		switch (e.type) {
 		case SWT.Selection:
-			if (e.widget == enableButton) {
+			if (e.widget == tabFolder) {
+				updateInfoLabel();
+			} else if (e.widget == enableButton) {
 				setEnabled(enableButton.getSelection());
 				updateFields();
+				updateInfoLabel();
 			} else {
 				String url = System.getProperty("com.bdaum.zoom.msTranslation"); //$NON-NLS-1$
 				try {
@@ -151,12 +172,23 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 					// should never happen
 				}
 			}
-			break;
+			return;
 		case SWT.Modify:
 			if (enabled)
 				checkCredentials();
-			break;
 		}
+	}
+
+	private void updateInfoLabel() {
+		if (enableButton.getSelection()) {
+			infoLabel.setVisible(true);
+			String label = tabFolder.getSelection().getText().trim();
+			if (label.startsWith("&")) //$NON-NLS-1$
+				label = label.substring(1);
+			infoLabel.setText(NLS.bind(Messages.AiPreferencePage_x_used, label));
+		} else
+			infoLabel.setVisible(false);
+
 	}
 
 	protected void updateFields() {
@@ -177,6 +209,7 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		enableButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ENABLE));
 		keyField.setText(preferenceStore.getString(PreferenceConstants.TRANSLATORKEY));
+		endpointField.setText(preferenceStore.getString(PreferenceConstants.TRANSLATORENDPOINT));
 	}
 
 	@Override
@@ -193,14 +226,19 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 		boolean enabled = enableButton.getSelection();
 		preferenceStore.setValue(PreferenceConstants.ENABLE, enabled);
 		if (enabled) {
-			preferenceStore.setValue(PreferenceConstants.TRANSLATORKEY, keyField.getText());
+			preferenceStore.setValue(PreferenceConstants.TRANSLATORKEY, keyField.getText().trim());
+			preferenceStore.setValue(PreferenceConstants.TRANSLATORENDPOINT, endpointField.getText().trim());
 			String selectedLanguage = getSelectedLanguage();
 			if (selectedLanguage != null)
 				preferenceStore.setValue(PreferenceConstants.LANGUAGE, selectedLanguage);
 		}
 		CTabItem tabItem = tabFolder.getSelection();
-		if (tabItem != null)
-			preferenceStore.setValue(PreferenceConstants.ACTIVEPROVIDER, tabItem.getText().trim());
+		if (tabItem != null) {
+			String label = tabItem.getText().trim();
+			if (label.startsWith("&")) //$NON-NLS-1$
+				label = label.substring(1);
+			preferenceStore.setValue(PreferenceConstants.ACTIVEPROVIDER, label);
+		}
 	}
 
 	private String getSelectedLanguage() {
@@ -218,11 +256,19 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 		if (key.isEmpty()) {
 			showStatus(Messages.AiPreferencePage_no_app_key, true);
 			updateButtons();
-		} else {
-			showStatus("", false); //$NON-NLS-1$
-			AiActivator.getDefault().getClient().setKey(key);
-			verifyAccountCredentials(500);
+			return;
 		}
+		String endpoint = endpointField.getText().trim();
+		if (endpoint.isEmpty()) {
+			showStatus(Messages.AiPreferencePage_no_endpoint, true);
+			updateButtons();
+			return;
+		}
+		showStatus("", false); //$NON-NLS-1$
+		TranslatorClient client = AiActivator.getDefault().getClient();
+		client.withKey(key);
+		client.withEndpoint(endpoint);
+		verifyAccountCredentials(500);
 	}
 
 	protected void verifyAccountCredentials(int time) {
@@ -233,16 +279,10 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 				boolean error;
 				String msg;
 				AiActivator activator = AiActivator.getDefault();
-				String accessToken = activator.getClient().getAccessToken();
 				Locale[] languages = activator.getClient().getLanguages();
-				if (accessToken != null) {
-					msg = Messages.AiPreferencePage_verified;
-					activator.disposeClient();
-					error = false;
-				} else {
-					msg = Messages.AiPreferencePage_login_faild;
-					error = true;
-				}
+				String translate = activator.getClient().translate("Hello"); //$NON-NLS-1$
+				error = translate != null;
+				msg = error ? Messages.AiPreferencePage_login_faild : Messages.AiPreferencePage_verified;
 				if (!statusField.isDisposed())
 					statusField.getDisplay().asyncExec(new Runnable() {
 						@Override
@@ -254,11 +294,9 @@ public class AiPreferencePage extends AbstractPreferencePage implements Listener
 								if (selectedLanguage == null)
 									selectedLanguage = AiActivator.getDefault().getPreferenceStore()
 											.getString(PreferenceConstants.LANGUAGE);
-								if (selectedLanguage != null)
-									languageViewer.setSelection(
-											new StructuredSelection(Locale.forLanguageTag(selectedLanguage)));
-								else
-									languageViewer.setSelection(new StructuredSelection(Locale.ENGLISH));
+								languageViewer.setSelection(new StructuredSelection(
+										selectedLanguage != null ? Locale.forLanguageTag(selectedLanguage)
+												: Locale.ENGLISH));
 								updateFields();
 								updateButtons();
 							}

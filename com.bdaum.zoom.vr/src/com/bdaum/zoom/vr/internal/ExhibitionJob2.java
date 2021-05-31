@@ -1042,8 +1042,9 @@ public class ExhibitionJob2 extends CustomJob implements LoaderListener {
 				return f.getName().startsWith(ROOMPREFIX);
 			}
 		});
-		for (File room : rooms)
-			ids.add(room.getName().substring(ROOMPREFIX.length()));
+		if (rooms != null)
+			for (File room : rooms)
+				ids.add(room.getName().substring(ROOMPREFIX.length()));
 		File configFile = new File(resFile, "config.js"); //$NON-NLS-1$
 		if (configFile.exists()) {
 			StringBuffer sb = new StringBuffer(4096);

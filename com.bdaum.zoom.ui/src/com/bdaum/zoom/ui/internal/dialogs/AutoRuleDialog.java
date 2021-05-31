@@ -21,16 +21,14 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -45,7 +43,8 @@ import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 
 @SuppressWarnings("restriction")
-public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
+public class AutoRuleDialog extends ZTitleAreaDialog
+		implements Listener, ICheckStateListener, ISelectionChangedListener {
 
 	private static NumberFormat af = NumberFormat.getNumberInstance();
 
@@ -98,7 +97,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 		label.setText(Messages.AutoRuleDialog_name);
 		nameField = new Text(comp, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
-		nameField.addModifyListener(this);
+		nameField.addListener(SWT.Modify, this);
 		new Label(comp, SWT.NONE).setText(Messages.AutoRuleDialog_group);
 		List<Object> categories = QueryField.getCategoriesAndSubgroups();
 		groupCombo = new ComboViewer(comp, SWT.READ_ONLY | SWT.BORDER);
@@ -109,12 +108,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 		groupCombo.setLabelProvider(new GroupComboLabelProvider());
 		groupCombo.setInput(categories);
 		groupCombo.getControl().setLayoutData(new GridData(100, SWT.DEFAULT));
-		groupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				fillFieldCombo();
-				fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
-			}
-		});
+		groupCombo.addSelectionChangedListener(this);
 		new Label(comp, SWT.NONE).setText(Messages.AutoRuleDialog_field);
 		fieldCombo = new ComboViewer(comp, SWT.READ_ONLY | SWT.BORDER);
 		comboControl = fieldCombo.getCombo();
@@ -143,14 +137,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 				}
 			} });
 		fieldCombo.setComparator(ZViewerComparator.INSTANCE);
-		fieldCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				fillExplanation(qfield = (QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement());
-				intervalField.setText(""); //$NON-NLS-1$
-				updateStack();
-				validate();
-			}
-		});
+		fieldCombo.addSelectionChangedListener(this);
 		new Label(comp, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 		explanation = new Label(comp, SWT.WRAP);
 		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false, 4, 1);
@@ -170,14 +157,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 		new Label(intervalGroup, SWT.NONE).setText(Messages.AutoRuleDialog_interval);
 		intervalField = new Text(intervalGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		intervalField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		intervalField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				QueryField qfield = (QueryField) fieldCombo.getStructuredSelection().getFirstElement();
-				if (qfield != null)
-					setResultingInterval(compileInterval(intervalField.getText(), qfield), qfield);
-				validate();
-			}
-		});
+		intervalField.addListener(SWT.Modify, this);
 		new Label(intervalGroup, SWT.NONE).setText(Messages.AutoRuleDialog_result);
 		resultingIntervals = new Label(intervalGroup, SWT.WRAP);
 		layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
@@ -204,18 +184,8 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 				return null;
 			}
 		});
-		enumViewer.addCheckStateListener(new ICheckStateListener() {
-			@Override
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				validate();
-			}
-		});
-		new AllNoneGroup(enumGroup, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				enumViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-			}
-		});
+		enumViewer.addCheckStateListener(this);
+		new AllNoneGroup(enumGroup, this);
 		selectGroup = new Composite(stack, SWT.NONE);
 		layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
@@ -223,11 +193,7 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 		new Label(selectGroup, SWT.NONE).setText(Messages.AutoRuleDialog_values);
 		valueField = new Text(selectGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		valueField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		valueField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				validate();
-			}
-		});
+		valueField.addListener(SWT.Modify, this);
 		return area;
 	}
 
@@ -506,8 +472,36 @@ public class AutoRuleDialog extends ZTitleAreaDialog implements ModifyListener {
 	}
 
 	@Override
-	public void modifyText(ModifyEvent e) {
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Modify) {
+			if (e.widget == intervalField) {
+				QueryField qfield = (QueryField) fieldCombo.getStructuredSelection().getFirstElement();
+				if (qfield != null)
+					setResultingInterval(compileInterval(intervalField.getText(), qfield), qfield);
+			}
+			validate();
+		} else
+			enumViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
+
+	}
+
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
 		validate();
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (event.getSource() == groupCombo) {
+			fillFieldCombo();
+			fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
+		} else {
+			fillExplanation(qfield = (QueryField) ((IStructuredSelection) event.getSelection()).getFirstElement());
+			intervalField.setText(""); //$NON-NLS-1$
+			updateStack();
+			validate();
+		}
+
 	}
 
 }

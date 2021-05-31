@@ -536,7 +536,9 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 	private boolean vertical;
 	protected Rectangle hotspot = new Rectangle(0, 0, 0, 0);
 	protected boolean systemCursorSet = false;
-	protected ToolTip highresTooltip, syncTooltip, helpTooltip, metaTootip;
+	protected ToolTip highresTooltip, syncTooltip;
+	private boolean helpOn = false;
+	private boolean metaOn;
 
 	void fadein(MultiStatus status, IProgressMonitor monitor, final FadingShell shell, final Canvas canvas,
 			final FadingShell formerShell, boolean closeFormer) {
@@ -577,13 +579,6 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 			});
 	}
 
-	/*
-	 * (nicht-Javadoc)
-	 * 
-	 * @see
-	 * com.bdaum.zoom.ui.views.IMediaViewer#init(org.eclipse.ui.IWorkbenchWindow,
-	 * org.eclipse.swt.graphics.RGB, int)
-	 */
 	public void init(IWorkbenchWindow window, int kind, RGB bw, int crop) {
 		super.init(window, kind, bw, crop);
 		IPreferencesService preferencesService = Platform.getPreferencesService();
@@ -606,7 +601,6 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 			break;
 		default:
 			modMask = -1;
-			break;
 		}
 	}
 
@@ -693,11 +687,12 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 			}
 			break;
 		case SWT.Help:
-			if (helpTooltip == null)
-				helpTooltip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-			UiUtilities.showTooltip(helpTooltip, mbounds.x + 10, mbounds.y + 5,
-					Messages.getString("ImageViewer.image_viewer"), //$NON-NLS-1$
-					getKeyboardHelp(true));
+			if (e.widget == topCanvas) {
+				helpOn = !helpOn;
+				if (helpOn)
+					metaOn = false;
+				topCanvas.redraw();
+			}
 			break;
 		case SWT.Paint:
 			if (e.widget == controlCanvas)
@@ -770,26 +765,30 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 						.append((previewImage != null ? Messages.getString("ImageViewer.loading_highres") //$NON-NLS-1$
 								: Messages.getString("ImageViewer.loading_thumbnail"))) //$NON-NLS-1$
 						.append('\n').append('\n').append(getKeyboardHelp(false)).append('\n').toString();
-			if (tlayout == null) {
-				tlayout = new TextLayout(display);
-				tlayout.setAlignment(SWT.CENTER);
-				tlayout.setWidth(sbnds.width);
-				tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
-			}
-			tlayout.setText(text);
-			Rectangle tbounds = tlayout.getBounds();
-			int y = (sbnds.height - tbounds.height) / 2;
-			gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
-			gc.setFont(tlayout.getFont());
-			gc.setAlpha(64);
-			Point textExtent = gc.textExtent(text);
-			gc.fillRoundRectangle((tbounds.width - textExtent.x) / 2 - 10, y - 5, textExtent.x + 20, tbounds.height, 10,
-					10);
-			gc.setAlpha(255);
-			gc.setForeground(display.getSystemColor((file == null || loadFailed != null) ? SWT.COLOR_RED
-					: (previewImage != null) ? SWT.COLOR_CYAN : SWT.COLOR_GREEN));
-			tlayout.draw(gc, 0, y);
+			drawText(gc, sbnds, text);
 		}
+	}
+
+	private void drawText(GC gc, Rectangle sbnds, String text) {
+		if (tlayout == null) {
+			tlayout = new TextLayout(display);
+			tlayout.setAlignment(SWT.CENTER);
+			tlayout.setWidth(sbnds.width);
+			tlayout.setFont(JFaceResources.getFont(UiConstants.VIEWERFONT));
+		}
+		tlayout.setText(text);
+		Rectangle tbounds = tlayout.getBounds();
+		int y = (sbnds.height - tbounds.height) / 2;
+		gc.setBackground(display.getSystemColor(SWT.COLOR_BLACK));
+		gc.setFont(tlayout.getFont());
+		gc.setAlpha(128);
+		Point textExtent = gc.textExtent(text);
+		gc.fillRoundRectangle((tbounds.width - textExtent.x) / 2 - 10, y - 5, textExtent.x + 20, tbounds.height, 10,
+				10);
+		gc.setAlpha(255);
+		gc.setForeground(display.getSystemColor((file == null || loadFailed != null) ? SWT.COLOR_RED
+				: (previewImage != null) ? SWT.COLOR_CYAN : SWT.COLOR_GREEN));
+		tlayout.draw(gc, 0, y);
 	}
 
 	private void paintTop(Event e) {
@@ -867,6 +866,12 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 				gc.fillOval(x - 2, y - 2, bounds.width + 4, bounds.height + 4);
 				gc.drawImage(img, x, y);
 			}
+			if (helpOn)
+				drawText(gc, topCanvas.getClientArea(), getKeyboardHelp(true));
+			else if (metaOn)
+				drawText(gc, topCanvas.getClientArea(),
+						NLS.bind(Messages.getString("ImageViewer.metadata"), asset.getName(), //$NON-NLS-1$
+								new HoverInfo(asset, (ImageRegion[]) null).getText()));
 		}
 	}
 
@@ -883,14 +888,32 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 	}
 
 	private String getKeyboardHelp(boolean help) {
-		String msg = NLS.bind(help ? Messages.getString("ImageViewer.use_mouse_wheel2") //$NON-NLS-1$
-				: Messages.getString("ImageViewer.use_mouse_wheel"), //$NON-NLS-1$
-				modMask == SWT.BUTTON3 ? Messages.getString("ImageViewer.right_mouse_button") //$NON-NLS-1$
-						: modMask == SWT.ALT ? Messages.getString("ImageViewer.ALT") //$NON-NLS-1$
-								: Messages.getString("ImageViewer.SHIFT"));//$NON-NLS-1$
+		boolean touchEnabled = display.getTouchEnabled();
+		StringBuilder sb = new StringBuilder();
+		if (help) {
+			sb.append(touchEnabled ? Messages.getString("ImageViewer.two_finger") //$NON-NLS-1$
+					: Messages.getString("ImageViewer.mouse_wheel")); //$NON-NLS-1$
+			switch (modMask) {
+			case SWT.ALT:
+				sb.append(Messages.getString("ImageViewer.alt_pressed")); //$NON-NLS-1$
+				break;
+			case SWT.SHIFT:
+				sb.append(Messages.getString("ImageViewer.shift_pressed")); //$NON-NLS-1$
+				break;
+			case SWT.BUTTON3:
+				sb.append(Messages.getString("ImageViewer.mouse_zoom")); //$NON-NLS-1$
+				break;
+			}
+			sb.append(touchEnabled ? Messages.getString("ImageViewer.finger_drag") //$NON-NLS-1$
+					: Messages.getString("ImageViewer.mouse_drag")) //$NON-NLS-1$
+					.append(Messages.getString("ImageViewer.hw")); //$NON-NLS-1$
+		}
+		sb.append(Messages.getString("ImageViewer.esc")) //$NON-NLS-1$
+				.append(help ? Messages.getString("ImageViewer.f1_to_close") : Messages.getString("ImageViewer.f1")) //$NON-NLS-1$ //$NON-NLS-2$
+				.append(Messages.getString("ImageViewer.f2")); //$NON-NLS-1$
 		if (!transformListeners.isEmpty())
-			msg += Messages.getString("ImageViewer.use_capslock"); //$NON-NLS-1$
-		return msg;
+			sb.append(Messages.getString("ImageViewer.use_capslock")); //$NON-NLS-1$
+		return sb.append('\n').toString();
 	}
 
 	/*
@@ -1029,7 +1052,11 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 					int f = (e.stateMask & SWT.CONTROL) != 0 ? 5 : 1;
 					switch (e.keyCode) {
 					case SWT.ESC:
-						close();
+						if (metaOn || helpOn) {
+							metaOn = helpOn = false;
+							topCanvas.redraw();
+						} else
+							close();
 						break;
 					case SWT.ARROW_LEFT:
 						pan(-INCREMENT * f, 0);
@@ -1056,7 +1083,12 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 						pan(0, PAGEINCREMENT * f);
 						break;
 					case SWT.F2:
-						metadataRequested(asset);
+						if (e.widget == topCanvas) {
+							metaOn = !metaOn;
+							if (metaOn)
+								helpOn = false;
+							topCanvas.redraw();
+						}
 						break;
 					case SWT.F4:
 						if (kind != PRIMARY)
@@ -1110,6 +1142,14 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 		if (image != null) {
 			image.dispose();
 			image = null;
+		}
+		if (highresTooltip != null) {
+			highresTooltip.dispose();
+			highresTooltip = null;
+		}
+		if (syncTooltip != null) {
+			syncTooltip.dispose();
+			syncTooltip = null;
 		}
 		return super.close();
 	}
@@ -1203,14 +1243,6 @@ public class ImageViewer extends AbstractMediaViewer implements UiConstants, IFr
 			currentCustomCursor = cursor;
 			topCanvas.setCursor(UiActivator.getDefault().getCursor(display, cursor));
 		}
-	}
-
-	private void metadataRequested(Asset asset) {
-		if (metaTootip == null)
-			metaTootip = new ToolTip(topShell.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-		UiUtilities.showTooltip(metaTootip, mbounds.x + mbounds.width / 2, mbounds.y + mbounds.height / 2,
-				NLS.bind(Messages.getString("SlideShowPlayer.metadata"), asset.getName()), //$NON-NLS-1$
-				new HoverInfo(asset, (ImageRegion[]) null).getText());
 	}
 
 	public String getName() {

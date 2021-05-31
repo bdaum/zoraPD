@@ -58,7 +58,7 @@ import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class FtpDirPage extends ColoredWizardPage {
+public class FtpDirPage extends ColoredWizardPage implements ICheckStateListener {
 
 	private CheckboxTreeViewer viewer;
 	private FTPClient ftp;
@@ -206,13 +206,13 @@ public class FtpDirPage extends ColoredWizardPage {
 				return super.compare(v, e1, e2);
 			}
 		});
-		cbViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				validatePage();
-			}
-		});
+		cbViewer.addCheckStateListener(this);
 		UiUtilities.installDoubleClickExpansion(cbViewer);
 		return cbViewer;
+	}
+	
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		validatePage();
 	}
 
 	@Override

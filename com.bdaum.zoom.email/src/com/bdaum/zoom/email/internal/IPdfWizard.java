@@ -39,8 +39,6 @@ public interface IPdfWizard {
 
 	int getJpegQuality();
 
-//	int getScalingMethod();
-
 	FtpAccount getFtpAccount();
 
 	String getWeblink();

@@ -80,8 +80,6 @@ public class TemplateProcessor {
 		this.variables = variables;
 	}
 
-
-
 	public String processTemplate(String template, Asset asset) {
 		return processTemplate(template, asset, "", -1, -1); //$NON-NLS-1$
 	}
@@ -135,11 +133,12 @@ public class TemplateProcessor {
 				from = p + 1;
 			}
 		}
-		char[] t = new char[sb.length()];
-		sb.getChars(0, sb.length(), t, 0);
+		int length = sb.length();
+		char[] t = new char[length];
+		sb.getChars(0, length, t, 0);
 		parse(t, EXPR);
-		String s = new String(t, 0, removeChars(t, 0, t.length));
-		return s.isEmpty() ? Format.MISSINGENTRYSTRING : s;
+		int wp = removeNils(t);
+		return wp == 0 ? Format.MISSINGENTRYSTRING : new String(t, 0, wp);
 	}
 
 	public String processTemplate(IHoverContribution contrib, Object object, IHoverContext context, boolean isTitle) {
@@ -224,7 +223,7 @@ public class TemplateProcessor {
 		char[] t = new char[len];
 		sb.getChars(0, len, t, 0);
 		parse(t, LINEP);
-		return new String(t, 0, removeChars(t, 0, len));
+		return new String(t, 0, removeNils(t));
 	}
 
 	private static int replaceContent(StringBuilder sb, int p, int q, String text) {
@@ -271,7 +270,7 @@ public class TemplateProcessor {
 					for (TrackRecordImpl t : records) {
 						if (sbt.length() > 0)
 							sbt.append('\n');
-						sbt.append('\t').append(QueryField.TRACK.getFormatter().toString(t));
+						sbt.append('\t').append(QueryField.TRACK.getFormatter().format(t));
 						if (++j > 16)
 							break;
 					}
@@ -298,9 +297,10 @@ public class TemplateProcessor {
 		return sbp;
 	}
 
-	private static int removeChars(char[] t, int from, int to) {
-		int wp = from;
-		for (int i = from; i < to; i++)
+	private static int removeNils(char[] t) {
+		int wp = 0;
+		int l = t.length;
+		for (int i = 0; i < l; i++)
 			if (t[i] > NIL)
 				t[wp++] = t[i];
 		return wp;
@@ -334,7 +334,17 @@ public class TemplateProcessor {
 				state = FAIL;
 				break;
 			case '\n':
+				if (i < t.length - 1 && t[i + 1] == '\r')
+					t[i++] = NIL;
+				if (linestart >= 0 && level == 0) {
+					lineBreak(t, linestart, i + 1, dbqm);
+					linestart = -1;
+				}
+				state = LINEP;
+				break;
 			case '\r':
+				if (i < t.length - 1 && t[i + 1] == '\n')
+					t[i++] = NIL;
 				if (linestart >= 0 && level == 0) {
 					lineBreak(t, linestart, i + 1, dbqm);
 					linestart = -1;
@@ -393,7 +403,6 @@ public class TemplateProcessor {
 									++fails[level];
 									if (level == 0)
 										++lineFails;
-
 								} else {
 									state = SUCCESS;
 									++successes[level];
@@ -484,7 +493,6 @@ public class TemplateProcessor {
 								if (level == 0)
 									++lineSuccesses;
 							}
-							break;
 						}
 						break;
 					default:
@@ -498,7 +506,6 @@ public class TemplateProcessor {
 						startpos[level++] = i - 1;
 					}
 					state = EXPR;
-					break;
 				}
 			}
 		}

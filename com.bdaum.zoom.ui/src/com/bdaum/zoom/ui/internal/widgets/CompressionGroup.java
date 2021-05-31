@@ -25,12 +25,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class CompressionGroup {
+public class CompressionGroup implements Listener {
 
 	private static final String QUALITY = "jpegQuality"; //$NON-NLS-1$
 	private static final String METHOD = "method"; //$NON-NLS-1$
@@ -46,22 +47,34 @@ public class CompressionGroup {
 	private Composite group;
 
 	private CheckboxButton methodButton;
+	private Label hintLabel;
+	private boolean webP = false;
 
 	public CompressionGroup(Composite parent, boolean method) {
 		group = new Composite(parent, SWT.NONE);
-		GridLayout gridLayout = (GridLayout) parent.getLayout();
-		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, gridLayout.numColumns, 1));
-		group.setLayout(new GridLayout(2, false));
-		if (method)
+		group.setLayoutData(
+				new GridData(SWT.FILL, SWT.BEGINNING, true, false, ((GridLayout) parent.getLayout()).numColumns, 1));
+		GridLayout layout = new GridLayout(3, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		group.setLayout(layout);
+		if (method) {
 			methodButton = WidgetFactory.createCheckButton(group, Messages.CompressionGroup_use_webp,
-					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1),
+					new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1),
 					Messages.CompressionGroup_webp_tooltip);
+			methodButton.addListener(SWT.Selection, this);
+		}
 		new Label(group, SWT.NONE).setText(Messages.CompressionGroup_jpegQuality);
 		numControl = new NumericControl(group, SWT.NONE);
 		numControl.setMinimum(1);
 		numControl.setMaximum(100);
 		numControl.setIncrement(5);
 		numControl.setPageIncrement(25);
+		hintLabel = new Label(group, SWT.NONE);
+		GridData data = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
+		data.horizontalIndent = 20;
+		hintLabel.setLayoutData(data);
+		hintLabel.setText(Messages.CompressionGroup_enter_0);
+		hintLabel.setVisible(false);
 	}
 
 	public void setEnabled(boolean enabled) {
@@ -72,53 +85,43 @@ public class CompressionGroup {
 		if (settings == null)
 			numControl.setSelection(75);
 		else {
+			webP = settings.getBoolean(METHOD);
+			if (methodButton != null)
+				methodButton.setSelection(webP);
 			try {
-				int v = settings.getInt(QUALITY);
-				numControl.setSelection(v <= 0 || v > 100 ? 75 : v);
+				int quality = settings.getInt(QUALITY);
+				numControl.setSelection(quality <= 0 || quality > 100 ? 75 : quality);
 			} catch (NumberFormatException e) {
 				numControl.setSelection(75);
 			}
-			if (methodButton != null)
-				methodButton.setSelection(settings.getBoolean(METHOD));
 		}
 	}
 
 	public void saveSettings(IDialogSettings settings) {
 		settings.put(QUALITY, numControl.getSelection());
-		if (methodButton != null)
-			settings.put(METHOD, methodButton.getSelection());
+		settings.put(METHOD, webP);
 	}
 
 	public void fillValues(int quality, boolean useWebP) {
-		numControl.setSelection(quality > 0 ? quality : 75);
+		webP = useWebP;
+		numControl.setSelection(quality <= 0 || quality > 100 ? 75 : quality);
 		if (methodButton != null)
 			methodButton.setSelection(useWebP);
+		updateLabel();
 	}
 
 	public int getJpegQuality() {
 		return numControl.getSelection();
 	}
 
-	/**
-	 * @return
-	 * @see org.eclipse.swt.widgets.Control#isEnabled()
-	 */
 	public boolean isEnabled() {
 		return numControl.isEnabled();
 	}
 
-	/**
-	 * @return
-	 * @see org.eclipse.swt.widgets.Control#isVisible()
-	 */
 	public boolean isVisible() {
 		return group.isVisible();
 	}
 
-	/**
-	 * @param visible
-	 * @see org.eclipse.swt.widgets.Control#setVisible(boolean)
-	 */
 	public void setVisible(boolean visible) {
 		group.setVisible(visible);
 	}
@@ -137,6 +140,23 @@ public class CompressionGroup {
 
 	public boolean getUseWebp() {
 		return methodButton != null && methodButton.getSelection();
+	}
+
+	public void setUseWebP(boolean b) {
+		this.webP = b;
+		if (methodButton != null)
+			methodButton.setSelection(b);
+		updateLabel();
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		webP = methodButton.getSelection();
+		updateLabel();
+	}
+
+	private void updateLabel() {
+		hintLabel.setVisible(webP);
 	}
 
 }

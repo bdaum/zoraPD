@@ -1,149 +1,207 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head><title>Slideshow designer view</title>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Slide show designer view </h2>
-<p>With the slide show designer view you can create individually
-designed slide shows. Slides are placed on a storyboard and can be
-arranged in sequence. Duration and fading behavior can be configured individually for each slide.</p>
-<p>In the top area of the <span style="font-style: italic;">Slide show
-designer view</span> features the <span style="font-style: italic;">storyboard</span>. Simply place images on the
-storyboard by dragging them from a gallery to the storyboard.&nbsp;By pressing&nbsp;<abbr>Ctrl</abbr>
-when dragging images over an existing storyboard image the new images will
-replace the storyboard image. Otherwise they are simply added to the storyboard.</p><p>Per drag
-&amp; drop you may rearrange the images freely. Images can be
-removed from the storyboard
-by dragging them over the top border of the view.</p><p>A right click on a slide selects the associated image in other views such as galleries.</p>
-<p>Each slide is equipped with four handles:</p>
-<ul style="font-weight: normal;">
-<li>At the left border is a &nbsp;<span style="font-weight: bold;">gray handle</span>. This
-handle allows adjusting the delay between the previous slide and the
-current slide.</li>
-<li>The <span style="font-weight: bold;">yellow
-handle</span> at the right border is used for adjusting the display
-duration of the slide.</li>
-<li>The <span style="font-weight: bold;">green
-handle</span> at the baseline left determines the fade-in time.</li>
-<li>The <span style="font-weight: bold;">red
-handle</span> at the baseline right determines the fade-out time.</li>
-  <li>The <span style="font-weight: bold;">blue handle</span>
-at the top determines the amount of zooming during the display
-duration.&nbsp; The maximum zoom amount will cause a zoom-in by factor
-2. When a zoom amount greater zero is defined, a <span style="font-weight: bold;">blue dot</span> in the image determines the zoom direction. It can be dragged to any position within the image.<br>
-  </li>
-
-</ul>
-<div style="margin-left: 80px;"><img style="width: 335px; height: 316px;" alt="slide" src="../images/slide_en.png"><br>
-</div>
-<br>
-The title of each slide is editable. Simply click on the title area.<br>
-<br>
-Below the storyboard is a time axis. By clicking on the time axis you can set a different start point for the show.<br>
-<br>
-<span style="font-weight: bold;">Local menu functions and tool buttons</span><br style="font-weight: bold;">
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Play</span> (<img style="width: 16px; height: 16px;" alt="play" src="../images/play.gif">).
-Start to play the slide show. The <a href="slideshowPlayer.html">player</a>
-is interactive and allows changing image properties while playing.</li>
-<li><span style="font-weight: bold;">Slideshow
-Properties</span> (<img style="width: 16px; height: 16px;" alt="slideshow" src="../images/slideshow.gif">). Allows editing the global properties of the
-slide show (see below).</li>
-  <li><span style="font-weight: bold;">Synchronize</span><span style="font-weight: bold;"></span> <span style="font-weight: bold;"></span>(<img style="width: 16px; height: 16px;" alt="Ausstellungseigenschaften" src="../images/sync.png">)<span style="font-weight: bold;">.</span> Toggles synchronization mode. If this mode is set the selected image will be shown in the current collection (if present), too.</li>
-
-</ul><span style="font-weight: bold;">Navigation</span>
-<p>Navigation is similar to the <a href="sleeves.htm"><span style="font-style: italic;">Sleeves view</span></a>.
-Just drag the whole area to pan. Make sure that the cursor is not positioned on a slide when starting dragging. <abbr>Ctrl</abbr>
-accelerates the panning operation. All other modification keys (except
-the zoom key, see below) can be used to force panning, even is the
-cursor is positioned on a slide. The panning is restricted to the horizontal direction. By pressing <abbr>Shift+Ctrl</abbr> you can override that restriction and pan in the vertical direction, too.
-</p>
-
-<p>You
-can adjust the viewing distance by pressing the zoom key (<abbr>ALT</abbr> or <abbr>Shift</abbr> key or the right mouse button depending on the <a href="mousePrefs.html">preference settings</a>) and
-dragging left or right.Alternatively, you
-may zoom using the mouse wheel.</p>
-
-
-
-<p><abbr>ALT</abbr>-click on the slide or a click on the legend opens the property dialog.<br>
-</p>
-
-<h4><a name="properties"></a>Slide show properties</h4>
-<ul style="font-weight: normal;">
-<li style="font-weight: bold;">Name. <span style="font-weight: normal;">The name of the slide show.</span><br>
-</li>
-<li><span style="font-weight: bold;">Description</span>.
-Name and description will be show at the start of the slide show.</li>
-<li><span style="font-weight: bold;">Use preview
-images where possible</span>.
-This can be useful for slow machines when displaying RAW files. If the
-preview image in the RAW file is large enough it will be used.
-Otherwise, or if this option is switched off, the RAW file is converted
-into a displayable file format. This happens in the background while
-the previous slide is displaying but it could slow down the display
-process and cause flicker.</li>
-  <li><span style="font-weight: bold;">Skip duplicates.</span> This
-option is only available for Adhoc Slides shows. When checked,
-duplicate images (images with the same image name) are skipped.</li><li><span style="font-weight: bold;">Voice notes.</span> Mark this option if you want to replay attached voice notes.</li>
-
-<li style="font-weight: bold;">Default timing for slides</li>
-<ul style="font-weight: normal;">
-<li><span style="font-weight: bold;">Duration</span>.
-This is the display duration when an image is added to the storyboard.</li>
-<li><span style="font-weight: bold;">Transition.</span>
-This is the default transition time <span style="font-style: italic;">(fade-in</span> and <span style="font-style: italic;">fade-out</span>) for new images added to the
-storyboard.</li>
-<li><span style="font-weight: bold;">Title
-display</span>. This is the display time for all titles. Set this
-value to <samp style="font-weight: bold;">0</samp> if you don't want titles to be displayed.</li><li><span style="font-weight: bold;">Content</span>. Select what to show in the title display: the image caption, the slide sequence number, or both.</li>
-</ul>
-</ul>
-<h4><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">Slide
-properties</font></h4>
-<font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">To
-edit the slide properties in </font><font onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">a
-separate <a href="slide.html">dialog</a> just </font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">click&nbsp;the
-slide legend or </font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><abbr>ALT</abbr>-click into the image area</font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">.<br>
-<br>
-</font>
-<h4><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">Context menu<br>
-</font></h4>
-<font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">To
-obtain the context menu, right click a slide or the time bar. The
-following functions are available:<br><br></font><ul style="font-weight: normal;"><li><span style="font-weight: bold;">Set time cursor</span>. Sets&nbsp;the current start point for the slide show.<font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;"></span></font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Jump to image.</span> Jumps to an image selected from a list.</font></li>
-  <li><span style="font-weight: bold;">Jump to section</span>. Jumps to a section break selected from a list.<br>
-  </li>
-  <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Jump to last selected</span>. Jumps to the image that was most recently selected.</font></li>
-  <li><span style="font-weight: bold;">Jump to time cursor</span>. Jumps to the current position of the time cursor.<br>
-  </li>
-<li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">View image fullscreen.</span> Shows the image in full resolution.</font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Modify.</span> Edit or rotate the image.</font></li>
-  <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Cut</span>. </font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7">Removes the selected images from the exhibition but keeps them in the application clipboard.</font></li>
-  <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Paste</span>. Pastes images from the clipboard to the mouse position.</font></li>
-<li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Show folder.</span> Shows the selected image in its file system folder.</font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Show in timeline.</span> Shows the selected image in its timeline collection.</font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Show in map. </span>Shows the selected image in the map view &nbsp;(only with geo-coded images)</font></li><li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;">Play voice note.</span> Plays the voicenote attached to the image, if any.</font></li><li><span style="font-weight: bold;">Create section break.</span> Creates
-a new <a href="sectionbreak.html">section break</a>.</li>
-</ul>
-<h4>Tip</h4>
-A convenient way to create a slideshow is to start with an Adhoc
-slideshow. When the slideshow has ended you have the opportunity to
-save the slide show under a name. Then you can edit this slideshow.<br>
-<br>
-
-</body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <title>Slideshow designer view</title>
+    <link rel="stylesheet" type="text/css" href="../../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Slide show designer view </h2>
+    <p>With the slide show designer view you can create individually designed
+      slide shows. Slides are placed on a storyboard and can be arranged in
+      sequence. Duration and fading behavior can be configured individually for
+      each slide.</p>
+    <p>In the top area of the <span style="font-style: italic;">Slide show
+        designer view</span> features the <span style="font-style: italic;">storyboard</span>.
+      Simply place images on the storyboard by dragging them from a gallery to
+      the storyboard.&nbsp;By pressing&nbsp;<abbr>Ctrl</abbr> when dragging
+      images over an existing storyboard image the new images will replace the
+      storyboard image. Otherwise they are simply added to the storyboard.</p>
+    <p>Per drag &amp; drop you may rearrange the images freely. Images can be
+      removed from the storyboard by dragging them over the top border of the
+      view.</p>
+    <p>A right click on a slide selects the associated image in other views such
+      as galleries.</p>
+    <p>Each slide is equipped with four handles:</p>
+    <ul style="font-weight: normal;">
+      <li>At the left border is a &nbsp;<span style="font-weight: bold;">gray
+          handle</span>. This handle allows adjusting the delay between the
+        previous slide and the current slide.</li>
+      <li>The <span style="font-weight: bold;">yellow handle</span> at the
+        right border is used for adjusting the display duration of the slide.</li>
+      <li>The <span style="font-weight: bold;">green handle</span> at the
+        baseline left determines the fade-in time.</li>
+      <li>The <span style="font-weight: bold;">red handle</span> at the
+        baseline right determines the fade-out time.</li>
+      <li>The <span style="font-weight: bold;">blue handle</span> at the top
+        determines the amount of zooming during the display duration.&nbsp; The
+        maximum zoom amount will cause a zoom-in by factor 2. When a zoom amount
+        greater zero is defined, a <span style="font-weight: bold;">blue dot</span>
+        in the image determines the zoom direction. It can be dragged to any
+        position within the image.<br>
+      </li>
+    </ul>
+    <div style="margin-left: 80px;"><img style="width: 335px; height: 316px;" alt="slide"
+        src="../images/slide_en.png"><br>
+    </div>
+    <br>
+    The title of each slide is editable. Simply click on the title area.<br>
+    <br>
+    Below the storyboard is a time axis. By clicking on the time axis you can
+    set a different start point for the show.<br>
+    <br>
+    <span style="font-weight: bold;">Local menu functions and tool buttons</span><br
+      style="font-weight: bold;">
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Play</span> (<img style="width: 16px; height: 16px;"
+          alt="play" src="../images/play.gif">). Start to play the slide show.
+        The <a href="slideshowPlayer.html">player</a> is interactive and allows
+        changing image properties while playing.</li>
+      <li><span style="font-weight: bold;">Slideshow Properties</span> (<img style="width: 16px; height: 16px;"
+          alt="slideshow" src="../images/slideshow.gif">). Allows editing the
+        global properties of the slide show (see below).</li>
+      <li><span style="font-weight: bold;">Synchronize</span><span style="font-weight: bold;"></span>
+        <span style="font-weight: bold;"></span>(<img style="width: 16px; height: 16px;"
+          alt="Ausstellungseigenschaften" src="../images/sync.png">)<span style="font-weight: bold;">.</span>
+        Toggles synchronization mode. If this mode is set the selected image
+        will be shown in the current collection (if present), too.</li>
+    </ul>
+    <span style="font-weight: bold;">Navigation</span>
+    <p>Navigation is similar to the <a href="sleeves.htm"><span style="font-style: italic;">Sleeves
+          view</span></a>. Just drag the whole area to pan. Make sure that the
+      cursor is not positioned on a slide when starting dragging. <abbr>Ctrl</abbr>
+      accelerates the panning operation. All other modification keys (except the
+      zoom key, see below) can be used to force panning, even is the cursor is
+      positioned on a slide. The panning is restricted to the horizontal
+      direction. By pressing <abbr>Shift+Ctrl</abbr> you can override that
+      restriction and pan in the vertical direction, too. </p>
+    <p>You can adjust the viewing distance by pressing the zoom key (<abbr>ALT</abbr>
+      or <abbr>Shift</abbr> key or the right mouse button depending on the <a
+        href="mousePrefs.html">preference settings</a>) and dragging left or
+      right.Alternatively, you may zoom using the mouse wheel.</p>
+    <p><abbr>ALT</abbr>-click on the slide or a click on the legend opens the
+      property dialog.<br>
+    </p>
+    <h4><a name="properties"></a>Slide show properties</h4>
+    <ul style="font-weight: normal;">
+      <li style="font-weight: bold;">Name. <span style="font-weight: normal;">The
+          name of the slide show.</span><br>
+      </li>
+      <li><span style="font-weight: bold;">Description</span>. Name and
+        description will be show at the start of the slide show.</li>
+      <li><b>Contents</b><br>
+        <span style="font-weight: bold;"></span></li>
+      <ul>
+        <li><span style="font-weight: bold;">Use preview images where possible</span>.
+          This can be useful for slow machines when displaying RAW files. If the
+          preview image in the RAW file is large enough it will be used.
+          Otherwise, or if this option is switched off, the RAW file is
+          converted into a displayable file format. This happens in the
+          background while the previous slide is displaying but it could slow
+          down the display process and cause flicker.</li>
+        <li><span style="font-weight: bold;">Skip duplicates.</span> This option
+          is only available for Adhoc slideshows. When checked, duplicate images
+          (images with the same image name) are skipped.</li>
+        <li><span style="font-weight: bold;">Voice notes.</span> Mark this
+          option if you want to replay attached voice notes.</li>
+        <li><b>Show only</b>. Select a privacy level (only for Adhoc
+          slideshows).<br>
+        </li>
+      </ul>
+      <li style="font-weight: bold;">Default timing for slides</li>
+      <ul style="font-weight: normal;">
+        <li><span style="font-weight: bold;">Duration</span>. This is the
+          display duration when an image is added to the storyboard.</li>
+        <li><span style="font-weight: bold;">Transition.</span> This is the
+          default transition time <span style="font-style: italic;">(fade-in</span>
+          and <span style="font-style: italic;">fade-out</span>) for new images
+          added to the storyboard.</li>
+        <li><span style="font-weight: bold;">Title display</span>. This is the
+          display time for all titles. Set this value to <samp style="font-weight: bold;">0</samp>
+          if you don't want titles to be displayed.</li>
+        <li><span style="font-weight: bold;">Content</span>. Select what to show
+          in the title display: the image caption, the slide sequence number, or
+          both.<br>
+        </li>
+      </ul>
+      <li><b>Design</b></li>
+      <ul style="font-weight: normal;">
+        <li><b>Background color</b>. The color of screen areas not covered by
+          the slide.</li>
+        <li><b>Title color scheme</b>. The color scheme for the title display.</li>
+        <li><b>Title transparency:</b> The transparency of the title. 0 is
+          opaque, 100 is completely transparent (invisible title).</li>
+      </ul>
+    </ul>
+    <h4><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+        id="TR_1_7">Slide properties</font></h4>
+    <font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+      id="TR_1_7">To edit the slide properties in </font><font onmouseover="top.Highlight.Apply(this);"
+      onmouseout="top.Highlight.Clear();" id="TR_1_7">a separate <a href="slide.html">dialog</a>
+      just </font><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+      id="TR_1_7">click&nbsp;the slide legend or </font><font style="" onmouseover="top.Highlight.Apply(this);"
+      onmouseout="top.Highlight.Clear();" id="TR_1_7"><abbr>ALT</abbr>-click
+      into the image area</font><font style="" onmouseover="top.Highlight.Apply(this);"
+      onmouseout="top.Highlight.Clear();" id="TR_1_7">.<br>
+      <br>
+    </font>
+    <h4><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+        id="TR_1_7">Context menu<br>
+      </font></h4>
+    <font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+      id="TR_1_7">To obtain the context menu, right click a slide or the time
+      bar. The following functions are available:<br>
+      <br>
+    </font>
+    <ul style="font-weight: normal;">
+      <li><span style="font-weight: bold;">Set time cursor</span>. Sets&nbsp;the
+        current start point for the slide show.<font style="" onmouseover="top.Highlight.Apply(this);"
+          onmouseout="top.Highlight.Clear();" id="TR_1_7"><span style="font-weight: bold;"></span></font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Jump to image.</span>
+          Jumps to an image selected from a list.</font></li>
+      <li><span style="font-weight: bold;">Jump to section</span>. Jumps to a
+        section break selected from a list.<br>
+      </li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Jump to last selected</span>.
+          Jumps to the image that was most recently selected.</font></li>
+      <li><span style="font-weight: bold;">Jump to time cursor</span>. Jumps to
+        the current position of the time cursor.<br>
+      </li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">View image fullscreen.</span>
+          Shows the image in full resolution.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Modify.</span> Edit or
+          rotate the image.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Cut</span>. </font><font
+          style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7">Removes the selected images from the exhibition but keeps
+          them in the application clipboard.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Paste</span>. Pastes
+          images from the clipboard to the mouse position.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Show folder.</span> Shows
+          the selected image in its file system folder.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Show in timeline.</span>
+          Shows the selected image in its timeline collection.</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Show in map. </span>Shows
+          the selected image in the map view &nbsp;(only with geo-coded images)</font></li>
+      <li><font style="" onmouseover="top.Highlight.Apply(this);" onmouseout="top.Highlight.Clear();"
+          id="TR_1_7"><span style="font-weight: bold;">Play voice note.</span>
+          Plays the voicenote attached to the image, if any.</font></li>
+      <li><span style="font-weight: bold;">Create section break.</span> Creates
+        a new <a href="sectionbreak.html">section break</a>.</li>
+    </ul>
+    <h4>Tip</h4>
+    A convenient way to create a slideshow is to start with an Adhoc slideshow.
+    When the slideshow has ended you have the opportunity to save the slide show
+    under a name. Then you can edit this slideshow.<br>
+    <br>
+  </body>
+</html>

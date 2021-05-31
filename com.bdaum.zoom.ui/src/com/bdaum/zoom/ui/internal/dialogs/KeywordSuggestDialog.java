@@ -33,8 +33,6 @@ import org.eclipse.jface.viewers.CheckboxTableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -155,6 +153,7 @@ public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 	private QueryOptions queryOptions;
 	private ILireService lireService;
 	private RadioButtonGroup sortButtonGroup;
+	private Button configureButton;
 
 	public KeywordSuggestDialog(Shell parentShell, List<Asset> assets, Object[] selectedKeywords) {
 		super(parentShell);
@@ -242,32 +241,14 @@ public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 						((ScoredString) e2).getString());
 			}
 		});
-		AllNoneGroup buttonbar = new AllNoneGroup(viewerComp, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				viewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-			}
-		});
+		AllNoneGroup buttonbar = new AllNoneGroup(viewerComp, this);
 		Label label = new Label(buttonbar, SWT.SEPARATOR | SWT.HORIZONTAL);
 		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		if (lireService != null) {
-			Button configureButton = new Button(buttonbar, SWT.PUSH);
+			configureButton = new Button(buttonbar, SWT.PUSH);
 			configureButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			configureButton.setText(Messages.SuggestKeywordDialog_configure);
-			configureButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					if (lireService.showConfigureSearch(KeywordSuggestDialog.this, null)) {
-						Job.getJobManager().cancel(KeywordSuggestDialog.this);
-						QueryOptions queryOptions = UiActivator.getDefault().getQueryOptions();
-						options.setMaxResults(queryOptions.getMaxHits());
-						options.setMinScore(queryOptions.getScore());
-						options.setMethod(queryOptions.getMethod());
-						updateMessage();
-						fillValues();
-					}
-				}
-			});
+			configureButton.addListener(SWT.Selection, this);
 		}
 	}
 
@@ -276,8 +257,21 @@ public class KeywordSuggestDialog extends ZProgressDialog implements Listener {
 	}
 
 	public void handleEvent(Event e) {
-		if (allKeywords != null)
-			viewer.setInput(allKeywords.values());
+		if (e.widget == configureButton) {
+			if (lireService.showConfigureSearch(KeywordSuggestDialog.this, null)) {
+				Job.getJobManager().cancel(KeywordSuggestDialog.this);
+				QueryOptions queryOptions = UiActivator.getDefault().getQueryOptions();
+				options.setMaxResults(queryOptions.getMaxHits());
+				options.setMinScore(queryOptions.getScore());
+				options.setMethod(queryOptions.getMethod());
+				updateMessage();
+				fillValues();
+			}
+		} else if (e.widget == sortButtonGroup) {
+			if (allKeywords != null)
+				viewer.setInput(allKeywords.values());
+		} else
+			viewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
 	}
 
 }

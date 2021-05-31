@@ -1,195 +1,249 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="de"><head>
-
-
-
-
-
-
-
-
-
-  
-  <meta content="text/html;charset=UTF-8" http-equiv="Content-Type"><title>Mit RAW-Dateien arbeiten</title>
-  
-
-  
-  
-  <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
-
-  <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css"></head><body>
-<h2>Mit RAW-Dateien arbeiten<br>
-</h2>
-Das RAW-Bildformat ist bei vielen ernsthaften Fotografen beliebt. Der
-Grund dafür ist, dass anders als das begrenzte und verlustbehaftete
-JPEG-Format, RAW-Dateien alle vom Kamerasensor eingefangen Daten
-enthalten. <br>
-<br>
-RAW-Bilder können nicht direkt angezeigt oder gedruckt werden.
-Stattdessen müssen sie in ein traditionelles Bildformat wie TIFF oder
-JPeG mit Hilfe eines Raw-Konverters entwickelt werden, zum Beispiel mit
-<span style="font-style: italic;">Adobe Camera Raw, Adobe Lightroom, Capture One, Raw Therapee, AfterShot</span>, <span style="font-style: italic;">LightZone</span> und anderen. <br>
-<br>
-Leider verwendet fast jeder Kamerahersteller ein eigenes RAW-Format. In
-einem Versuch, das RAW-Bildformat zu standardisieren, hat Adobe das
-DNG-Format geschaffen (<span style="font-style: italic;">Digital Negative</span>).
-Einige Kamerahersteller unterstützen dieses Format direkt, in den
-meisten Fällen müssen die von der Kamera gelieferten Bilder jedoch mit
-dem <span style="font-style: italic;">Adobe DNG Converter</span> in
-DNG-Dateien umgerechnet werden. Auch diese DNG-Dateien müssen noch mit
-einem RAW-Konverter zu anzeigbaren Bildern "entwickelt" werden.
-Allerdings können nicht alle RAW-Konverter DNG-Dateien, die mit dem <span style="font-style: italic;">Adobe DNG Converter</span>
-gewonnen wurden, umwandeln. Deshalb raten wir dazu, sowohl die
-originalen RAW-Bilder als auch die daraus ableiteten DNG-Dateien zu
-speichern. <br>
-<br>
-<h4>Grundlegende RAW-Unterstützung </h4>
-<span style="font-style: italic;">ZoRa Photo Director</span> kann
-RAW-und DNG-Bilder direkt importieren. Dabei können Sie wahlweise
-RAW-Bilder in DNG- Bilder konvertieren lassen, denn <span style="font-style: italic;">ZoRa Photo Director</span> kann den <span style="font-style: italic;">Adobe DNG-Konverter</span> ansteuern. (Beachten Sie, dass der <span style="font-style: italic;">Adobe DNG-Konverter</span> nicht mit <span style="font-style: italic;">ZoRa Photo Director</span> ausgeliefert wird. Sie müssen ihn von Adobe herunterladen und separat installieren.) <br>
-<br>
-Normalerweise<span style="font-style: italic;"> ZoRa Photo Director</span> verwendet intern das beliebte Modul <span style="font-weight: bold;">DCRAW</span> um RAW-Bilder in ein anzeigbares Format zu konvertieren (siehe auch <a href="../tasks/import.html#raw">Importieren von Bildern</a>).
-Das ist jedes Mal erforderlich, wenn ein Thumbnail von einem Bild
-erzeugt wird, wenn die Bilder angesehen oder exportiert werden.
-Normalerweise dauert die Konvertierung ein paar Sekunden. Da ständig
-neue Digitalkameras am Markt erscheinen, ändert DCRAW seine Versionen häufig - häufiger als <span style="font-style: italic;">ZoRa Photo Director</span>. <a href="../reference/dcraw.html">Neue DCRAW-Versionen</a> können Sie aber einfach in den Unterordner <code>dropins/</code> im Installationsordner von <span style="font-style: italic;">ZoRa Photo Director</span>  ablegen, um den Import von neuen Kameramodellen zu gewährleisten. <br><br>Als Alternative zu DCRAW kann <span style="font-style: italic;">ZoRa Photo Director</span> auch <span style="font-weight: bold;">RawTherapee</span> oder <span style="font-weight: bold;">darktable</span> im Batch-Modus verwenden. Die Ergebnisse sind qualitativ besser als bei DCRAW und falls Sie <span style="font-style: italic;">RawTherapee</span> <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span style="font-weight: bold;"> </span>überwiegend als Raw-Konverter verwenden, ist es sinnvoll ihn auch in&nbsp;<span style="font-style: italic;">ZoRa Photo Director</span> zu integrieren, um die Konvertierungsergebnisse konsistent zu halten. Außerdem sind neuere Versionen von <span style="font-style: italic;">RawTherapee</span> <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span style="font-weight: bold;"> </span>auf OS X Plattformen leichter erhältlich als neuere DCRAW-Versionen. <span style="font-style: italic;">RawTherapee</span> bietet sogar die Möglichkeit auch neue Kameratypen relativ einfach zu unterstützen - siehe <a target="_blank" href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats">hier</a>!<br><br>Hier richten Sie die RAW-und DNG-Konvertierung ein:&nbsp; <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym>. <br>
-<br>
-<span style="font-style: italic;">ZoRa Photo Director</span> kann automatisch die Beziehungen zwischen RAW-Bildern und abgeleiteten Bildern verfolgen. Sie können diese Beziehungen mit dem <a href="../reference/hierarchy.html">Hierarchie-Sichtfenster</a> visualisieren.<br>
-<br>
-<h4><a name="3R"></a>Raw Recipe Reflection (3R) </h4>
-Bei der Entwicklung von RAW-Bildern ändert der RAW-Konverter nicht das
-ursprüngliche Bild. Stattdessen werden bestimmte Transformationen auf
-das Originalbild angewandt und das Ergebnis in einem herkömmlichen
-Bildformat wie TIFF oder JPEG abgespeichert. Diese Transformationen
-(Rezepte) werden in der Regel in separaten Dateien gespeichert, zum
-Beispiel in XMP-Filialdateien (<span style="font-style: italic;">Sidecars</span>) oder in separaten Ordnern, so dass später diese Transformationen leicht erneut angewendet oder modifiziert werden können. <br>
-<br>
-<span style="font-style: italic;">ZoRa Photo Director</span> ist in der
-Lage, diese Rezepte zu lesen und sie auf das Bild anzuwenden, wenn das
-Bild in ein sichtbares Format konvertiert wird. Dies erfolgt wahlweise
-und kann unter <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym> konfiguriert werden. Im Falle, dass für ein Bild mehrere Rezepte von verschiedenen RAW-Konvertern vorhanden sind, verwendet<span style="font-style: italic;">ZoRa Photo Director</span> jeweils das neueste Rezept. In dem seltenen Fall, dass zwei RAW-Konverter die gleiche Rezeptdateien verwenden (wie im Fall von <span style="font-style: italic;">Adobe Camera Raw</span> / <span style="font-style: italic;">Adobe Lightroom</span> und <span style="font-style: italic;">AfterShot</span>) entscheidet die Priorität, die unter <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym> eingetragen wurde. <br>
-<br>
-RAW-Rezepte, die benutzt wurden, um abgeleitete Bilder (wie TIFF- oder
-JPeG-Bilder) zu erzeugen, können automatisch im Katalog archiviert
-werden (<acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt; RAW-Konvertierung<sup>*</sup></acronym>). So können Sie später bei Bedarf die Originalrezepte wieder herstellen. Dazu rufen Sie für das RAW-Bild das <a href="../reference/hierarchy.html">Hierarchie-Sichtfenster</a> auf (<acronym>Beziehungen&gt;Derivate anzeigen</acronym>) und doppelklicken darin das abgeleitete Bild. Im folgenden Dialog klicken Sie dann auf <abbr>Wiederherstellen</abbr>.<br><br>Das oben gesagte gilt allerdings nur, wenn Sie DCRAW als Raw-Konverter verwenden. Bei der Verwendung von <span style="font-style: italic;">RawTherapee</span>, haben Sie nur die Möglichkeit <code>.pp3</code>-Sidecar-Rezepte oder das in <span style="font-style: italic;">RawTherapee</span>
-eingestellte Standardverarbeitungsprofil zu verwenden. Rezepte anderer
-Raw-Konverter werden ignoriert. Der Vorteil ist allerdings, dass die
-Rezeptverarbeitung direkt von <span style="font-style: italic;">RawTherapee</span> durchgeführt wird, so dass die Konvertierungsergebnisse 100% mit denen von <span style="font-style: italic;">RawTherapee</span> übereinstimmen.<br>
-<h4>Erweiterte Funktionen: CHDK Unterstützung </h4>
-Das CHDK ist ein Werkzeug, dass auf eine Speicherkarte geladen wird und es den meisten <span style="font-weight: bold;">Canon</span>-Consumer-Kameras u.a. ermöglicht, Bilder als RAW oder DNG-Dateien zu
-liefern. Leider sind in diesem RAW-Format nicht die EXIF-Daten
-enthalten, und die DNG-Dateien enthalten nur einen unvollständigen Satz
-von EXIF-Daten. Zum Glück produziert die Kamera auch eine zugehörige
-JPEG-Datei mit einem kompletten Satz von EXIF-Daten. <br>
-<br>
-Um den kompletten Satz von Metadaten mit diesen Dateien zu importieren, empfehlen wir folgendes Vorgehen: <br>
-<ul>
-  <li>Richten Sie die Kamera so ein, dass sie DNG-Bilder liefert
-(CHDK-Menü). Dies ermöglicht es Ihnen, die Bilder mit den meisten
-RAW-Konvertern zu verarbeiten (die RAW-Konverter-Unterstützung für das
-proprietäre CHDK-RAW-Format ist sehr begrenzt.)  </li>
-  <li>Richten Sie die Kamera so ein,&nbsp; dass Bildnamen mit dem Präfix <code>IMG_</code> versehen werden (CHDK-Menü). </li>
-  <li>Beim Import der Bilder von der Speicherkarte mit dem <span style="font-style: italic;">ZoRa Photo Director</span> aktivieren Sie die Option <span style="font-weight: bold;">Präfix für EXIF-Transfer</span> unter <span style="font-weight: bold;">Fortgeschrittene Optionen</span> (siehe auch <a href="../reference/importFromDevice.html">Import-vom-Gerät-Dialog</a>). <span style="font-style: italic;">ZoRa Photo Director</span>  importiert daraufhin das Bild aus der DNG-Datei und die EXIF-Daten aus der zugehörigen JPEG-Datei.</li>
-</ul><br>
-<h4><a name="formats"></a>Unterstützte RAW-Formate</h4>
-Die von <span style="font-style: italic;">ZoRa Photo Director</span> unterstützten RAW-Formate sind in Datei <code>raw.ini</code> im Plugin <code>com.bdaum.zoom.image</code> festgelegt. Bei Bedarf kann diese Datei geändert werden.<br>
-<br>
-<div style="margin-left: 80px;"><small><code>[3fr]<br>
-name=Hasselblad<br>
-[arw]<br>
-name=Sony<br>
-[bay]<br>
-name=Casio<br>
-[cap]<br>
-name=PhaseOne<br>
-[cr2]<br>
-name=Canon<br>
-[crw]<br>
-name=Canon<br>
-[cs1]<br>
-name=Sinar<br>
-[dcr]<br>
-name=Kodak<br>
-[dcs]<br>
-name=Kodak<br>
-[drf]<br>
-name=Kodak<br>
-[eip]<br>
-name=PhaseOne<br>
-[erf]<br>
-name=Epson<br>
-[fff]<br>
-name=Imacon<br>
-[gpr]<br>
-name=GoPro<br>
-unsupportedBy=DCRAW;RawTherapee;darktable<br>
-[iiq]<br>
-name=PhaseOne<br>
-[k25]<br>
-name=Kodak<br>
-[kdc]<br>
-name=Kodak<br>
-[mdc]<br>
-name=Minolta RD-175<br>
-[mef]<br>
-name=Mamiya<br>
-[mos]<br>
-name=Leaf<br>
-[mrw]<br>
-name=Minolta<br>
-[nef]<br>
-name=Nikon<br>
-[nrw]<br>
-name=Nikon<br>
-[orf]<br>
-name=Olympus<br>
-[pef]<br>
-name=Pentax<br>
-[pxn]<br>
-name=Logitech<br>
-[ptx]<br>
-name=Pentax<br>
-[r3d]<br>
-name=Red<br>
-[raf]<br>
-name=Fuji<br>
-[raw]<br>
-name=Panasonic<br>
-[rw1]<br>
-name=Leica<br>
-[rw2]<br>
-name=Panasonic<br>
-[sr2]<br>
-name=Sony<br>
-[srf]<br>
-name=Sony<br>
-[srw]<br>
-name=Samsung<br>
-[x3f]<br>
-name=Sigma<br>
-unsupportedBy=darktable</code></small><span id="result_box" class="" tabindex="-1" lang="en"><span><small><code></code></small></span></span><br>
-
-</div>
-<br>
-Wie sie sehen, wird die Raw-Konvertierung von GoPro-RAW-Dateien von
-beiden Konvertern nicht unterstützt. Wir schlagen vor, solche Dateien
-zunächst nach DNG umzuwandeln.<br>
-<br>
-
-
-
-
-
-<hr style="width: 100%; height: 2px;"><sup>*)</sup> Auf dem Mac: <acronym>ZoRa Photo Director&gt;Einstellungen&gt;...</acronym><br>
-
-<br>
-
-<br>
-
-<br>
-
-<ul style="font-weight: normal;">
-
-</ul>
-
-</body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="de">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Mit RAW-Dateien arbeiten</title>
+    <link rel="stylesheet" type="text/css" href="../../../../../com.bdaum.zoom.rcp/book.css">
+    <link rel="stylesheet" type="text/css" href="PLUGINS_ROOT/PRODUCT_PLUGIN/book.css">
+  </head>
+  <body>
+    <h2>Mit RAW-Dateien arbeiten<br>
+    </h2>
+    Das RAW-Bildformat ist bei vielen ernsthaften Fotografen beliebt. Der Grund
+    dafür ist, dass anders als das begrenzte und verlustbehaftete JPEG-Format,
+    RAW-Dateien alle vom Kamerasensor eingefangen Daten enthalten. <br>
+    <br>
+    RAW-Bilder können nicht direkt angezeigt oder gedruckt werden. Stattdessen
+    müssen sie in ein traditionelles Bildformat wie TIFF oder JPeG mit Hilfe
+    eines Raw-Konverters entwickelt werden, zum Beispiel mit <span style="font-style: italic;">Adobe
+      Camera Raw, Adobe Lightroom, Capture One, Raw Therapee, AfterShot</span>,
+    <span style="font-style: italic;">LightZone</span> und anderen. <br>
+    <br>
+    Leider verwendet fast jeder Kamerahersteller ein eigenes RAW-Format. In
+    einem Versuch, das RAW-Bildformat zu standardisieren, hat Adobe das
+    DNG-Format geschaffen (<span style="font-style: italic;">Digital Negative</span>).
+Einige
+    Kamerahersteller unterstützen dieses Format direkt, in den meisten Fällen
+    müssen die von der Kamera gelieferten Bilder jedoch mit dem <span style="font-style: italic;">Adobe
+      DNG Converter</span> in DNG-Dateien umgerechnet werden. Auch diese
+    DNG-Dateien müssen noch mit einem RAW-Konverter zu anzeigbaren Bildern
+    "entwickelt" werden. Allerdings können nicht alle RAW-Konverter DNG-Dateien,
+    die mit dem <span style="font-style: italic;">Adobe DNG Converter</span>
+    gewonnen wurden, umwandeln. Deshalb raten wir dazu, sowohl die originalen
+    RAW-Bilder als auch die daraus ableiteten DNG-Dateien zu speichern. <br>
+    <br>
+    <h4>Grundlegende RAW-Unterstützung </h4>
+    <span style="font-style: italic;">ZoRa Photo Director</span> kann RAW-und
+    DNG-Bilder direkt importieren. Dabei können Sie wahlweise RAW-Bilder in DNG-
+    Bilder konvertieren lassen, denn <span style="font-style: italic;">ZoRa
+      Photo Director</span> kann den <span style="font-style: italic;">Adobe
+      DNG-Konverter</span> ansteuern. (Beachten Sie, dass der <span style="font-style: italic;">Adobe
+      DNG-Konverter</span> nicht mit <span style="font-style: italic;">ZoRa
+      Photo Director</span> ausgeliefert wird. Sie müssen ihn von Adobe
+    herunterladen und separat installieren.) <br>
+    <br>
+    <p> Normalerweise<span style="font-style: italic;"> ZoRa Photo Director</span>
+      verwendet intern das beliebte Modul <span style="font-weight: bold;">DCRAW</span>
+      um RAW-Bilder in ein anzeigbares Format zu konvertieren (siehe auch <a href="../tasks/import.html#raw">Importieren
+        von Bildern</a>). Das ist jedes Mal erforderlich, wenn ein Thumbnail von
+      einem Bild erzeugt wird, wenn die Bilder angesehen oder exportiert werden.
+      Normalerweise dauert die Konvertierung ein paar Sekunden. Da ständig neue
+      Digitalkameras am Markt erscheinen, ändert DCRAW seine Versionen häufig -
+      häufiger als <span style="font-style: italic;">ZoRa Photo Director</span>.
+      <a href="../reference/dcraw.html">Neue DCRAW-Versionen</a> können Sie aber
+      einfach in den Unterordner <code>dropins/</code> im Installationsordner
+      von <span style="font-style: italic;">ZoRa Photo Director</span> ablegen,
+      um den Import von neuen Kameramodellen zu gewährleisten. </p>
+    <p>Leider wird DCRAW nicht mehr weiterentwickelt. Eine Alternative ist das
+      Programm <code>dcraw_emu </code>aus dem <b>LIBRAW</b>-Projekt. Sie
+      können dieses Programm auch mit <i>ZoRa Photo Director </i>verwenden.
+      Stellen Sie jedoch sicher, dass sich unter Windows die dynamische
+      Bibliothek <code>libraw.dll</code> im gleichen Ordner wie <code>dcraw_emu.exe</code>
+      befindet.<br>
+    </p>
+    <p>Außerdem kann <span style="font-style: italic;">ZoRa Photo Director</span>
+      auch <span style="font-weight: bold;">RawTherapee</span> oder <span style="font-weight: bold;">darktable</span>
+      im Batch-Modus als Raw-Konverter verwenden. Die Ergebnisse sind qualitativ
+      besser als bei DCRAW und falls Sie <span style="font-style: italic;">RawTherapee</span>
+      <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span
+        style="font-weight: bold;"> </span>überwiegend als Raw-Konverter
+      verwenden, ist es sinnvoll ihn auch in&nbsp;<span style="font-style: italic;">ZoRa
+        Photo Director</span> zu integrieren, um die Konvertierungsergebnisse
+      konsistent zu halten. Außerdem sind neuere Versionen von <span style="font-style: italic;">RawTherapee</span>
+      <span style="font-weight: bold;"></span> oder <span style="font-style: italic;">darktable</span><span
+        style="font-weight: bold;"> </span>auf für OS X Plattformen erhältlich.
+      <span style="font-style: italic;">RawTherapee</span> bietet sogar die
+      Möglichkeit auch neue Kameratypen relativ einfach zu unterstützen - siehe
+      <a target="_blank" href="http://rawpedia.rawtherapee.com/Adding_Support_for_New_Raw_Formats">hier</a>!</p>
+    <br>
+    Hier richten Sie die RAW-und DNG-Konvertierung ein:&nbsp; <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt;
+      RAW-Konvertierung<sup>*</sup></acronym>. <br>
+    <br>
+    <span style="font-style: italic;">ZoRa Photo Director</span> kann
+    automatisch die Beziehungen zwischen RAW-Bildern und abgeleiteten Bildern
+    verfolgen. Sie können diese Beziehungen mit dem <a href="../reference/hierarchy.html">Hierarchie-Sichtfenster</a>
+    visualisieren.<br>
+    <br>
+    <h4><a name="3R"></a>Raw Recipe Reflection (3R) </h4>
+    Bei der Entwicklung von RAW-Bildern ändert der RAW-Konverter nicht das
+    ursprüngliche Bild. Stattdessen werden bestimmte Transformationen auf das
+    Originalbild angewandt und das Ergebnis in einem herkömmlichen Bildformat
+    wie TIFF oder JPEG abgespeichert. Diese Transformationen (Rezepte) werden in
+    der Regel in separaten Dateien gespeichert, zum Beispiel in
+    XMP-Filialdateien (<span style="font-style: italic;">Sidecars</span>) oder
+    in separaten Ordnern, so dass später diese Transformationen leicht erneut
+    angewendet oder modifiziert werden können. <br>
+    <br>
+    <span style="font-style: italic;">ZoRa Photo Director</span> ist in der
+    Lage, diese Rezepte zu lesen und sie auf das Bild anzuwenden, wenn das Bild
+    in ein sichtbares Format konvertiert wird. Dies erfolgt wahlweise und kann
+    unter <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt;
+      RAW-Konvertierung<sup>*</sup></acronym> konfiguriert werden. Im Falle,
+    dass für ein Bild mehrere Rezepte von verschiedenen RAW-Konvertern vorhanden
+    sind, verwendet<span style="font-style: italic;">ZoRa Photo Director</span>
+    jeweils das neueste Rezept. In dem seltenen Fall, dass zwei RAW-Konverter
+    die gleiche Rezeptdateien verwenden (wie im Fall von <span style="font-style: italic;">Adobe
+      Camera Raw</span> / <span style="font-style: italic;">Adobe Lightroom</span>
+    und <span style="font-style: italic;">AfterShot</span>) entscheidet die
+    Priorität, die unter <acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt;
+      RAW-Konvertierung<sup>*</sup></acronym> eingetragen wurde. <br>
+    <br>
+    RAW-Rezepte, die benutzt wurden, um abgeleitete Bilder (wie TIFF- oder
+    JPeG-Bilder) zu erzeugen, können automatisch im Katalog archiviert werden (<acronym>Fenster&gt;Benutzervorgaben&gt;Importieren&gt;
+      RAW-Konvertierung<sup>*</sup></acronym>). So können Sie später bei Bedarf
+    die Originalrezepte wieder herstellen. Dazu rufen Sie für das RAW-Bild das <a
+      href="../reference/hierarchy.html">Hierarchie-Sichtfenster</a> auf (<acronym>Beziehungen&gt;Derivate
+      anzeigen</acronym>) und doppelklicken darin das abgeleitete Bild. Im
+    folgenden Dialog klicken Sie dann auf <abbr>Wiederherstellen</abbr>.<br>
+    <br>
+    Das oben gesagte gilt allerdings nur, wenn Sie DCRAW als Raw-Konverter
+    verwenden. Bei der Verwendung von <span style="font-style: italic;">RawTherapee</span>,
+    haben Sie nur die Möglichkeit <code>.pp3</code>-Sidecar-Rezepte oder das in
+    <span style="font-style: italic;">RawTherapee</span> eingestellte
+    Standardverarbeitungsprofil zu verwenden. Rezepte anderer Raw-Konverter
+    werden ignoriert. Der Vorteil ist allerdings, dass die Rezeptverarbeitung
+    direkt von <span style="font-style: italic;">RawTherapee</span>
+    durchgeführt wird, so dass die Konvertierungsergebnisse 100% mit denen von <span
+      style="font-style: italic;">RawTherapee</span> übereinstimmen.<br>
+    <h4>Erweiterte Funktionen: CHDK Unterstützung </h4>
+    Das CHDK ist ein Werkzeug, dass auf eine Speicherkarte geladen wird und es
+    den meisten <span style="font-weight: bold;">Canon</span>-Consumer-Kameras
+    u.a. ermöglicht, Bilder als RAW oder DNG-Dateien zu liefern. Leider sind in
+    diesem RAW-Format nicht die EXIF-Daten enthalten, und die DNG-Dateien
+    enthalten nur einen unvollständigen Satz von EXIF-Daten. Zum Glück
+    produziert die Kamera auch eine zugehörige JPEG-Datei mit einem kompletten
+    Satz von EXIF-Daten. <br>
+    <br>
+    Um den kompletten Satz von Metadaten mit diesen Dateien zu importieren,
+    empfehlen wir folgendes Vorgehen: <br>
+    <ul>
+      <li>Richten Sie die Kamera so ein, dass sie DNG-Bilder liefert
+        (CHDK-Menü). Dies ermöglicht es Ihnen, die Bilder mit den meisten
+        RAW-Konvertern zu verarbeiten (die RAW-Konverter-Unterstützung für das
+        proprietäre CHDK-RAW-Format ist sehr begrenzt.) </li>
+      <li>Richten Sie die Kamera so ein,&nbsp; dass Bildnamen mit dem Präfix <code>IMG_</code>
+        versehen werden (CHDK-Menü). </li>
+      <li>Beim Import der Bilder von der Speicherkarte mit dem <span style="font-style: italic;">ZoRa
+          Photo Director</span> aktivieren Sie die Option <span style="font-weight: bold;">Präfix
+          für EXIF-Transfer</span> unter <span style="font-weight: bold;">Fortgeschrittene
+          Optionen</span> (siehe auch <a href="../reference/importFromDevice.html">Import-vom-Gerät-Dialog</a>).
+        <span style="font-style: italic;">ZoRa Photo Director</span> importiert
+        daraufhin das Bild aus der DNG-Datei und die EXIF-Daten aus der
+        zugehörigen JPEG-Datei.</li>
+    </ul>
+    <br>
+    <h4><a name="formats"></a>Unterstützte RAW-Formate</h4>
+    Die von <span style="font-style: italic;">ZoRa Photo Director</span>
+    unterstützten RAW-Formate sind in Datei <code>raw.ini</code> im Plugin <code>com.bdaum.zoom.image</code>
+    festgelegt. Bei Bedarf kann diese Datei geändert werden.<br>
+    <br>
+    <div style="margin-left: 80px;"><small><code>[3fr]<br>
+          name=Hasselblad<br>
+          [arw]<br>
+          name=Sony<br>
+          [bay]<br>
+          name=Casio<br>
+          [cap]<br>
+          name=PhaseOne<br>
+          [cr2]<br>
+          name=Canon<br>
+          [crw]<br>
+          name=Canon<br>
+          [cs1]<br>
+          name=Sinar<br>
+          [dcr]<br>
+          name=Kodak<br>
+          [dcs]<br>
+          name=Kodak<br>
+          [drf]<br>
+          name=Kodak<br>
+          [eip]<br>
+          name=PhaseOne<br>
+          [erf]<br>
+          name=Epson<br>
+          [fff]<br>
+          name=Imacon<br>
+          [gpr]<br>
+          name=GoPro<br>
+          unsupportedBy=DCRAW;RawTherapee;darktable<br>
+          [iiq]<br>
+          name=PhaseOne<br>
+          [k25]<br>
+          name=Kodak<br>
+          [kdc]<br>
+          name=Kodak<br>
+          [mdc]<br>
+          name=Minolta RD-175<br>
+          [mef]<br>
+          name=Mamiya<br>
+          [mos]<br>
+          name=Leaf<br>
+          [mrw]<br>
+          name=Minolta<br>
+          [nef]<br>
+          name=Nikon<br>
+          [nrw]<br>
+          name=Nikon<br>
+          [orf]<br>
+          name=Olympus<br>
+          [pef]<br>
+          name=Pentax<br>
+          [pxn]<br>
+          name=Logitech<br>
+          [ptx]<br>
+          name=Pentax<br>
+          [r3d]<br>
+          name=Red<br>
+          [raf]<br>
+          name=Fuji<br>
+          [raw]<br>
+          name=Panasonic<br>
+          [rw1]<br>
+          name=Leica<br>
+          [rw2]<br>
+          name=Panasonic<br>
+          [sr2]<br>
+          name=Sony<br>
+          [srf]<br>
+          name=Sony<br>
+          [srw]<br>
+          name=Samsung<br>
+          [x3f]<br>
+          name=Sigma<br>
+          unsupportedBy=darktable</code></small><span id="result_box" class="" tabindex="-1"
+        lang="en"><span><small><code></code></small></span></span><br>
+    </div>
+    <br>
+    Wie sie sehen, wird die Raw-Konvertierung von GoPro-RAW-Dateien von beiden
+    Konvertern nicht unterstützt. Wir schlagen vor, solche Dateien zunächst nach
+    DNG umzuwandeln.<br>
+    <br>
+    <hr style="width: 100%; height: 2px;"><sup>*)</sup> Auf dem Mac: <acronym>ZoRa
+      Photo Director&gt;Einstellungen&gt;...</acronym><br>
+    <br>
+    <br>
+    <br>
+    <ul style="font-weight: normal;">
+    </ul>
+  </body>
+</html>

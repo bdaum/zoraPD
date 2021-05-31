@@ -22,12 +22,11 @@ package com.bdaum.zoom.ui.internal.views;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -53,15 +52,7 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
@@ -128,7 +119,7 @@ import com.bdaum.zoom.ui.internal.widgets.DateComponent;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class DataEntryView extends BasicView implements IFieldUpdater {
+public class DataEntryView extends BasicView implements IFieldUpdater, IMenuListener{
 
 	public class SpinnerComponent extends Composite {
 
@@ -338,7 +329,7 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	private Action saveAction;
 	private Action restoreAction;
 	// protected boolean dirty;
-	private Set<QueryField> updateSet = Collections.synchronizedSet(new HashSet<QueryField>(150));
+	private Set<QueryField> updateSet = ConcurrentHashMap.newKeySet(150);
 	private TabFolder tabFolder;
 	private List<Asset> dirtyAssets;
 
@@ -448,13 +439,13 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 	protected void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				DataEntryView.this.fillContextMenu(manager);
-			}
-		});
+		menuMgr.addMenuListener(this);
 		getControl().setMenu(menuMgr.createContextMenu(getControl()));
 		getSite().registerContextMenu(menuMgr, this);
+	}
+	
+	public void menuAboutToShow(IMenuManager manager) {
+		fillContextMenu(manager);
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
@@ -836,14 +827,14 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 		sc.setExpandVertical(true);
 		sc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		final Composite innerComp = new Composite(sc, SWT.NONE);
-		sc.addControlListener(new ControlAdapter() {
+		sc.addListener(SWT.Resize, new Listener() {
 			@Override
-			public void controlResized(ControlEvent e) {
-				sc.removeControlListener(this);
+			public void handleEvent(Event e) {
+				sc.removeListener(SWT.Resize,this);
 				try {
 					sc.setMinSize(innerComp.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 				} finally {
-					sc.addControlListener(this);
+					sc.addListener(SWT.Resize,this);
 				}
 			}
 		});
@@ -867,9 +858,9 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			layoutData.grabExcessHorizontalSpace = false;
 			checkButton.setLayoutData(layoutData);
 			widgetMap.put(qfield, checkButton);
-			checkButton.addSelectionListener(new SelectionAdapter() {
+			checkButton.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event event) {
 					if (!updateSet.contains(qfield))
 						putValue(qfield, checkButton.getSelection());
 				}
@@ -898,13 +889,13 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 				layoutData.widthHint = widthHint;
 				textField.setLayoutData(layoutData);
 				widgetMap.put(qfield, textField);
-				textField.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent event) {
+				textField.addListener(SWT.Modify, new Listener() {
+					public void handleEvent(Event event) {
 						if (!updateSet.contains(qfield)) {
 							Object text = textField.getText();
 							if (!QueryField.VALUE_MIXED.equals(text)) {
 								try {
-									putValue(qfield, text = qfield.getFormatter().fromString((String) text));
+									putValue(qfield, text = qfield.getFormatter().parse((String) text));
 									hideFieldDeco(textField);
 								} catch (ParseException e) {
 									showError(textField, e.getMessage());
@@ -923,15 +914,15 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			spinner.setMinimum(0);
 			spinner.setMaximum(Integer.MAX_VALUE);
 			spinner.setLayoutData(layoutData);
-			spinner.addSelectionListener(new SelectionAdapter() {
+			spinner.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					putCurrencyValue(qfield, spinner);
 				}
 			});
-			spinner.addKeyListener(new KeyAdapter() {
+			spinner.addListener(SWT.KeyUp, new Listener() {
 				@Override
-				public void keyReleased(KeyEvent keyEvent) {
+				public void handleEvent(Event keyEvent) {
 					switch (keyEvent.character) {
 					case '+':
 						spinner.setSelection(spinner.getSelection() + 1);
@@ -955,8 +946,8 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			layoutData.horizontalAlignment = widthHint == SWT.DEFAULT ? SWT.FILL : SWT.LEFT;
 			layoutData.widthHint = widthHint;
 			textField.setLayoutData(layoutData);
-			textField.addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent event) {
+			textField.addListener(SWT.Modify, new Listener() {
+				public void handleEvent(Event event) {
 					if (!updateSet.contains(qfield)) {
 						String text = textField.getText().trim();
 						if (text.isEmpty()) {
@@ -1008,15 +999,15 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 			final SpinnerComponent spinner = new SpinnerComponent(parent, SWT.BORDER);
 			spinner.setData(UiConstants.LABEL, label);
 			spinner.setLayoutData(layoutData);
-			spinner.addSelectionListener(new SelectionAdapter() {
+			spinner.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					putIntegerValue(qfield, spinner);
 				}
 			});
-			spinner.addKeyListener(new KeyAdapter() {
+			spinner.addListener(SWT.KeyUp, new Listener() {
 				@Override
-				public void keyReleased(KeyEvent keyEvent) {
+				public void handleEvent(Event keyEvent) {
 					switch (keyEvent.character) {
 					case '+':
 						spinner.setSelection(spinner.getSelection() + 1);
@@ -1067,9 +1058,9 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 					editButton.setToolTipText(NLS.bind(Messages.getString("DataEntryView.edit"), //$NON-NLS-1$
 							qfield.getLabel()));
 					editButton.setText("..."); //$NON-NLS-1$
-					editButton.addSelectionListener(new SelectionAdapter() {
+					editButton.addListener(SWT.Selection, new Listener() {
 						@Override
-						public void widgetSelected(SelectionEvent e) {
+						public void handleEvent(Event e) {
 							Object result = handleEditButton(parent, qfield, valueMap.get(qfield));
 							if (result != null) {
 								if (result instanceof BagChange)
@@ -1083,14 +1074,14 @@ public class DataEntryView extends BasicView implements IFieldUpdater {
 
 					});
 				} else {
-					textField.addModifyListener(new ModifyListener() {
-						public void modifyText(ModifyEvent event) {
+					textField.addListener(SWT.Modify, new Listener() {
+						public void handleEvent(Event event) {
 							if (!updateSet.contains(qfield)) {
 								Object text = textField.getText();
 								if (!QueryField.VALUE_MIXED.equals(text)) {
 									if (qfield.getFormatter() != null)
 										try {
-											text = qfield.getFormatter().fromString((String) text);
+											text = qfield.getFormatter().parse((String) text);
 											putValue(qfield, text);
 											hideFieldDeco(textField);
 										} catch (ParseException e) {

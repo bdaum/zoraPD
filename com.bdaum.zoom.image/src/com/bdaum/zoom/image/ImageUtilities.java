@@ -555,17 +555,18 @@ public class ImageUtilities {
 				writer.setOutput(stream);
 				try {
 					ImageWriteParam param = writer.getDefaultWriteParam();
+					if (quality <= 0 || quality > 100)
+						quality = 75;
 					if (format == SWT.IMAGE_JPEG) {
-						if (quality > 0) {
-							param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-							param.setCompressionQuality(quality / 100f);
-						}
+						param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+						param.setCompressionQuality(quality / 100f);
 					} else if (format == ZImage.IMAGE_WEBP) {
-						if (quality > 0) {
+						if (quality == 100)
+							param.setCompressionType("Lossless"); //$NON-NLS-1$
+						else {
 							param.setCompressionType("Lossy"); //$NON-NLS-1$
 							param.setCompressionQuality(quality / 100f);
-						} else
-							param.setCompressionType("Lossless"); //$NON-NLS-1$
+						}
 					}
 					writer.write(null, new IIOImage(bufferedImage, null, null), param);
 					return true;
@@ -1394,6 +1395,10 @@ public class ImageUtilities {
 	 *            - SWT image data
 	 * @return - output buffered image
 	 */
+	public static BufferedImage swtImage2buffered(ImageData data) {
+		return swtImage2buffered(data, ColorSpace.getInstance(ColorSpace.CS_sRGB));
+	}
+	
 	public static BufferedImage swtImage2buffered(final ImageData data, ColorSpace colorSpace) {
 		int w = data.width;
 		int h = data.height;

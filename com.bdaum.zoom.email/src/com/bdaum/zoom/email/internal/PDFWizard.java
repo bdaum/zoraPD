@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -42,8 +42,7 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.internal.wizards.AbstractAssetSelectionWizard;
 
 @SuppressWarnings("restriction")
-public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWizard,
-		IExecutableExtension, IPdfWizard {
+public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWizard, IExecutableExtension, IPdfWizard {
 
 	private static final String PDFSETTINGSID = "com.bdaum.zoom.pdfProperties"; //$NON-NLS-1$
 	private static final String HTMLSETTINGSID = "com.bdaum.zoom.htmlProperties"; //$NON-NLS-1$
@@ -53,8 +52,8 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	private String settingsId;
 	private String type;
 
-	public void setInitializationData(IConfigurationElement config,
-			String propertyName, Object data) throws CoreException {
+	public void setInitializationData(IConfigurationElement config, String propertyName, Object data)
+			throws CoreException {
 		if ("html".equals(data)) { //$NON-NLS-1$
 			settingsId = HTMLSETTINGSID;
 			type = "HTML"; //$NON-NLS-1$
@@ -67,20 +66,17 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		super.init(workbench, selection);
 		CoreActivator coreActivator = CoreActivator.getDefault();
-		setDialogSettings(Activator.getDefault(),settingsId);
+		setDialogSettings(Activator.getDefault(), settingsId);
 		Iterator<Asset> it = assets.iterator();
 		while (it.hasNext()) {
-			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next()
-					.getFormat());
-			if (mediaSupport != null
-					&& !mediaSupport.testProperty(IMediaSupport.PDF))
+			IMediaSupport mediaSupport = coreActivator.getMediaSupport(it.next().getFormat());
+			if (mediaSupport != null && !mediaSupport.testProperty(IMediaSupport.PDF))
 				it.remove();
 		}
 		int size = assets.size();
 		String msg = (assets.isEmpty()) ? Messages.PDFWizard_nothing_selected
-				: (size == 1) ? NLS.bind(Messages.PDFWizard_create_from_one,
-						type) : NLS.bind(Messages.PDFWizard_create_from_n,
-						type, size);
+				: (size == 1) ? NLS.bind(Messages.PDFWizard_create_from_one, type)
+						: NLS.bind(Messages.PDFWizard_create_from_n, type, size);
 		setWindowTitle(msg);
 	}
 
@@ -88,9 +84,8 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 	public void addPages() {
 		super.addPages();
 		ImageDescriptor imageDescriptor = Icons.pdf64.getDescriptor();
-		filePage = new PDFTargetFilePage(type, assets);
+		addPage(filePage = new PDFTargetFilePage(type, assets));
 		filePage.setImageDescriptor(imageDescriptor);
-		addPage(filePage);
 		layoutPage = new CreatePDFPage(assets, type);
 		layoutPage.setImageDescriptor(imageDescriptor);
 		addPage(layoutPage);
@@ -112,9 +107,9 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 
 	@Override
 	public boolean performFinish() {
-		filePage.finish();
-		boolean finish = layoutPage.finish();
-		saveDialogSettings();
+		boolean finish = filePage.finish() && layoutPage.finish();
+		if (finish)
+			saveDialogSettings();
 		return finish;
 	}
 
@@ -131,9 +126,7 @@ public class PDFWizard extends AbstractAssetSelectionWizard implements IExportWi
 			file.createNewFile();
 			return file;
 		} catch (IOException e) {
-			Activator.getDefault().logError(
-					NLS.bind(Messages.PDFWizard_cannot_create_pdf_file,
-							targetFile), e);
+			Activator.getDefault().logError(NLS.bind(Messages.PDFWizard_cannot_create_pdf_file, targetFile), e);
 			return null;
 		}
 	}

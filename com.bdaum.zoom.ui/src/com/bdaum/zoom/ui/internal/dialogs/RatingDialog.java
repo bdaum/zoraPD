@@ -143,10 +143,10 @@ public class RatingDialog extends ZDialog implements Listener {
 			switch (r = e.x / width) {
 			case 0:
 				canvas.setToolTipText(select ? Messages.RatingDialog_all : Messages.RatingDialog_delete);
-				break;
+				return;
 			case 1:
 				canvas.setToolTipText(select ? Messages.RatingDialog_unrated : Messages.RatingDialog_remove);
-				break;
+				return;
 			case 2:
 			case 3:
 			case 4:
@@ -154,18 +154,12 @@ public class RatingDialog extends ZDialog implements Listener {
 			case 6:
 			case 7:
 				canvas.setToolTipText(NLS.bind("{0} ({1})", QueryField.RATING.getEnumLabels()[r - 1], r - 2)); //$NON-NLS-1$
-				break;
+				return;
 			default:
 				canvas.setToolTipText(""); //$NON-NLS-1$
-				break;
 			}
-			break;
+			return;
 		case SWT.MouseDown:
-			// if (buttonHeight > 0 && e.y > height) {
-			// rating = BYSERVICE;
-			// close();
-			// return;
-			// }
 			switch (r = e.x / width) {
 			case 0:
 				rating = select ? QueryField.SELECTALL : DELETE;
@@ -183,7 +177,7 @@ public class RatingDialog extends ZDialog implements Listener {
 					close();
 				}
 			});
-			break;
+			return;
 		case SWT.KeyUp:
 			switch (e.character) {
 			case '0':
@@ -195,25 +189,19 @@ public class RatingDialog extends ZDialog implements Listener {
 				rating = e.character - '0';
 				canvas.redraw();
 				setReturnCode(OK);
-				break;
+				return;
 			case 'a':
 				if (select) {
 					rating = QueryField.SELECTALL;
 					canvas.redraw();
 					setReturnCode(OK);
 				}
-				break;
+				return;
 			case '-':
 				rating = select ? QueryField.SELECTUNDEF : UNDEF;
 				canvas.redraw();
 				setReturnCode(OK);
 				break;
-			// case '*':
-			// if (buttonHeight > 0) {
-			// rating = BYSERVICE;
-			// close();
-			// }
-			// break;
 			default:
 				switch (e.keyCode) {
 				case SWT.ESC:
@@ -226,14 +214,13 @@ public class RatingDialog extends ZDialog implements Listener {
 						setReturnCode(OK);
 					}
 				}
-				break;
 			}
-			break;
+			return;
 		case SWT.FocusOut:
 		case SWT.Deactivate:
 			rating = select ? SELECTABORT : Constants.RATING_UNDEFINED;
 			close();
-			break;
+			return;
 		case SWT.Paint:
 			GC gc = e.gc;
 			gc.setBackground(e.display.getSystemColor(SWT.COLOR_WHITE));
@@ -251,11 +238,6 @@ public class RatingDialog extends ZDialog implements Listener {
 				else if (i > zero)
 					drawCell(e, Icons.rating61.getImage(), i, r);
 			}
-			// if (buttonHeight > 0) {
-			// String text = Messages.RatingDialog_use_rating_service;
-			// Point tx = gc.textExtent(text);
-			// gc.drawText(text, (w - tx.x) / 2, height + (height - tx.y) / 2, true);
-			// }
 		}
 	}
 	

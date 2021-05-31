@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.PatternListEditor;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
@@ -38,6 +39,7 @@ public class KeywordPreferencePage extends AbstractPreferencePage {
 
 	@Override
 	protected void createPageContents(Composite composite) {
+		setHelp(HelpContextIds.KEYWORD_PREFERENCE_PAGE);
 		Label label = new Label(composite, SWT.NONE);
 		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setText( Messages.getString("KeywordPreferencePage.keyword_descr")); //$NON-NLS-1$

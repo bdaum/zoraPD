@@ -25,9 +25,8 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Tree;
@@ -41,9 +40,9 @@ public class SortColumnManager {
 			Table table = ((TableViewer) viewer).getTable();
 			int columnCount = table.getColumnCount();
 			Assert.isTrue(columnCount == dfltDir.length, NLS.bind("dfltDir dimension != {0}", columnCount)); //$NON-NLS-1$
-			SelectionListener selectionListener = new SelectionAdapter() {
+			Listener selectionListener = new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					if (table.getSortColumn() == e.widget)
 						table.setSortDirection(table.getSortDirection() == SWT.DOWN ? SWT.UP : SWT.DOWN);
 					else {
@@ -63,7 +62,7 @@ public class SortColumnManager {
 			};
 			for (int i = 0; i < columnCount; i++)
 				if (dfltDir[i] != SWT.NONE)
-					table.getColumn(i).addSelectionListener(selectionListener);
+					table.getColumn(i).addListener(SWT.Selection, selectionListener);
 			if (dfltCol >= 0 && dfltCol < dfltDir.length && dfltDir[dfltCol] != SWT.NONE) {
 				table.setSortColumn(table.getColumn(dfltCol));
 				table.setSortDirection(dfltDir[dfltCol]);
@@ -72,9 +71,9 @@ public class SortColumnManager {
 			Tree tree = ((TreeViewer) viewer).getTree();
 			int columnCount = tree.getColumnCount();
 			Assert.isTrue(columnCount == dfltDir.length, NLS.bind("dfltDir dimension != {0}", columnCount)); //$NON-NLS-1$
-			SelectionListener selectionListener = new SelectionAdapter() {
+			Listener selectionListener = new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					if (tree.getSortColumn() == e.widget)
 						tree.setSortDirection(tree.getSortDirection() == SWT.DOWN ? SWT.UP : SWT.DOWN);
 					else {
@@ -96,7 +95,7 @@ public class SortColumnManager {
 			};
 			for (int i = 0; i < columnCount; i++)
 				if (dfltDir[i] != SWT.NONE)
-					tree.getColumn(i).addSelectionListener(selectionListener);
+					tree.getColumn(i).addListener(SWT.Selection, selectionListener);
 			if (dfltCol >= 0 && dfltCol < dfltDir.length && dfltDir[dfltCol] != SWT.NONE) {
 				tree.setSortColumn(tree.getColumn(dfltCol));
 				tree.setSortDirection(dfltDir[dfltCol]);

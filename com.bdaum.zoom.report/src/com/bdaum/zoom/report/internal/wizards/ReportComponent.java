@@ -600,7 +600,7 @@ public class ReportComponent extends Composite {
 				cumulate(sales);
 				cumulate(earnings);
 				for (i = 0; i < earnings.length; i++) {
-					String label = day ? df.format(new Date(i * ONEDAY / interval))
+					String label = day ? df.format(i * ONEDAY / interval)
 							: String.valueOf((int) ((i * range + interval / 2) / interval + lower));
 					if (doCount)
 						result.addValue((Integer) counts[i], COUNT, label);

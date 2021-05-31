@@ -75,8 +75,8 @@ public abstract class SmugmugMethod implements Action {
 			if (HttpStatus.SC_OK == response) {
 				rv = parseResponse(method.getResponseBodyAsString());
 			} else {
-				throw new CommunicationException(Messages.getString(
-						"juploadr.ui.error.bad.http.response", Activator.getStatusText(response))); //$NON-NLS-1$
+				throw new CommunicationException(
+						Messages.getString("juploadr.ui.error.bad.http.response", Activator.getStatusText(response))); //$NON-NLS-1$
 			}
 		} catch (HttpException e) {
 			throw new CommunicationException(e.getMessage(), e);
@@ -112,8 +112,7 @@ public abstract class SmugmugMethod implements Action {
 			}
 			return handler.isSuccessful();
 		} catch (SAXException e) {
-			throw new AuthException(
-					Messages.getString("juploadr.ui.error.response.unreadable.noreason"), e); //$NON-NLS-1$
+			throw new AuthException(Messages.getString("juploadr.ui.error.response.unreadable.noreason"), e); //$NON-NLS-1$
 		} catch (IOException e) {
 			// this can't happen
 		}
@@ -144,7 +143,7 @@ public abstract class SmugmugMethod implements Action {
 			if (sessionId != null) {
 				params.put("SessionID", sessionId); //$NON-NLS-1$
 			}
-			//			params.put("auth_token", session.getAccount().getToken()); //$NON-NLS-1$
+			// params.put("auth_token", session.getAccount().getToken()); //$NON-NLS-1$
 		}
 		for (Map.Entry<String, String> entry : params.entrySet()) {
 			appendNVP(queryString, entry.getKey(), entry.getValue());
@@ -183,11 +182,11 @@ public abstract class SmugmugMethod implements Action {
 
 	public abstract boolean isAuthorized();
 
-	public HttpMethodBase getMethod() {
+	 public HttpMethodBase getMethod() {
 		StringBuffer query = new StringBuffer(getUrl());
 		query.append(getQueryString(true));
 		// log.info(query.toString());
-		GetMethod get = new GetMethod(query.toString());
+		 GetMethod get = new GetMethod(query.toString());
 
 		return get;
 	}

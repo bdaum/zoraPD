@@ -21,15 +21,14 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.Constants;
@@ -45,7 +44,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class FindDuplicatesDialog extends ZTitleAreaDialog {
+public class FindDuplicatesDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.findDuplicatesDialog"; //$NON-NLS-1$
 
@@ -115,18 +114,12 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 		methodGroup.setLayoutData(layoutData);
 		methodGroup.setLayout(new GridLayout(2, false));
 		methodGroup.setText(Messages.FindDuplicatesDialog_method);
-		SelectionListener selectionListener = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateControls();
-			}
-		};
 		byFileNameButton = new Button(methodGroup, SWT.RADIO);
-		byFileNameButton.addSelectionListener(selectionListener);
+		byFileNameButton.addListener(SWT.Selection, this);
 		new Label(methodGroup, SWT.NONE)
 				.setText(Messages.FindDuplicatesDialog_by_filename);
 		byOriginalButton = new Button(methodGroup, SWT.RADIO);
-		byOriginalButton.addSelectionListener(selectionListener);
+		byOriginalButton.addListener(SWT.Selection, this);
 		new Label(methodGroup, SWT.NONE)
 				.setText(Messages.FindDuplicatesDialog_by_original);
 		new Label(methodGroup, SWT.NONE);
@@ -134,17 +127,17 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 				Messages.FindDuplicatesDialog_include_ext, null);
 
 		byExposureDataButton = new Button(methodGroup, SWT.RADIO);
-		byExposureDataButton.addSelectionListener(selectionListener);
+		byExposureDataButton.addListener(SWT.Selection, this);
 		new Label(methodGroup, SWT.NONE)
 				.setText(Messages.FindDuplicatesDialog_match_by_exposure);
 		if (!Core.getCore().getDbManager().getMeta(true).getNoIndex()) {
 			bySimilarityButton = new Button(methodGroup, SWT.RADIO);
-			bySimilarityButton.addSelectionListener(selectionListener);
+			bySimilarityButton.addListener(SWT.Selection, this);
 			new Label(methodGroup, SWT.NONE)
 					.setText(Messages.FindDuplicatesDialog_match_by_similarity);
 
 			combinedButton = new Button(methodGroup, SWT.RADIO);
-			combinedButton.addSelectionListener(selectionListener);
+			combinedButton.addListener(SWT.Selection, this);
 			new Label(methodGroup, SWT.NONE)
 					.setText(Messages.FindDuplicatesDialog_match_similarity_exposure_data);
 			new Label(methodGroup, SWT.NONE);
@@ -236,6 +229,11 @@ public class FindDuplicatesDialog extends ZTitleAreaDialog {
 	 */
 	public boolean isWithExtension() {
 		return withExtension;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateControls();
 	}
 
 }

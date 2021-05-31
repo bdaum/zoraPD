@@ -35,8 +35,6 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -57,7 +55,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.gps.Trackpoint;
 import com.bdaum.zoom.ui.widgets.DateInput;
 
-public class TrackpointDialog extends ZTitleAreaDialog {
+public class TrackpointDialog extends ZTitleAreaDialog  implements Listener {
 
 	public class EditDialog extends ZTitleAreaDialog implements Listener {
 
@@ -274,77 +272,19 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 		editButton = new Button(composite, SWT.PUSH);
 		editButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		editButton.setText(Messages.TrackpointDialog_edit);
-		editButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
-				EditDialog dialog = new EditDialog(getShell(), subtracks, track, false,
-						Messages.TrackpointDialog_edit_subtrack,
-						NLS.bind(Messages.TrackpointDialog_modify_start_end, formatTrack(track)));
-				if (dialog.open() == EditDialog.OK) {
-					track.setStart(dialog.getStart());
-					track.setEnd(dialog.getEnd());
-					viewer.update(track, null);
-				}
-			}
-		});
+		editButton.addListener(SWT.Selection, this);
 		removeButton = new Button(composite, SWT.PUSH);
 		removeButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		removeButton.setText(Messages.TrackpointDialog_remove);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Iterator<?> it = viewer.getStructuredSelection().iterator();
-				while (it.hasNext()) {
-					Object next = it.next();
-					subtracks.remove(next);
-					viewer.remove(next);
-				}
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
 		joinButton = new Button(composite, SWT.PUSH);
 		joinButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		joinButton.setText(Messages.TrackpointDialog_join);
-		joinButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				SubTrack first = null;
-				Iterator<?> it = viewer.getStructuredSelection().iterator();
-				while (it.hasNext()) {
-					SubTrack t = (SubTrack) it.next();
-					if (first == null)
-						first = t;
-					else {
-						first.setEnd(t.getEnd());
-						subtracks.remove(t);
-						viewer.remove(t);
-					}
-				}
-				if (first != null)
-					viewer.update(first, null);
-			}
-		});
+		joinButton.addListener(SWT.Selection, this);
 		splitButton = new Button(composite, SWT.PUSH);
 		splitButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		splitButton.setText(Messages.TrackpointDialog_split);
-		splitButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
-				EditDialog dialog = new EditDialog(getShell(), subtracks, track, true,
-						Messages.TrackpointDialog_spli_subtrack,
-						NLS.bind(Messages.TrackpointDialog_split_subtrack_msg, formatTrack(track)));
-				if (dialog.open() == EditDialog.OK) {
-					int index = subtracks.indexOf(track);
-					SubTrack newTrack = new SubTrack(dialog.getEnd());
-					newTrack.setEnd(track.getEnd());
-					track.setEnd(dialog.getStart());
-					subtracks.add(index + 1, newTrack);
-					viewer.setInput(subtracks);
-					viewer.setSelection(new StructuredSelection(new Object[] { track, newTrack }));
-				}
-			}
-		});
+		splitButton.addListener(SWT.Selection, this);
 	}
 
 	public void createViewer(Composite comp) {
@@ -476,7 +416,7 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 	}
 
 	private static String formatDate(long time) {
-		return Format.EMDY_TIME_FORMAT.get().format(new Date(time));
+		return Format.EMDY_TIME_FORMAT.get().format(time);
 	}
 
 	private static String formatTime(long minutes) {
@@ -518,6 +458,58 @@ public class TrackpointDialog extends ZTitleAreaDialog {
 
 	public Trackpoint[] getResult() {
 		return result.toArray(new Trackpoint[result.size()]);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == editButton) {
+			SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
+			EditDialog dialog = new EditDialog(getShell(), subtracks, track, false,
+					Messages.TrackpointDialog_edit_subtrack,
+					NLS.bind(Messages.TrackpointDialog_modify_start_end, formatTrack(track)));
+			if (dialog.open() == EditDialog.OK) {
+				track.setStart(dialog.getStart());
+				track.setEnd(dialog.getEnd());
+				viewer.update(track, null);
+			}
+		} else if (e.widget == removeButton) {
+			Iterator<?> it = viewer.getStructuredSelection().iterator();
+			while (it.hasNext()) {
+				Object next = it.next();
+				subtracks.remove(next);
+				viewer.remove(next);
+			}
+		} else if (e.widget == joinButton) {
+			SubTrack first = null;
+			Iterator<?> it = viewer.getStructuredSelection().iterator();
+			while (it.hasNext()) {
+				SubTrack t = (SubTrack) it.next();
+				if (first == null)
+					first = t;
+				else {
+					first.setEnd(t.getEnd());
+					subtracks.remove(t);
+					viewer.remove(t);
+				}
+			}
+			if (first != null)
+				viewer.update(first, null);
+		} else  {
+			SubTrack track = (SubTrack) viewer.getStructuredSelection().getFirstElement();
+			EditDialog dialog = new EditDialog(getShell(), subtracks, track, true,
+					Messages.TrackpointDialog_spli_subtrack,
+					NLS.bind(Messages.TrackpointDialog_split_subtrack_msg, formatTrack(track)));
+			if (dialog.open() == EditDialog.OK) {
+				int index = subtracks.indexOf(track);
+				SubTrack newTrack = new SubTrack(dialog.getEnd());
+				newTrack.setEnd(track.getEnd());
+				track.setEnd(dialog.getStart());
+				subtracks.add(index + 1, newTrack);
+				viewer.setInput(subtracks);
+				viewer.setSelection(new StructuredSelection(new Object[] { track, newTrack }));
+			}
+		}
+		
 	}
 
 }

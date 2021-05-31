@@ -240,7 +240,7 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable, Liste
 		switch (e.type) {
 		case SWT.Modify:
 			updateButtons();
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == testFtpButton)
 				testFtp();
@@ -248,10 +248,9 @@ public class EditFtpDialog extends ZTitleAreaDialog implements IAdaptable, Liste
 				testUrl();
 			else
 				updateButtons();
-			break;
+			return;
 		case SWT.Verify:
 			e.doit = "\"*:<>?\\|[]".indexOf(e.character) < 0; //$NON-NLS-1$
-			break;
 		}
 	}
 

@@ -23,8 +23,10 @@
  */
 package mediautil.gen;
 
-import java.io.*;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -210,22 +212,32 @@ public class BasicIo {
 
 	public static int asInt(String str) {
 		try {
-			return (
-				(ByteBuffer) ByteBuffer
+			ByteBuffer buffer = ByteBuffer
 					.allocate(4)
 					.put(str.getBytes("ISO8859_1"))
-					.order(ByteOrder.LITTLE_ENDIAN)
-					.flip())
-				.getInt();
+					.order(ByteOrder.LITTLE_ENDIAN);
+			return ((ByteBuffer) ((Buffer)buffer).flip()).getInt();
+//			return (
+//				(ByteBuffer) ByteBuffer
+//					.allocate(4)
+//					.put(str.getBytes("ISO8859_1"))
+//					.order(ByteOrder.LITTLE_ENDIAN)
+//					.flip())
+//				.getInt();
 		} catch (UnsupportedEncodingException uee) {
 		}
 		throw new IllegalArgumentException("Can't represent  " + str + " as int");
 	}
 
 	public static String asString(int i) {
+		ByteBuffer buffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(i);
 		return Charset
-			.forName("ISO8859_1")
-			.decode((ByteBuffer) ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(i).flip())
-			.toString();
+				.forName("ISO8859_1")
+				.decode((ByteBuffer) ((Buffer)buffer).flip())
+				.toString();
+//		return Charset
+//			.forName("ISO8859_1")
+//			.decode((ByteBuffer) ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(i).flip())
+//			.toString();
 	}
 }

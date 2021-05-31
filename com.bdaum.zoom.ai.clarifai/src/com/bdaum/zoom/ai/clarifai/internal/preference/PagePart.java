@@ -40,7 +40,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
@@ -48,9 +47,9 @@ import com.bdaum.zoom.ai.clarifai.internal.ClarifaiActivator;
 import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.Theme;
-import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.Password;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePagePart;
@@ -63,7 +62,7 @@ import clarifai2.api.ClarifaiClient;
 @SuppressWarnings("restriction")
 public class PagePart extends AbstractPreferencePagePart implements Listener {
 
-	private Text apiKeyField;
+	private Password apiKeyField;
 	private NumericControl conceptField;
 	private NumericControl confidenceField;
 	private ComboViewer modelCombo;
@@ -90,16 +89,23 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		((GridLayout) composite.getLayout()).verticalSpacing = 0;
 		new Label(composite, SWT.NONE).setText(Messages.PagePart_manage_clarifai_account);
 		new Label(composite, SWT.NONE);
-		CGroup eGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_credentials);
+		CGroup eGroup = new CGroup(composite, SWT.NONE);
+		eGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		eGroup.setLayout(new GridLayout(3, false));
+		eGroup.setText(Messages.PagePart_credentials);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_apikey);
-		apiKeyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		apiKeyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		apiKeyField = new Password(eGroup, SWT.BORDER);
+		apiKeyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		apiKeyField.addListener(SWT.Modify, this);
-		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_access_token);
-		statusField = new Label(eGroup, SWT.NONE);
-		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		Label label = new Label(eGroup, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
+		label.setText(Messages.PagePart_access_token);
+		statusField = new Label(eGroup, SWT.WRAP);
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+		layoutData.heightHint = 30;
+		statusField.setLayoutData(layoutData);
 		CLink link = new CLink(eGroup, SWT.NONE);
-		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		link.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 		link.setText(Messages.PagePart_visit_account_page);
 		link.addListener(SWT.Selection, this);
 		CGroup tGroup = CGroup.create(composite, 1, Messages.PagePart_limits);
@@ -144,13 +150,19 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		confidenceField.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		confidenceField.setMaximum(99);
 		confidenceField.setMinimum(0);
-		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_mark_above);
+		Composite kwcomp = new Composite(tGroup, SWT.NONE);
+		kwcomp.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = layout.marginHeight = 0;
+		kwcomp.setLayout(layout);
+		new Label(kwcomp, SWT.NONE).setText(Messages.PagePart_mark_above);
+		knownButton = WidgetFactory.createCheckButton(kwcomp, Messages.PagePart_mark_known,
+				new GridData(SWT.END, SWT.CENTER, false, false), Messages.PagePart_mark_known_tooltip);
 		aboveField = new NumericControl(tGroup, SWT.BORDER);
 		aboveField.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		aboveField.setMaximum(100);
 		aboveField.setMinimum(0);
-		knownButton = WidgetFactory.createCheckButton(tGroup, Messages.PagePart_mark_known,
-				new GridData(SWT.END, SWT.CENTER, false, false, 2, 1), Messages.PagePart_mark_known_tooltip);
+		
 		Composite buttonArea1 = new Composite(tGroup, SWT.NONE);
 		buttonArea1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
 		buttonArea1.setLayout(new GridLayout(3, false));
@@ -179,11 +191,10 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 			} catch (MalformedURLException e1) {
 				// should never happen
 			}
-			break;
+			return;
 		case SWT.Modify:
 			if (enabled)
 				checkCredentials(parentPage);
-			break;
 		}
 	}
 

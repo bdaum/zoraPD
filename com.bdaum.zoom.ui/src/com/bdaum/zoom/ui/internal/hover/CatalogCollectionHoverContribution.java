@@ -113,38 +113,38 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 		if (object instanceof HoverTestObject) {
 			if (TYPE.equals(key))
 				return Messages.CatalogCollectionHoverContribution_sys_coll;
-			else if (NAME.equals(key))
+			if (NAME.equals(key))
 				return Messages.CatalogCollectionHoverContribution_sample_coll;
-			else if (DESCRIPTION.equals(key))
+			if (DESCRIPTION.equals(key))
 				return Messages.CatalogCollectionHoverContribution_just_a_sample_coll;
-			else if (CONTENT.equals(key))
+			if (CONTENT.equals(key))
 				return Messages.CatalogCollectionHoverContribution_focal_length;
-			else if (SCOPE.equals(key))
+			if (SCOPE.equals(key))
 				return Messages.CatalogCollectionHoverContribution_local_search;
-			else if (SORT.equals(key))
+			if (SORT.equals(key))
 				return Messages.CatalogCollectionHoverContribution_sorted_by_creationdate;
-			else if (HINTS.equals(key))
+			if (HINTS.equals(key))
 				return Messages.CatalogCollectionHoverContribution_album_size;
-			else if (STATISTICS.equals(key))
+			if (STATISTICS.equals(key))
 				return Messages.CatalogCollectionHoverContribution_two_subfolders;
 		} else if (object instanceof SmartCollection) {
 			SmartCollection sm = (SmartCollection) object;
-			if (TYPE.equals(key)) {
+			if (TYPE.equals(key))
 				return sm.getAlbum()
 						? sm.getSystem() ? Messages.CatalogCollectionHoverContribution_person_album
 								: Messages.CatalogCollectionHoverContribution_album
 						: sm.getSystem() ? Messages.CatalogCollectionHoverContribution_sys_coll
 								: Messages.CatalogCollectionHoverContribution_user_coll;
-			} else if (NAME.equals(key)) {
+			if (NAME.equals(key))
 				return sm.getName();
-			} else if (DESCRIPTION.equals(key)) {
+			if (DESCRIPTION.equals(key))
 				return UiUtilities.shortenText(sm.getDescription(), 100);
-			} else if (CONTENT.equals(key)) {
-				if (!sm.getSystem() && !UiUtilities.isImport(sm))
-					return UiUtilities.composeContentDescription(sm, "\n", false, false); //$NON-NLS-1$
-			} else if (SCOPE.equals(key)) {
+			if (SCOPE.equals(key))
 				return sm.getNetwork() ? Messages.CatalogCollectionHoverContribution_netword_search
 						: Messages.CatalogCollectionHoverContribution_local_search;
+			if (CONTENT.equals(key)) {
+				if (!sm.getSystem() && !UiUtilities.isImport(sm))
+					return UiUtilities.composeContentDescription(sm, "\n", false, false); //$NON-NLS-1$
 			} else if (SORT.equals(key)) {
 				List<SortCriterion> sortCriteria = sm.getSortCriterion();
 				if (!sortCriteria.isEmpty()) {
@@ -153,9 +153,9 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 					return sb.toString();
 				}
 			} else if (HINTS.equals(key)) {
-				if (sm.getAlbum()) {
+				if (sm.getAlbum())
 					return NLS.bind(Messages.CatalogCollectionHoverContribution_images, sm.getAsset().size());
-				} else if (sm.getSystem()) {
+				if (sm.getSystem()) {
 					List<Criterion> crits = sm.getCriterion();
 					if (!crits.isEmpty()) {
 						Criterion criterion = crits.get(0);
@@ -167,7 +167,7 @@ public class CatalogCollectionHoverContribution extends AbstractHoverContributio
 				int size = sm.getSubSelection().size();
 				if (size == 1)
 					return Messages.CatalogCollectionHoverContribution_one_subfolder;
-				else if (size > 1)
+				if (size > 1)
 					return NLS.bind(Messages.CatalogCollectionHoverContribution_subfolders, size);
 			}
 		}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2015 Berthold Daum.
+ * Copyright (c) 2009-2021 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,14 +47,11 @@ public class RawConverter extends AbstractRawConverter {
 	private static final String RAWHIGHLIGHT = "com.bdaum.zoom.rawhighlight"; //$NON-NLS-1$
 	private static final String WB_METHOD = "com.bdaum.zoom.wbMethod"; //$NON-NLS-1$
 	private static final String SHOW_INFO = "com.bdaum.zoom.dcraw.property.showInfo"; //$NON-NLS-1$
-
-	private final static NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
-
-	static {
-		nf.setGroupingUsed(false);
-	}
+	private static final String AUTOBRIGHTNESS = "com.bdaum.zoom.dcraw.autoBrightness"; //$NON-NLS-1$
 
 	private File dcraw;
+	private boolean dll = false;
+	private boolean emu = false;
 	private boolean external = false;
 	private int outputProfile = -1;
 
@@ -66,11 +63,13 @@ public class RawConverter extends AbstractRawConverter {
 		if (location == null || location.isEmpty()) {
 			if (dcraw == null || external)
 				dcraw = Activator.getDefault().locateDCRAW();
-			external = false;
+			dll = external = false;
 		} else {
 			dcraw = new File(location);
+			dll = new File(dcraw.getParentFile(), "libraw.dll").exists(); //$NON-NLS-1$
 			external = true;
 		}
+		emu = dcraw != null && dcraw.getName().contains("_emu"); //$NON-NLS-1$
 	}
 
 	public File setInput(File file, Options options) {
@@ -81,15 +80,19 @@ public class RawConverter extends AbstractRawConverter {
 				return null;
 		}
 		String path = rawFile.getAbsolutePath();
-		int p = path.lastIndexOf('.');
-		if (p >= 0)
-			path = path.substring(0, p);
+		if (!emu) { 
+			int p = path.lastIndexOf('.');
+			if (p >= 0)
+				path = path.substring(0, p);
+		}
 		return new File(path + ".tiff"); //$NON-NLS-1$
 	}
 
 	public String[] getParms(Options options) {
 		if (dcraw == null)
 			return null;
+		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+		nf.setGroupingUsed(false);
 		List<String> parms = new ArrayList<String>();
 		parms.add(dcraw.getAbsolutePath());
 		if (options != null && getOption(options, SHOW_INFO))
@@ -98,7 +101,7 @@ public class RawConverter extends AbstractRawConverter {
 			Integer q = (Integer) options.get(RAWINTERPOLATION);
 			if (q != null) {
 				parms.add("-q"); //$NON-NLS-1$
-				parms.add(String.valueOf(q.intValue()));
+				parms.add(String.valueOf(q));
 			}
 			Integer i = (Integer) options.get(RAWITERATIONS);
 			if (i != null) {
@@ -106,20 +109,25 @@ public class RawConverter extends AbstractRawConverter {
 				parms.add(String.valueOf(i));
 			}
 			Integer h = (Integer) options.get(RAWHIGHLIGHT);
-			if (h != null && h.intValue() != 0) {
+			if (h != null && h != 0) {
 				parms.add("-H"); //$NON-NLS-1$
-				parms.add(String.valueOf(h.intValue()));
+				parms.add(String.valueOf(h));
 			}
 			Integer n = (Integer) options.get(DENOISE);
 			if (n != null) {
 				parms.add("-n"); //$NON-NLS-1$
-				parms.add(String.valueOf(n.intValue()));
+				parms.add(String.valueOf(n));
 			}
 			Object abb = options.get(ABBERATION);
 			if (abb instanceof double[]) {
 				parms.add("-C"); //$NON-NLS-1$
 				for (double f : (double[]) abb)
 					parms.add(nf.format(f));
+			}
+			Object aut = options.get(AUTOBRIGHTNESS);
+			if (aut instanceof Boolean && !((Boolean) aut)) {
+				parms.add("-c"); //$NON-NLS-1$
+				parms.add("0"); //$NON-NLS-1$
 			}
 		} else
 			parms.add("-h"); //$NON-NLS-1$
@@ -128,7 +136,7 @@ public class RawConverter extends AbstractRawConverter {
 			Float e = (Float) options.get(EXPOSURE);
 			if (g != null || e != null)
 				parms.add("-W"); //$NON-NLS-1$
-			if (e != null && e.doubleValue() != 1f) {
+			if (e != null && e != 1f) {
 				parms.add("-b"); //$NON-NLS-1$
 				parms.add(nf.format(Math.min(999, e)));
 			}
@@ -182,10 +190,11 @@ public class RawConverter extends AbstractRawConverter {
 
 	public int deriveOptions(Recipe recipe, Options options, int resolution) {
 		for (IRawConverter.RawProperty prop : props) {
-			if (SHOW_INFO.equals(prop.id))
+			String id = prop.id;
+			if (SHOW_INFO.equals(id))
 				options.put(SHOW_INFO, Boolean.parseBoolean(prop.value));
 			else if (recipe == null) {
-				if (WB_METHOD.equals(prop.id)) {
+				if (WB_METHOD.equals(id)) {
 					try {
 						switch (Integer.parseInt(prop.value)) {
 						case Recipe.wbASSHOT:
@@ -198,21 +207,22 @@ public class RawConverter extends AbstractRawConverter {
 					} catch (NumberFormatException e) {
 						// ignore
 					}
-				} else if (RAWHIGHLIGHT.equals(prop.id)) {
+				} else if (RAWHIGHLIGHT.equals(id)) {
 					if (Boolean.parseBoolean(prop.value))
 						options.put(RAWHIGHLIGHT, 2);
 				}
 			}
-			if (resolution == HIGH) {
+			if (emu && AUTOBRIGHTNESS.equals(id))
+				options.put(AUTOBRIGHTNESS, Boolean.parseBoolean(prop.value));
+			if (resolution == HIGH)
 				try {
-					if (RAWINTERPOLATION.equals(prop.id))
+					if (RAWINTERPOLATION.equals(id))
 						options.put(RAWINTERPOLATION, Integer.parseInt(prop.value));
-					else if (RAWITERATIONS.equals(prop.id))
+					else if (RAWITERATIONS.equals(id))
 						options.put(RAWITERATIONS, Integer.parseInt(prop.value));
 				} catch (NumberFormatException e) {
 					// do nothing
 				}
-			}
 		}
 		if (recipe != null) {
 			switch (recipe.whiteBalanceMethod) {
@@ -313,13 +323,35 @@ public class RawConverter extends AbstractRawConverter {
 	}
 
 	@Override
-	public boolean isValid() {
-		return dcraw != null ? true : super.isValid();
+	public String isValid() {
+		File f = dcraw;
+		if (f == null) {
+			String p = getPath();
+			f = p == null ? null : new File(p);
+		} 
+		return testExecutable(f);
+		
+	}
+	
+	@Override
+	public String testExecutable(File f) {
+		String errorMsg = super.testExecutable(f);
+		if (errorMsg == null && f.getName().equals("dcraw_emu.exe")) { //$NON-NLS-1$
+			File parent = f.getParentFile();
+			if (!new File(parent, "libraw.dll").exists()) //$NON-NLS-1$
+				return NLS.bind(Messages.getString("RawConverter.libraw_missing"), parent); //$NON-NLS-1$
+		}
+		return errorMsg;
 	}
 
 	@Override
 	public int getOutputProfile() {
 		return outputProfile;
+	}
+
+	@Override
+	public String getLibPath() {
+		return dcraw == null || !dll ? null : dcraw.getParent();
 	}
 
 }

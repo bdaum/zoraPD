@@ -48,9 +48,6 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -58,7 +55,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -96,7 +95,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportFileSelectionPage extends ColoredWizardPage {
+public class ImportFileSelectionPage extends ColoredWizardPage implements Listener, ICheckStateListener {
 
 	public class Digest {
 
@@ -148,7 +147,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			Messages.ImportFileSelectionPage_all_raw, Messages.ImportFileSelectionPage_raw_if_jpeg,
 			Messages.ImportFileSelectionPage_all_jpeg, Messages.ImportFileSelectionPage_jpeg_if_raw };
 
-	public static class SkippedFormatsDialog extends ZTitleAreaDialog implements SelectionListener {
+	public static class SkippedFormatsDialog extends ZTitleAreaDialog implements Listener {
 
 		private static final int SELECTALL = 9999;
 		private static final int SELECTNONE = 9998;
@@ -187,7 +186,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				layout.marginHeight = 2;
 				checkGroup.setLayout(layout);
 				Button button = new Button(checkGroup, SWT.CHECK);
-				button.addSelectionListener(this);
+				button.addListener(SWT.Selection, this);
 				button.setSelection(skippedFormats.contains(format));
 				buttonMap.put(format, button);
 				new Label(checkGroup, SWT.NONE)
@@ -260,12 +259,8 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			return result;
 		}
 
-		public void widgetSelected(SelectionEvent e) {
+		public void handleEvent(Event e) {
 			updateButtons();
-		}
-
-		public void widgetDefaultSelected(SelectionEvent e) {
-			// do nothing
 		}
 
 	}
@@ -440,45 +435,16 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 		importViewer.getControl().setLayoutData(layoutData);
 		importViewer.setContentProvider(new DcimContentProvider());
 		importViewer.setLabelProvider(new DcimLabelProvider());
-		importViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				selectedFiles = null;
-				checkHierarchy(event.getElement(), event.getChecked(), false);
-				validatePage();
-				if (lastImportButton != null)
-					lastImportButton.setEnabled(lastImportTimestamp >= 0 || !lastImportPath.isEmpty());
-			}
-		});
+		importViewer.addCheckStateListener(this);
 		UiUtilities.installDoubleClickExpansion(importViewer);
-		AllNoneGroup selectComp = new AllNoneGroup(innerComp, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				if (e.widget.getData() == AllNoneGroup.ALL) {
-					ImportNode[] rootElements = (ImportNode[]) importViewer.getInput();
-					importViewer.setCheckedElements(rootElements);
-					for (ImportNode node : rootElements)
-						checkHierarchy(node, true, false);
-				} else
-					importViewer.setCheckedElements(new ImportNode[0]);
-				validatePage();
-				if (lastImportButton != null)
-					lastImportButton.setEnabled(lastImportTimestamp >= 0 || !lastImportPath.isEmpty());
-			}
-		});
+		AllNoneGroup selectComp = new AllNoneGroup(innerComp, this);
 		if (media) {
 			StorageObject[] dcims = ((ImportFromDeviceWizard) getWizard()).getDcims();
 			lastImportButton = WidgetFactory.createPushButton(selectComp,
 					Messages.ImportFromDeviceWizard_all_since_last_import, SWT.BEGINNING);
 			diffButton = WidgetFactory.createPushButton(selectComp, Messages.ImportFileSelectionPage_Difference,
 					SWT.BEGINNING);
-			diffButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					progressbar.setVisible(true);
-					calculateDiff();
-					progressbar.setVisible(false);
-				}
-			});
+			diffButton.addListener(SWT.Selection, this);
 			Label label = new Label(selectComp, SWT.SEPARATOR | SWT.HORIZONTAL);
 			label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			manageMediaButton = WidgetFactory.createPushButton(selectComp,
@@ -504,22 +470,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				updateVolumeLabel(key);
 			}
 			if (lastImportTimestamp >= 0 || !lastImportPath.isEmpty())
-				lastImportButton.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						if (lastImportTimestamp >= 0 || !lastImportPath.isEmpty()) {
-							markSinceLastImport();
-							validatePage();
-						}
-					}
-				});
+				lastImportButton.addListener(SWT.Selection, this);
 			else
 				lastImportButton.setEnabled(false);
 			if (meta.getLastDeviceImport() != null && !meta.getLastDeviceImport().isEmpty() || key != null) {
 				final String k = key;
-				manageMediaButton.addSelectionListener(new SelectionAdapter() {
+				manageMediaButton.addListener(SWT.Selection, new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						editMedia(meta, k, true);
 					}
 				});
@@ -544,15 +502,14 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			skipFormatsField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			Button skipFormatButton = new Button(skipComp, SWT.PUSH);
 			skipFormatButton.setText("..."); //$NON-NLS-1$
-			skipFormatButton.addSelectionListener(new SelectionAdapter() {
+			skipFormatButton.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					SkippedFormatsDialog dialog = new SkippedFormatsDialog(getShell(), skippedFormats);
 					if (dialog.open() == Dialog.OK) {
 						skippedFormats = dialog.getResult();
 						skipFormatsField.setText(Core.toStringList(skippedFormats.toArray(), ";")); //$NON-NLS-1$
 					}
-					super.widgetSelected(e);
 				}
 			});
 		}
@@ -727,7 +684,7 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 				if (timestamp > 0)
 					sb.append(", ") //$NON-NLS-1$
 							.append(NLS.bind(Messages.ImportFileSelectionPage_last_import,
-									Format.YMD_TIME_FORMAT.get().format(new Date(timestamp))));
+									Format.YMD_TIME_FORMAT.get().format(timestamp)));
 				descr = imp.getDescription();
 			}
 			volumeLabel.setText(sb.toString());
@@ -1240,6 +1197,40 @@ public class ImportFileSelectionPage extends ColoredWizardPage {
 			monitor.setCanceled(true);
 			getWizard().performCancel();
 		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == diffButton) {
+			progressbar.setVisible(true);
+			calculateDiff();
+			progressbar.setVisible(false);
+		} else if (e.widget == lastImportButton) {
+			if (lastImportTimestamp >= 0 || !lastImportPath.isEmpty()) {
+				markSinceLastImport();
+				validatePage();
+			}
+		} else {
+			if (e.widget.getData() == AllNoneGroup.ALL) {
+				ImportNode[] rootElements = (ImportNode[]) importViewer.getInput();
+				importViewer.setCheckedElements(rootElements);
+				for (ImportNode node : rootElements)
+					checkHierarchy(node, true, false);
+			} else
+				importViewer.setCheckedElements(new ImportNode[0]);
+			validatePage();
+			if (lastImportButton != null)
+				lastImportButton.setEnabled(lastImportTimestamp >= 0 || !lastImportPath.isEmpty());
+		}
+	}
+
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		selectedFiles = null;
+		checkHierarchy(event.getElement(), event.getChecked(), false);
+		validatePage();
+		if (lastImportButton != null)
+			lastImportButton.setEnabled(lastImportTimestamp >= 0 || !lastImportPath.isEmpty());
 	}
 
 }

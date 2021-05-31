@@ -29,6 +29,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
+
 /**
  * The activator class controls the plug-in life cycle
  */
@@ -68,7 +69,7 @@ public class Activator extends Plugin {
 				responseCode = ((HttpURLConnection) con).getResponseCode();
 			else if (con instanceof HttpsURLConnection)
 				responseCode = ((HttpsURLConnection) con).getResponseCode();
-			if (responseCode >= 0 && responseCode != HttpStatus.SC_OK)
+			if (responseCode >= 0 && responseCode != HttpURLConnection.HTTP_OK)
 				throw new HttpException(getStatusText(responseCode), e);
 			throw e;
 		}

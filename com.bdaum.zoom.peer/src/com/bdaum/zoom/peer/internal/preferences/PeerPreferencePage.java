@@ -22,7 +22,6 @@ package com.bdaum.zoom.peer.internal.preferences;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,16 +48,16 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -82,7 +81,7 @@ import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class PeerPreferencePage extends AbstractPreferencePage implements IPeerListener {
+public class PeerPreferencePage extends AbstractPreferencePage implements IPeerListener, Listener, ISelectionChangedListener {
 
 	private static final Object[] EMPTY = new Object[0];
 	private TreeViewer catViewer;
@@ -213,7 +212,7 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 			@Override
 			public String getText(Object element) {
 				if (element instanceof PeerDefinition)
-					return Format.YMD_TIME_FORMAT.get().format(new Date(((PeerDefinition) element).getLastAccess()));
+					return Format.YMD_TIME_FORMAT.get().format(((PeerDefinition) element).getLastAccess());
 				return  ""; //$NON-NLS-1$
 			}
 		});
@@ -266,9 +265,9 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		Button clearButton = new Button(buttonGroup, SWT.PUSH);
 		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		clearButton.setText(Messages.PeerPreferencePage_clear);
-		clearButton.addSelectionListener(new SelectionAdapter() {
+		clearButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				@SuppressWarnings("unchecked")
 				Collection<PeerDefinition> peers = (Collection<PeerDefinition>) incomingViewer.getInput();
 				Iterator<PeerDefinition> it = peers.iterator();
@@ -283,9 +282,9 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		final Button blockButton = new Button(buttonGroup, SWT.PUSH);
 		blockButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		blockButton.setText(Messages.PeerPreferencePage_toggle);
-		blockButton.addSelectionListener(new SelectionAdapter() {
+		blockButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				IStructuredSelection sel = incomingViewer.getStructuredSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof PeerDefinition) {
@@ -423,9 +422,9 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		Button addButton = new Button(buttonGroup, SWT.PUSH);
 		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addButton.setText(Messages.PeerPreferencePage_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
+		addButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				PeerDefinitionDialog dialog = new PeerDefinitionDialog(getShell(), null, true, false, false);
 				if (dialog.open() == PeerDefinitionDialog.OK) {
 					PeerDefinition newPeer = dialog.getResult();
@@ -440,9 +439,9 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		final Button removeButton = new Button(buttonGroup, SWT.PUSH);
 		removeButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		removeButton.setText(Messages.PeerPreferencePage_remove);
-		removeButton.addSelectionListener(new SelectionAdapter() {
+		removeButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				IStructuredSelection sel = peerViewer.getStructuredSelection();
 				Object firstElement = sel.getFirstElement();
 				if (firstElement instanceof PeerDefinition) {
@@ -647,85 +646,26 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		addCurrentButton = new Button(buttonGroup, SWT.PUSH);
 		addCurrentButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addCurrentButton.setText(Messages.PeerPreferencePage_add_current);
-		addCurrentButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				String catFile = Core.getCore().getDbManager().getFileName();
-				SharedCatalog cat = new SharedCatalog(catFile, QueryField.SAFETY_RESTRICTED);
-				@SuppressWarnings("unchecked")
-				List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
-				catalogs.add(cat);
-				catViewer.setInput(catalogs);
-				catViewer.setSelection(new StructuredSelection(cat));
-				updateButtons();
-			}
-		});
+		addCurrentButton.addListener(SWT.Selection, this);
 
 		final Button addButton = new Button(buttonGroup, SWT.PUSH);
 		addButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addButton.setText(Messages.PeerPreferencePage_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
-				dialog.setFileName(Core.getCore().getDbManager().getFileName());
-				String filename = dialog.open();
-				if (filename != null) {
-					SharedCatalog cat = new SharedCatalog(filename, QueryField.SAFETY_RESTRICTED);
-					@SuppressWarnings("unchecked")
-					List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
-					catalogs.add(cat);
-					catViewer.setInput(catalogs);
-					catViewer.setSelection(new StructuredSelection(cat));
-				}
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		addRestrictionButton = new Button(buttonGroup, SWT.PUSH);
 		addRestrictionButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addRestrictionButton.setText(Messages.PeerPreferencePage_add_restriction);
-		addRestrictionButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = (IStructuredSelection) catViewer.getSelection();
-				Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof SharedCatalog) {
-					PeerDefinitionDialog dialog = new PeerDefinitionDialog(getControl().getShell(), null, true, true,
-							true);
-					if (dialog.open() == PeerDefinitionDialog.OK) {
-						PeerDefinition result = dialog.getResult();
-						result.setParent((SharedCatalog) firstElement);
-						catViewer.setInput(catViewer.getInput());
-						catViewer.expandToLevel(firstElement, 1);
-						catViewer.setSelection(new StructuredSelection(result));
-						validate();
-					}
-				}
-			}
-		});
+		addRestrictionButton.addListener(SWT.Selection, this);
 		removeCatButton = new Button(buttonGroup, SWT.PUSH);
 		removeCatButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		removeCatButton.setText(Messages.PeerPreferencePage_remove);
-		removeCatButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = (IStructuredSelection) catViewer.getSelection();
-				Object firstElement = sel.getFirstElement();
-				if (firstElement instanceof SharedCatalog) {
-					@SuppressWarnings("unchecked")
-					List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
-					catalogs.remove(firstElement);
-					catViewer.setInput(catalogs);
-					validate();
-					updateButtons();
-				}
-			}
-		});
-		catViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		removeCatButton.addListener(SWT.Selection, this);
+		catViewer.addSelectionChangedListener(this);
 		return comp;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 	@Override
@@ -744,12 +684,11 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 		if (file != null) {
 			@SuppressWarnings("unchecked")
 			List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
-			for (SharedCatalog sharedCatalog : catalogs) {
+			for (SharedCatalog sharedCatalog : catalogs)
 				if (sharedCatalog.getPath().equals(file)) {
 					currentShared = true;
 					break;
 				}
-			}
 		}
 		addCurrentButton.setEnabled(!currentShared);
 	}
@@ -814,6 +753,59 @@ public class PeerPreferencePage extends AbstractPreferencePage implements IPeerL
 
 	public void statusChanged(final PeerDefinition peer, boolean online) {
 		getControl().getDisplay().syncExec(() -> peerViewer.update(peer, null));
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == addCurrentButton) {
+			String catFile = Core.getCore().getDbManager().getFileName();
+			SharedCatalog cat = new SharedCatalog(catFile, QueryField.SAFETY_RESTRICTED);
+			@SuppressWarnings("unchecked")
+			List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
+			catalogs.add(cat);
+			catViewer.setInput(catalogs);
+			catViewer.setSelection(new StructuredSelection(cat));
+			updateButtons();
+		} else if (e.widget == addRestrictionButton) {
+			IStructuredSelection selection = (IStructuredSelection) catViewer.getSelection();
+			Object firstElement = selection.getFirstElement();
+			if (firstElement instanceof SharedCatalog) {
+				PeerDefinitionDialog dialog = new PeerDefinitionDialog(getControl().getShell(), null, true, true,
+						true);
+				if (dialog.open() == PeerDefinitionDialog.OK) {
+					PeerDefinition result = dialog.getResult();
+					result.setParent((SharedCatalog) firstElement);
+					catViewer.setInput(catViewer.getInput());
+					catViewer.expandToLevel(firstElement, 1);
+					catViewer.setSelection(new StructuredSelection(result));
+					validate();
+				}
+			}
+		} else if (e.widget == removeCatButton) {
+			IStructuredSelection sel = (IStructuredSelection) catViewer.getSelection();
+			Object firstElement = sel.getFirstElement();
+			if (firstElement instanceof SharedCatalog) {
+				@SuppressWarnings("unchecked")
+				List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
+				catalogs.remove(firstElement);
+				catViewer.setInput(catalogs);
+				validate();
+				updateButtons();
+			}
+		} else {
+			FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+			dialog.setFileName(Core.getCore().getDbManager().getFileName());
+			String filename = dialog.open();
+			if (filename != null) {
+				SharedCatalog cat = new SharedCatalog(filename, QueryField.SAFETY_RESTRICTED);
+				@SuppressWarnings("unchecked")
+				List<SharedCatalog> catalogs = (List<SharedCatalog>) catViewer.getInput();
+				catalogs.add(cat);
+				catViewer.setInput(catalogs);
+				catViewer.setSelection(new StructuredSelection(cat));
+			}
+		}
+		
 	}
 
 }

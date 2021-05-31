@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.dialogs;
@@ -169,14 +169,18 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listene
 				}
 				if (image == null)
 					image = Core.getCore().getImageCache().getImage(asset);
-				shell.getDisplay().asyncExec(() -> paintExample.setBackgroundImage(image, w, h));
+				shell.getDisplay().asyncExec(() -> {
+					if (shell.isDisposed())
+						paintExample.setBackgroundImage(image, w, h);
+				});
 				if (svg != null && !svg.isEmpty())
 					shell.getDisplay().asyncExec(() -> {
-						try {
-							paintExample.importSvg(svg, true);
-						} catch (IOException | ParserConfigurationException | SAXException e) {
-							UiActivator.getDefault().logError(Messages.VoiceNoteDialog_unable_to_create_drawing, e);
-						}
+						if (shell.isDisposed())
+							try {
+								paintExample.importSvg(svg, true);
+							} catch (IOException | ParserConfigurationException | SAXException e) {
+								UiActivator.getDefault().logError(Messages.VoiceNoteDialog_unable_to_create_drawing, e);
+							}
 					});
 			}
 			return Status.OK_STATUS;
@@ -437,14 +441,14 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listene
 		note.setLayoutData(layoutData);
 		return composite;
 	}
-	
+
 	@Override
 	public void handleEvent(Event e) {
 		switch (e.type) {
 		case SWT.Modify:
 			dirty = true;
 			updateButtons();
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == tabFolder) {
 				resizeDialog();
@@ -511,10 +515,8 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listene
 				dirty = true;
 				updateButtons();
 			}
-			break;
 		}
 	}
-
 
 	private Control createVoiceGroup(CTabFolder tabFolder) {
 		Composite composite = new Composite(tabFolder, SWT.NONE);
@@ -811,6 +813,5 @@ public class VoiceNoteDialog extends ZResizableDialog implements IKiosk, Listene
 	public void removeStateListener(IStateListener listener) {
 		// do nothing
 	}
-
 
 }

@@ -9,7 +9,7 @@
             executable="optional"
             id="com.bdaum.zoom.dcraw.converter"
             isDefault="true"
-            name="DCRAW"
+            name="%converter.name"
             path="com.bdaum.zoom.dcrawpath">
          <property
                default="false"
@@ -69,6 +69,12 @@
                default="false"
                id="com.bdaum.zoom.rawhighlight"
                name="%property.name.highlights"
+               type="boolean">
+         </property>
+         <property
+               default="true"
+               id="com.bdaum.zoom.dcraw.autoBrightness"
+               name="%property.name.autoBrightness"
                type="boolean">
          </property>
       </converter>

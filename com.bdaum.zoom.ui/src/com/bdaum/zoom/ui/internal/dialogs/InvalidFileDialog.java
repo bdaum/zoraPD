@@ -21,7 +21,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Date;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -81,10 +80,10 @@ public class InvalidFileDialog extends ZTitleAreaDialog {
 			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_file_path);
 			new Label(composite, SWT.NONE).setText(file.getParent());
 			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_file_size);
-			new Label(composite, SWT.NONE).setText(Format.sizeFormatter.toString(file.length()));
+			new Label(composite, SWT.NONE).setText(Format.sizeFormatter.format(file.length()));
 			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_last_mod);
 			new Label(composite, SWT.NONE)
-					.setText(Format.MDY_TIME_SECS_FORMAT.get().format(new Date(file.lastModified())));
+					.setText(Format.MDY_TIME_SECS_FORMAT.get().format(file.lastModified()));
 		} else {
 			new Label(composite, SWT.NONE).setText(Messages.InvalidFileDialog_uri);
 			new Label(composite, SWT.NONE).setText(uri.toString());

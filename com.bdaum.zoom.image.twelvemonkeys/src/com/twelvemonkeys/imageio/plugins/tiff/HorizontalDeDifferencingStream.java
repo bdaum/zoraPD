@@ -30,17 +30,18 @@
 
 package com.twelvemonkeys.imageio.plugins.tiff;
 
-import com.twelvemonkeys.lang.Validate;
+import static com.twelvemonkeys.imageio.plugins.tiff.HorizontalDifferencingStream.isValidBPS;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer; // JDK compatibilty
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
-import static com.twelvemonkeys.imageio.plugins.tiff.HorizontalDifferencingStream.isValidBPS;
+import com.twelvemonkeys.lang.Validate;
 
 /**
  * A decoder for data converted using "horizontal differencing predictor".
@@ -68,7 +69,7 @@ final class HorizontalDeDifferencingStream extends InputStream {
         channel = Channels.newChannel(Validate.notNull(stream, "stream"));
 
         buffer = ByteBuffer.allocate((columns * samplesPerPixel * bitsPerSample + 7) / 8).order(byteOrder);
-        buffer.flip();
+        ((Buffer) buffer).flip();  // cast because of JDK compatibilty
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -85,7 +86,7 @@ final class HorizontalDeDifferencingStream extends InputStream {
             }
 
             decodeRow();
-            buffer.flip();
+            ((Buffer) buffer).flip();  // cast because of JDK compatibilty
 
             return true;
         }

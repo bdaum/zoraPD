@@ -62,6 +62,7 @@
  <context id="perspectives_page_context" title="Perspectives preferences">
     <description>Manage perspectives</description>
     <topic href="html/reference/perspectivePrefs.html" label="Perspectives preferences"/>
+    <topic href="html/reference/perspective.html" label="Perspectives"/>
  </context>
  <context id="Spell_Context" title="Spell checking">
     <description>Installation of dictionaries and configuring spell checking</description>
@@ -70,6 +71,9 @@
  <context id="import_page_context" title="Import preferences">
     <description>Configure the import of images</description>
     <topic href="html/reference/importPrefs.html" label="Import preferences"/>
+    <topic href="html/reference/dcraw.html" label="DCRAW and successors"/>
+    <topic href="html/concepts/raw.html" label="RAW processing"/>
+    <topic href="html/tasks/import.html" label="Importing images"/>
  </context>
  <context id="catalog_page_context" title="Catalog preferences">
     <description>Managing catalog properties</description>
@@ -130,10 +134,13 @@
  <context id="auto_page_context" title="Automatic actions preferences">
     <description>Configure automatic actions</description>
     <topic href="html/reference/autoPrefs.html" label="Automatic actions preferences"/>
+    <topic href="html/reference/autoRule.html" label="Auto rules"/>
+    <topic href="html/reference/catalog.html" label="Collections"/>
  </context>
  <context id="general_page_context" title="General Preferences">
     <description>General Preferences</description>
     <topic href="html/reference/generalPrefs.html" label="General Preferences"/>
+    <topic href="html/tasks/tuning.html" label="Tuning"/>
  </context>
  <context id="keys_page_context" title="Key Preferences">
     <description>Key Preferences</description>
@@ -142,10 +149,15 @@
  <context id="keyword_page_context" title="Keyword preferences">
     <description>Keyword preferences</description>
     <topic href="html/reference/keywordPrefs.html" label="Keyword preferences"/>
+    <topic href="html/reference/keyworddef.html" label="Keyword definition"/>
+    <topic href="html/reference/keywordSearch.html" label="Keyword search"/>
+    <topic href="html/tasks/keywords.html" label="Working with keywords"/>
  </context>
  <context id="metadata_page_context" title="Metadata Preferences">
     <description>Metadata Preferences</description>
     <topic href="html/reference/metadataPrefs.html" label="Metadata Preferences"/>
+    <topic href="html/concepts/basic.html" label="Basic concepts"/>
+    <topic href="html/reference/metadata.html" label="Metadata"/>
  </context>
  <context id="watchedFolders_page_context" title="Watched folders preferences">
     <description>Manage watched folders</description>
@@ -374,6 +386,8 @@
    <context id="externalPrograms" title="External programs">
       <description>External image viewers and external image editors can easily be invoked.</description>
       <topic href="html/reference/fileAssociations.html" label="File associations"/>
+      <topic href="html/concepts/basic.html" label="Basic concepts"/>
+      <topic href="html/reference/imageViewer.html" label="Image Viewer"/>
    </context>
    <context id="presentations" title="Exhibitions, Slide Show, and Web galleries">
       <description>Presentations such as exhibitions, slide shows and web galleries can be created interactively. Web galleries can be uploaded to the Web.</description>

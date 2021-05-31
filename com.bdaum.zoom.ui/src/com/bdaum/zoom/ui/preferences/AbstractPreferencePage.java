@@ -38,10 +38,6 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -212,17 +208,17 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		toolBar.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 		final Cursor cursor = new Cursor(parent.getDisplay(), SWT.CURSOR_HAND);
 		toolBar.setCursor(cursor);
-		toolBar.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
+		toolBar.addListener(SWT.Dispose, new Listener() {
+			public void handleEvent(Event e) {
 				cursor.dispose();
 			}
 		});
 		ToolItem item = new ToolItem(toolBar, SWT.NONE);
 		item.setImage(image);
 		item.setToolTipText(JFaceResources.getString("helpToolTip")); //$NON-NLS-1$
-		item.addSelectionListener(new SelectionAdapter() {
+		item.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				helpPressed(parent);
 			}
 		});
@@ -311,9 +307,9 @@ public abstract class AbstractPreferencePage extends PreferencePage implements I
 		tabFolder = new CTabFolder(parent, SWT.BORDER);
 		tabFolder.setLayoutData(new GridData(GridData.FILL_BOTH));
 		tabFolder.setSimple(false);
-		tabFolder.addSelectionListener(new SelectionAdapter() {
+		tabFolder.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				lastSelectedItem = tabFolder.getSelectionIndex();
 			}
 		});

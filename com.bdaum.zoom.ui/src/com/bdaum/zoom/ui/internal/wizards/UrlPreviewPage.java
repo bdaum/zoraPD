@@ -32,13 +32,13 @@ import org.eclipse.swt.browser.CloseWindowListener;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.WindowEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.FileNameExtensionFilter;
@@ -49,7 +49,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class UrlPreviewPage extends ColoredWizardPage {
+public class UrlPreviewPage extends ColoredWizardPage implements CloseWindowListener, Listener, LocationListener {
 
 	private Browser browser;
 	private ObjectFilter filter;
@@ -90,51 +90,40 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		backButton = new Button(comp, SWT.PUSH);
 		backButton.setImage(Icons.backwards.getImage());
 		backButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-		backButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.back();
-			}
-		});
+		backButton.addListener(SWT.Selection, this);
 		forwardButton = new Button(comp, SWT.PUSH);
 		forwardButton.setImage(Icons.forwards.getImage());
 		forwardButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
-		forwardButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				browser.forward();
-			}
-		});
+		forwardButton.addListener(SWT.Selection, this);
 	}
 
 	private void createBrowserGroup(Composite composite) {
 
 		browser = new Browser(composite, SWT.BORDER);
-		browser.addCloseWindowListener(new CloseWindowListener() {
-			public void close(WindowEvent event) {
-				getWizard().getContainer().getShell().close();
-			}
-		});
-		browser.addLocationListener(new LocationListener() {
-
-			public void changing(LocationEvent event) {
-				// do nothing
-			}
-
-			public void changed(LocationEvent event) {
-				try {
-					url = new URL(event.location);
-				} catch (MalformedURLException e) {
-					// ignore
-				}
-				urlLabel.setText(url.toString());
-				validatePage();
-			}
-		});
+		browser.addCloseWindowListener(this);
+		browser.addLocationListener(this);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 400;
 		layoutData.heightHint = 400;
 		browser.setLayoutData(layoutData);
+	}
+	
+	public void close(WindowEvent event) {
+		getWizard().getContainer().getShell().close();
+	}
+	
+	public void changing(LocationEvent event) {
+		// do nothing
+	}
+
+	public void changed(LocationEvent event) {
+		try {
+			url = new URL(event.location);
+		} catch (MalformedURLException e) {
+			// ignore
+		}
+		urlLabel.setText(url.toString());
+		validatePage();
 	}
 
 	@Override
@@ -167,5 +156,14 @@ public class UrlPreviewPage extends ColoredWizardPage {
 		} catch (URISyntaxException e) {
 			return null;
 		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == backButton)
+			browser.back();
+		else
+			browser.forward();
+		
 	}
 }

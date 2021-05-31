@@ -27,19 +27,17 @@ import org.eclipse.jface.viewers.ICellEditorValidator;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-public class IncrementalNumberCellEditor extends TextCellEditor {
+public class IncrementalNumberCellEditor extends TextCellEditor implements ICellEditorValidator {
 
 	private final int increment;
 	private Button minusButton;
@@ -53,18 +51,18 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		nf = NumberFormat.getNumberInstance();
 		nf.setMaximumFractionDigits(digits);
 		nf.setMinimumFractionDigits(digits);
-		setValidator(new ICellEditorValidator() {
-			public String isValid(Object value) {
-				if (value != null) {
-					try {
-						nf.parse(value.toString());
-					} catch (ParseException e1) {
-						return Messages.getString("IncrementalNumberCellEditor.bad_number"); //$NON-NLS-1$
-					}
-				}
-				return null;
+		setValidator(this);
+	}
+	
+	public String isValid(Object value) {
+		if (value != null) {
+			try {
+				nf.parse(value.toString());
+			} catch (ParseException e1) {
+				return Messages.getString("IncrementalNumberCellEditor.bad_number"); //$NON-NLS-1$
 			}
-		});
+		}
+		return null;
 	}
 
 	@Override
@@ -88,33 +86,31 @@ public class IncrementalNumberCellEditor extends TextCellEditor {
 		composite.setLayout(layout);
 		final Text txt = (Text) super.createControl(composite);
 		txt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		txt.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				if (e.keyCode != 0 && e.character != '\b' && e.character != SWT.DEL
-						&& !Character.isDigit(e.character)) {
-					e.doit = false;
+		Listener listener = new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				switch (e.type) {
+				case SWT.Verify:
+					if (e.keyCode != 0 && e.character != '\b' && e.character != SWT.DEL
+							&& !Character.isDigit(e.character)) {
+						e.doit = false;
+						return;
+					}
+					String t = txt.getText();
+					String futureText = t.substring(0, e.start) + e.text + t.substring(e.end);
+					if (!futureText.isEmpty() && Integer.parseInt(futureText) > maximum)
+						e.doit = false;
 					return;
+				default:
+					incrementValue(txt, e.widget == minusButton ? -increment : increment);
 				}
-				String t = txt.getText();
-				String futureText = t.substring(0, e.start) + e.text + t.substring(e.end);
-				if (!futureText.isEmpty() && Integer.parseInt(futureText) > maximum)
-					e.doit = false;
 			}
-		});
+		};
+		txt.addListener(SWT.Verify, listener);
 		minusButton = new Button(composite, SWT.ARROW | SWT.DOWN);
-		minusButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				incrementValue(txt, -increment);
-			}
-		});
+		minusButton.addListener(SWT.Selection, listener);
 		plusButton = new Button(composite, SWT.ARROW | SWT.UP);
-		plusButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				incrementValue(txt, increment);
-			}
-		});
+		plusButton.addListener(SWT.Selection, listener);
 		return composite;
 	}
 

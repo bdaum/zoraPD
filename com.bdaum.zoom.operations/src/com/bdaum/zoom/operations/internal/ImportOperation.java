@@ -209,6 +209,9 @@ public class ImportOperation extends AbstractImportOperation {
 						&& (lastDeviceImportDate != null || lastDevicePath != null)) {
 					String key = importState.fromTransferFolder() ? null
 							: importState.isMedia() ? fileInput.getVolume() : fileInput.getAbsolutePath();
+					String media = importState.getMedia();
+					if (media != null)
+						key = media;
 					if (key != null) {
 						if (meta.getLastDeviceImport() == null)
 							meta.setLastDeviceImport(new HashMap<String, LastDeviceImport>());
@@ -218,7 +221,11 @@ public class ImportOperation extends AbstractImportOperation {
 									lastDeviceImportDate == null ? 0L : lastDeviceImportDate.getTime(), null, null,
 									lastDevicePath, null, null, null, null, null, null, null, null, null, null));
 						else {
-							lastImport.setTimestamp(lastDeviceImportDate == null ? 0L : lastDeviceImportDate.getTime());
+							if (lastDeviceImportDate != null) {
+								long time = lastDeviceImportDate.getTime();
+								if (time > lastImport.getTimestamp())
+									lastImport.setTimestamp(time);
+							}
 							lastImport.setPath(lastDevicePath);
 						}
 						toBeStored.add(lastImport);
@@ -267,20 +274,20 @@ public class ImportOperation extends AbstractImportOperation {
 		if (importState.transferNeeded()) {
 			if (tethered)
 				return NLS.bind(Messages.getString("ImportOperation.tethered"), //$NON-NLS-1$
-						Format.EMDY_TIME_FORMAT.get().format(importDate)); 
+						Format.EMDY_TIME_FORMAT.get().format(importDate));
 			String owner = importState.getDcimOwner();
 			return owner == null ? "" //$NON-NLS-1$
 					: NLS.bind(Messages.getString("ImportOperation.import_transfer"), owner, //$NON-NLS-1$
-							Format.MDY_FORMAT.get().format(importDate)); 
+							Format.MDY_FORMAT.get().format(importDate));
 		}
 		String timeline = importState.getConfiguration().timeline.intern();
 		SimpleDateFormat df = null;
 		if (timeline == Meta_type.timeline_year)
 			df = Format.YEAR_FORMAT.get();
 		else if (timeline == Meta_type.timeline_month)
-			df = Format.MY_FORMAT.get(); 
+			df = Format.MY_FORMAT.get();
 		else if (timeline == Meta_type.timeline_day)
-			df = Format.MDY_FORMAT.get(); 
+			df = Format.MDY_FORMAT.get();
 		else if (timeline == Meta_type.timeline_week)
 			df = Format.WEEK_WY_FORMAT.get();
 		else if (timeline == Meta_type.timeline_weekAndDay)

@@ -54,9 +54,6 @@ import org.w3c.dom.css.RGBColor;
 import com.bdaum.zoom.common.internal.FileLocator;
 import com.bdaum.zoom.css.CSSProperties;
 
-/**
- * The activator class controls the plug-in life cycle
- */
 public class CssActivator extends AbstractUIPlugin {
 
 	private static class CSSSWTApplyStylesListener {
@@ -95,25 +92,11 @@ public class CssActivator extends AbstractUIPlugin {
 
 	private ListenerList<IThemeListener> listeners = new ListenerList<IThemeListener>();
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.
-	 * BundleContext )
-	 */
-
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.
-	 * BundleContext )
-	 */
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
@@ -122,11 +105,6 @@ public class CssActivator extends AbstractUIPlugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
 	public static CssActivator getDefault() {
 		return plugin;
 	}
@@ -139,10 +117,6 @@ public class CssActivator extends AbstractUIPlugin {
 			fireThemeChanged();
 		}
 	}
-
-	/**
-	 * Informs listeners about a theme change
-	 */
 	public void fireThemeChanged() {
 		Display current = Display.getCurrent();
 		if (current != null) {

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2019 Berthold Daum  
+ * (c) 2019-2021 Berthold Daum  
  */
 package com.bdaum.zoom.webserver.internals.preferences;
 
@@ -67,6 +67,7 @@ import org.eclipse.ui.IWorkbench;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.QueryField;
@@ -77,8 +78,8 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.program.BatchUtilities;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.dialogs.WatchedFolderLabelProvider;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.internal.hover.WatchedFolderLabelProvider;
 import com.bdaum.zoom.ui.internal.html.CssCodeScanner;
 import com.bdaum.zoom.ui.internal.html.CssSourceViewer;
 import com.bdaum.zoom.ui.internal.html.HtmlSourceViewer;
@@ -89,7 +90,6 @@ import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.SharpeningGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
-import com.bdaum.zoom.ui.internal.wizards.ImportFileSelectionPage;
 import com.bdaum.zoom.ui.internal.wizards.WatchedFolderWizard;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -103,7 +103,8 @@ import io.nayuki.qrcodegen.QrCode;
 import io.nayuki.qrcodegen.QrSegment;
 
 @SuppressWarnings("restriction")
-public class WebserverPreferencePage extends AbstractPreferencePage implements WebserverListener, Listener {
+public class WebserverPreferencePage extends AbstractPreferencePage
+		implements WebserverListener, Listener, ITextListener, ISelectionChangedListener {
 	public static final String GENERAL = "general"; //$NON-NLS-1$
 	private static final String HTMLSELECTION = "htmlSelection"; //$NON-NLS-1$
 
@@ -130,7 +131,6 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 	private Composite uploadComp;
 	private Button addFolderButton, showLocButton, showDestButton, resetHtmlButton, resetCssButton, startButton,
 			stopButton;
-	private ITextListener textListener;
 	private TableViewer ipViewer;
 	private Label ipLabel;
 	private Canvas qrCanvas;
@@ -162,12 +162,6 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 				updateFields();
 			}
 		};
-		textListener = new ITextListener() {
-			@Override
-			public void textChanged(TextEvent event) {
-				updateButtons();
-			}
-		};
 		createTabFolder(composite, Messages.WebserverPreferencePage_webserver);
 		tabItem0 = UiUtilities.createTabItem(tabFolder, Messages.WebserverPreferencePage_settings,
 				Messages.WebserverPreferencePage_settings_tooltip);
@@ -188,7 +182,6 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		fillValues();
 	}
 
-	@SuppressWarnings("unused")
 	private Control createUploadGroup(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -220,63 +213,14 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		watchedFolderViewer.getControl().setLayoutData(layoutData);
 		watchedFolderViewer.getTable().setLinesVisible(true);
 		watchedFolderViewer.getTable().setHeaderVisible(true);
-		TableViewerColumn col0 = createColumn(Messages.WebserverPreferencePage_path, 240);
-		col0.setLabelProvider(new WatchedFolderLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof WatchedFolder) {
-					String uri = ((WatchedFolder) element).getUri();
-					try {
-						File file = new File(new URI(uri));
-						String path = file.getPath();
-						if (!path.endsWith(File.separator))
-							path += File.separator;
-						if (!file.exists())
-							path += Messages.WebserverPreferencePage_offline;
-						return path;
-					} catch (URISyntaxException e) {
-						// ignore
-					}
-					return uri;
-				}
-				return null;
-			}
-		});
-		TableViewerColumn col1 = createColumn(Messages.WebserverPreferencePage_7, 80);
-		col1.setLabelProvider(new WatchedFolderLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof WatchedFolder) {
-					String volume = ((WatchedFolder) element).getVolume();
-					return volume == null ? "" : volume; //$NON-NLS-1$
-				}
-				return null;
-			}
-		});
-		TableViewerColumn col2 = createColumn(Messages.WebserverPreferencePage_volume, 400);
-		col2.setLabelProvider(new WatchedFolderLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				if (element instanceof WatchedFolder) {
-					WatchedFolder wf = (WatchedFolder) element;
-					StringBuilder sb = new StringBuilder();
-					int skipPolicy = wf.getSkipPolicy();
-					if (skipPolicy < 0 && skipPolicy >= ImportFileSelectionPage.SKIPPOLICIES.length)
-						skipPolicy = 0;
-					sb.append(ImportFileSelectionPage.SKIPPOLICIES[skipPolicy]);
-					sb.append(" | ").append(wf.getTargetDir()); //$NON-NLS-1$
-					return sb.toString();
-				}
-				return null;
-			}
-		});
+		createColumn(Messages.WebserverPreferencePage_path, 240)
+				.setLabelProvider(new WatchedFolderLabelProvider(WatchedFolderLabelProvider.PATH));
+		createColumn(Messages.WebserverPreferencePage_7, 80)
+				.setLabelProvider(new WatchedFolderLabelProvider(WatchedFolderLabelProvider.VOLUME));
+		createColumn(Messages.WebserverPreferencePage_volume, 400)
+				.setLabelProvider(new WatchedFolderLabelProvider(WatchedFolderLabelProvider.POLICIES));
 		watchedFolderViewer.setContentProvider(ArrayContentProvider.getInstance());
-		watchedFolderViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-				validate();
-			}
-		});
+		watchedFolderViewer.addSelectionChangedListener(this);
 		ZColumnViewerToolTipSupport.enableFor(watchedFolderViewer);
 		Composite buttonComp = new Composite(importGroup, SWT.NONE);
 		buttonComp.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
@@ -285,7 +229,8 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		addFolderButton.setText(Messages.WebserverPreferencePage_add);
 		addFolderButton.setToolTipText(Messages.WebserverPreferencePage_add_tooltip);
 		addFolderButton.addListener(SWT.Selection, this);
-		new Label(buttonComp, SWT.SEPARATOR | SWT.HORIZONTAL);
+		Label sep = new Label(buttonComp, SWT.SEPARATOR | SWT.HORIZONTAL);
+		sep.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		showLocButton = new Button(buttonComp, SWT.PUSH);
 		showLocButton.setText(Messages.WebserverPreferencePage_show_folder);
 		showLocButton.addListener(SWT.Selection, this);
@@ -293,6 +238,18 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		showDestButton.setText(Messages.WebserverPreferencePage_show_target);
 		showDestButton.addListener(SWT.Selection, this);
 		return composite;
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (event.getSource() == watchedFolderViewer) {
+			updateButtons();
+			validate();
+		} else if (event.getSource() == ipViewer) {
+			updateUrlFields();
+		} else if (event.getSource() == sourceSelectViewer) {
+			updateStack(sourceSelectViewer.getStructuredSelection().getFirstElement());
+			updateButtons();
+		}
 	}
 
 	private TableViewerColumn createColumn(String lab, int w) {
@@ -306,9 +263,12 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
+		Label expl = new Label(composite, SWT.WRAP);
+		expl.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		expl.setText(Messages.WebserverPreferencePage_modify_css);
 		cssViewer = new CssSourceViewer(composite, null,
 				SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL, new CssCodeScanner(), null);
-		cssViewer.addTextListener(textListener);
+		cssViewer.addTextListener(this);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 600;
 		layoutData.heightHint = 400;
@@ -324,8 +284,15 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		composite.setLayout(new GridLayout(2, false));
-		sourceSelectViewer = new ComboViewer(composite, SWT.BORDER);
-		sourceSelectViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false, 2, 1));
+		Label expl = new Label(composite, SWT.WRAP);
+		expl.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+		expl.setText(Messages.WebserverPreferencePage_modify_html);
+		Composite sourceComp = new Composite(composite, SWT.NONE);
+		sourceComp.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		sourceComp.setLayout(new GridLayout(2, false));
+		new Label(sourceComp, SWT.NONE).setText(Messages.WebserverPreferencePage_select_page);
+		sourceSelectViewer = new ComboViewer(sourceComp, SWT.BORDER);
+		sourceSelectViewer.getControl().setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		sourceSelectViewer.setContentProvider(ArrayContentProvider.getInstance());
 		sourceSelectViewer.setLabelProvider(new LabelProvider() {
 			@Override
@@ -352,13 +319,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 			}
 		});
 		sourceSelectViewer.setInput(PreferenceConstants.HTMLTYPES);
-		sourceSelectViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateStack(sourceSelectViewer.getStructuredSelection().getFirstElement());
-				updateButtons();
-			}
-		});
+		sourceSelectViewer.addSelectionChangedListener(this);
 		htmlcomp = new Composite(composite, SWT.NONE);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.widthHint = 600;
@@ -368,7 +329,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		for (String type : PreferenceConstants.HTMLTYPES) {
 			HtmlSourceViewer sourceViewer = new HtmlSourceViewer(htmlcomp, null,
 					SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL, new XMLCodeScanner(), null);
-			sourceViewer.addTextListener(textListener);
+			sourceViewer.addTextListener(this);
 			viewerMap.put(type, sourceViewer);
 		}
 		resetHtmlButton = new Button(composite, SWT.PUSH);
@@ -464,12 +425,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 			}
 		});
 		ipViewer.setContentProvider(ArrayContentProvider.getInstance());
-		ipViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateUrlFields();
-			}
-		});
+		ipViewer.addSelectionChangedListener(this);
 		ipViewer.setInput(interfaces);
 		ipLabel = new Label(leftGroup, SWT.NONE);
 		ipLabel.setAlignment(SWT.CENTER);
@@ -489,7 +445,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		switch (e.type) {
 		case SWT.Paint:
 			paintControl(e);
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == resetHtmlButton) {
 				String type = (String) sourceSelectViewer.getStructuredSelection().getFirstElement();
@@ -540,6 +496,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 			} else if (e.widget == startButton) {
 				startButton.setEnabled(false);
 				WebserverActivator.getDefault().startWebserver();
+				oldPort = portField.getSelection();
 			} else if (e.widget == stopButton) {
 				stopButton.setEnabled(false);
 				WebserverActivator.getDefault().stopWebserver();
@@ -558,11 +515,10 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 						&& tifField.getSelection());
 				validate();
 			}
-			break;
+			return;
 		case SWT.Modify:
 			updateUrlFields();
 			validate();
-			break;
 		}
 
 	}
@@ -856,6 +812,9 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 				if (!startButton.isDisposed()) {
 					startButton.setEnabled(state == WebserverActivator.STOPPED);
 					stopButton.setEnabled(state == WebserverActivator.RUNNING);
+					setErrorMessage(
+							state == WebserverActivator.ERROR ? Messages.WebserverPreferencePage_webserver_failed
+									: null);
 				}
 			});
 	}
@@ -869,8 +828,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 	@Override
 	protected void doFillValues() {
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		oldPort = preferenceStore.getInt(PreferenceConstants.PORT);
-		portField.setSelection(oldPort);
+		portField.setSelection(oldPort = preferenceStore.getInt(PreferenceConstants.PORT));
 		pageField.setText(preferenceStore.getString(PreferenceConstants.STARTPAGE));
 		imagesPathField.setText(oldImagesPath = preferenceStore.getString(PreferenceConstants.IMAGEPATH));
 		exhibitionsPathField
@@ -921,9 +879,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 
 		boolean allowUploads = preferenceStore.getBoolean(PreferenceConstants.ALLOWUPLOADS);
 		allowUploadsButton.setSelection(allowUploads);
-		String password = preferenceStore.getString(PreferenceConstants.PASSWORD);
-		if (password != null)
-			passwordField.setText(password);
+		passwordField.setText(CommonUtilities.decode(preferenceStore.getString(PreferenceConstants.PASSWORD)));
 		metadataButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.ALLOWMETADATAMOD));
 		WatchedFolder wf = null;
 		String tid = preferenceStore.getString(PreferenceConstants.TRANSFERFOLDER);
@@ -943,6 +899,8 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		watchedFolderViewer.setInput(watchedFolders);
 		if (wf != null)
 			watchedFolderViewer.setSelection(new StructuredSelection(wf));
+		else if (watchedFolders.size() == 1)
+			watchedFolderViewer.setSelection(new StructuredSelection(watchedFolders.get(0)));
 		stateChanged(WebserverActivator.STOPPED, WebserverActivator.getDefault().getState());
 		for (String type : PreferenceConstants.HTMLTYPES)
 			viewerMap.get(type).setDocument(new Document(preferenceStore.getString(type)));
@@ -1106,7 +1064,7 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		boolean allowUploads = allowUploadsButton.getSelection();
 		preferenceStore.setValue(PreferenceConstants.ALLOWUPLOADS, allowUploads);
 		if (allowUploads) {
-			preferenceStore.setValue(PreferenceConstants.PASSWORD, passwordField.getText());
+			preferenceStore.setValue(PreferenceConstants.PASSWORD, CommonUtilities.encode(passwordField.getText()));
 			preferenceStore.setValue(PreferenceConstants.ALLOWMETADATAMOD, metadataButton.getSelection());
 			if (folderBackup != null) {
 				Meta meta = Core.getCore().getDbManager().getMeta(true);
@@ -1197,6 +1155,11 @@ public class WebserverPreferencePage extends AbstractPreferencePage implements W
 		if (allowUploadsButton.getSelection() && watchedFolderViewer.getStructuredSelection().isEmpty())
 			return Messages.WebserverPreferencePage_no_transfer_folder;
 		return super.doValidate();
+	}
+
+	@Override
+	public void textChanged(TextEvent event) {
+		updateButtons();
 	}
 
 }

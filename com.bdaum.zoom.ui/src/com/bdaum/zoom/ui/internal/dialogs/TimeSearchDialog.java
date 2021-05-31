@@ -51,7 +51,7 @@ import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.DateInput;
 
-public class TimeSearchDialog extends ZTitleAreaDialog {
+public class TimeSearchDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.timeSearchDialog"; //$NON-NLS-1$
 
@@ -99,25 +99,11 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_from);
 		fromField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		fromField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		fromField.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Date to = toField.getDate();
-				if (fromField.getDate().compareTo(to) > 0)
-					fromField.setDate(new Date(to.getTime()));
-			}
-		});
+		fromField.addListener(SWT.Selection, this);
 		new Label(timeGroup, SWT.NONE).setText(Messages.TimeSearchDialog_to);
 		toField = new DateInput(timeGroup, SWT.DATE | SWT.TIME | SWT.DROP_DOWN | SWT.BORDER);
 		toField.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, false, false));
-		toField.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Date from = fromField.getDate();
-				if (from.compareTo(toField.getDate()) > 0)
-					toField.setDate(new Date(from.getTime()));
-			}
-		});
+		toField.addListener(SWT.Selection, this);
 		findWithinGroup = new FindWithinGroup(comp);
 		if (Core.getCore().isNetworked())
 			findInNetworkGroup = new FindInNetworkGroup(comp);
@@ -277,6 +263,19 @@ public class TimeSearchDialog extends ZTitleAreaDialog {
 
 	public SmartCollectionImpl getResult() {
 		return coll;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == fromField) {
+			Date to = toField.getDate();
+			if (fromField.getDate().compareTo(to) > 0)
+				fromField.setDate(new Date(to.getTime()));
+		} else {
+			Date from = fromField.getDate();
+			if (from.compareTo(toField.getDate()) > 0)
+				toField.setDate(new Date(from.getTime()));
+		}
 	}
 
 }

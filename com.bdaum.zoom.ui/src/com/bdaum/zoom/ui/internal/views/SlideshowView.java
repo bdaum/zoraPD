@@ -2045,6 +2045,10 @@ public class SlideshowView extends AbstractPresentationView implements IHoverCon
 		};
 		exhibitPropertiesAction.setToolTipText(Messages.getString("SlideshowView.properties_tooltip")); //$NON-NLS-1$
 	}
+	
+	public void play() {
+		playAction.run();
+	}
 
 	protected void gotoSlide(boolean sections) {
 		SelectSlideDialog dialog = new SelectSlideDialog(getSite().getShell(), getSlides(sections), sections);

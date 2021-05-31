@@ -38,14 +38,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.group.GroupImpl;
@@ -64,7 +62,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
 @SuppressWarnings("restriction")
-public class AlbumSelectionDialog extends ZTitleAreaDialog {
+public class AlbumSelectionDialog extends ZTitleAreaDialog implements Listener, ICheckStateListener, ISelectionChangedListener, ITreeContentProvider {
 
 	private static final int NEWALBUM = 9999;
 	private static final int DELETEREGION = 9998;
@@ -78,7 +76,8 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 	protected boolean cntrlDwn;
 	private SmartCollectionImpl[] preselection;
 
-	public AlbumSelectionDialog(Shell parentShell, boolean small, List<String> assignedAlbums, SmartCollectionImpl[] preselection) {
+	public AlbumSelectionDialog(Shell parentShell, boolean small, List<String> assignedAlbums,
+			SmartCollectionImpl[] preselection) {
 		super(parentShell);
 		this.small = small;
 		this.assignedAlbums = assignedAlbums;
@@ -138,53 +137,9 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 			});
 			viewer.getTree().setHeaderVisible(true);
 		}
-		viewer.setContentProvider(new ITreeContentProvider() {
-			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-				// do nothing
-			}
-
-			public void dispose() {
-				// do nothing
-			}
-
-			public boolean hasChildren(Object element) {
-				if (element instanceof SmartCollection)
-					return !((SmartCollection) element).getSubSelection().isEmpty();
-				return false;
-			}
-
-			public Object getParent(Object element) {
-				if (element instanceof SmartCollection)
-					return ((SmartCollection) element).getSmartCollection_subSelection_parent();
-				return null;
-			}
-
-			public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof List) {
-					List<SmartCollection> rootalbums = new ArrayList<SmartCollection>();
-					for (Object obj : (List<?>) inputElement)
-						if (obj instanceof SmartCollection) {
-							SmartCollection album = (SmartCollection) obj;
-							if (album.getSmartCollection_subSelection_parent() == null)
-								rootalbums.add(album);
-						}
-					return rootalbums.toArray();
-				}
-				return null;
-			}
-
-			public Object[] getChildren(Object parentElement) {
-				if (parentElement instanceof SmartCollection)
-					return ((SmartCollection) parentElement).getSubSelection().toArray();
-				return EMPTY;
-			}
-		});
+		viewer.setContentProvider(this);
 		UiUtilities.installDoubleClickExpansion(viewer);
-		viewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				validate();
-			}
-		});
+		viewer.addCheckStateListener(this);
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = small ? 150 : 400;
 		viewer.getControl().setLayoutData(layoutData);
@@ -196,57 +151,11 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 					return !assignedAlbums.contains(((SmartCollectionImpl) element).getName());
 				}
 			} });
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				if (cntrlDwn) {
-					SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection())
-							.getFirstElement();
-					if (sm != null) {
-						CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
-								Messages.AlbumSelectionDialog_edit_person,
-								Messages.AlbumSelectionDialog_person_album_msg, false, true, false, false);
-						if (dialog.open() == Window.OK) {
-							final SmartCollectionImpl album = dialog.getResult();
-							if (album != null) {
-								Set<Object> toBeDeleted = new HashSet<Object>();
-								List<Object> toBeStored = new ArrayList<Object>();
-								Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
-								dbManager.safeTransaction(toBeDeleted, toBeStored);
-							}
-							viewer.update(sm, null);
-						}
-					}
-					cntrlDwn = false;
-				}
-				validate();
-			}
-		});
-		viewer.getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
+		viewer.addSelectionChangedListener(this);
+		viewer.getControl().addListener(SWT.KeyDown, this);
+		viewer.getControl().addListener(SWT.KeyUp, this);
 		if (!small)
-			new AllNoneGroup(composite, new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					if (e.widget.getData() == AllNoneGroup.ALL) {
-						viewer.expandAll();
-						viewer.setCheckedElements(albums.toArray());
-					} else
-						viewer.setCheckedElements(EMPTY);
-					validate();
-				}
-			});
+			new AllNoneGroup(composite, this);
 		return area;
 	}
 
@@ -320,6 +229,92 @@ public class AlbumSelectionDialog extends ZTitleAreaDialog {
 
 	public boolean isDeleteRegion() {
 		return deleteRegion;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.KeyDown) {
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = true;
+		} else if (e.type == SWT.KeyUp) {
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = false;
+		} else if (e.widget.getData() == AllNoneGroup.ALL) {
+			viewer.expandAll();
+			viewer.setCheckedElements(albums.toArray());
+		} else
+			viewer.setCheckedElements(EMPTY);
+		validate();
+	}
+
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		validate();
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (cntrlDwn) {
+			SmartCollectionImpl sm = (SmartCollectionImpl) ((IStructuredSelection) viewer.getSelection())
+					.getFirstElement();
+			if (sm != null) {
+				CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
+						Messages.AlbumSelectionDialog_edit_person,
+						Messages.AlbumSelectionDialog_person_album_msg, false, true, false, false);
+				if (dialog.open() == Window.OK) {
+					final SmartCollectionImpl album = dialog.getResult();
+					if (album != null) {
+						Set<Object> toBeDeleted = new HashSet<Object>();
+						List<Object> toBeStored = new ArrayList<Object>();
+						Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
+						dbManager.safeTransaction(toBeDeleted, toBeStored);
+					}
+					viewer.update(sm, null);
+				}
+			}
+			cntrlDwn = false;
+		}
+		validate();
+	}
+	
+	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+		// do nothing
+	}
+
+	public void dispose() {
+		// do nothing
+	}
+
+	public boolean hasChildren(Object element) {
+		if (element instanceof SmartCollection)
+			return !((SmartCollection) element).getSubSelection().isEmpty();
+		return false;
+	}
+
+	public Object getParent(Object element) {
+		if (element instanceof SmartCollection)
+			return ((SmartCollection) element).getSmartCollection_subSelection_parent();
+		return null;
+	}
+
+	public Object[] getElements(Object inputElement) {
+		if (inputElement instanceof List) {
+			List<SmartCollection> rootalbums = new ArrayList<SmartCollection>();
+			for (Object obj : (List<?>) inputElement)
+				if (obj instanceof SmartCollection) {
+					SmartCollection album = (SmartCollection) obj;
+					if (album.getSmartCollection_subSelection_parent() == null)
+						rootalbums.add(album);
+				}
+			return rootalbums.toArray();
+		}
+		return null;
+	}
+
+	public Object[] getChildren(Object parentElement) {
+		if (parentElement instanceof SmartCollection)
+			return ((SmartCollection) parentElement).getSubSelection().toArray();
+		return EMPTY;
 	}
 
 }

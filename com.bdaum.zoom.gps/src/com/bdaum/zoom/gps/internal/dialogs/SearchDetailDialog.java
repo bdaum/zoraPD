@@ -24,14 +24,14 @@ import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.gps.geonames.IGeocodingService;
@@ -39,7 +39,7 @@ import com.bdaum.zoom.gps.internal.GpsActivator;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class SearchDetailDialog extends ZTitleAreaDialog {
+public class SearchDetailDialog extends ZTitleAreaDialog implements Listener {
 
 	private Combo combo;
 	private String[] serviceNames;
@@ -84,12 +84,7 @@ public class SearchDetailDialog extends ZTitleAreaDialog {
 		if (select < 0)
 			select = dflt;
 		combo.setItems(serviceNames);
-		combo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateStack(combo.getSelectionIndex());
-			}
-		});
+		combo.addListener(SWT.Selection, this);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
 		data.widthHint = 500;
 		data.heightHint = 250;
@@ -121,6 +116,11 @@ public class SearchDetailDialog extends ZTitleAreaDialog {
 
 	public String getResult() {
 		return result;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateStack(combo.getSelectionIndex());
 	}
 
 }

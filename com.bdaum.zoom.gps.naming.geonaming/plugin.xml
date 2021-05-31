@@ -32,5 +32,11 @@
             class="com.bdaum.zoom.gps.naming.geonaming.internal.PreferenceInitializer">
       </initializer>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.gps.naming.geonaming.internal.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

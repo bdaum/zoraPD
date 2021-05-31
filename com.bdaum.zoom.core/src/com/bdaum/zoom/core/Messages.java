@@ -67,7 +67,6 @@ public class Messages extends NLS {
 	public static String Format_ly;
 	public static String Format_ly_short;
 	public static String Format_mdy;
-	public static String Format_mdy_time;
 	public static String Format_mdy_time_long;
 	public static String Format_mdy_time_secs;
 	public static String Format_mdy_time_short;
@@ -79,7 +78,6 @@ public class Messages extends NLS {
 	public static String Format_week;
 	public static String Format_week_ewy;
 	public static String Format_week_wy;
-	public static String Format_ymd_slash;
 	public static String Format_ymd_time;
 	public static String Format_ymdt_slash;
 	public static String QueryField_owner_id;

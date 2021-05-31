@@ -152,8 +152,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 
 	public class SelectStoryBoardDialog extends ZTitleAreaDialog {
 
-		private String title;
-		private String msg;
+		private String title, msg;
 		private Collection<Storyboard> input;
 		private TableViewer viewer;
 		private Storyboard selected;
@@ -1277,11 +1276,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 	protected static final Font DESCRIPTIONFONT = new Font("Arial", Font.PLAIN, 9); //$NON-NLS-1$
 
 	private WebGalleryImpl gallery;
-	private Action addStoryBoardAction;
-	private Action generateAction;
-	private Action saveAction;
-	private Action deleteStoryboardAction;
-	private Action editStoryboardAction;
+	private Action addStoryBoardAction, generateAction, saveAction, deleteStoryboardAction, editStoryboardAction;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -1553,7 +1548,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 				if (show == null)
 					return;
 				WebGalleryImpl backup = WebGalleryPropertiesOperation.cloneGallery(show);
-				show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show, show.getName(),
+				show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), WebGalleryView.this, null, show, show.getName(),
 						false, true, null);
 				if (show != null) {
 					performOperation(new WebGalleryPropertiesOperation(backup, setGallery(show)));
@@ -1890,7 +1885,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 
 	protected WebGalleryImpl getGallery() {
 		if (gallery == null && !dbIsReadonly())
-			setGallery(WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null,
+			setGallery(WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null, null,
 					Messages.getString("WebGalleryView.create_new_web_gallery"), false, false, null));//$NON-NLS-1$
 		return gallery;
 	}
@@ -1929,7 +1924,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 		super.show();
 	}
 
-	private void generate(final boolean save) {
+	public void generate(final boolean save) {
 		WebGalleryImpl show = getGallery();
 		if (show != null) {
 			if (offlineImages != null && !offlineImages.isEmpty()) {
@@ -1948,7 +1943,7 @@ public class WebGalleryView extends AbstractPresentationView implements IHoverCo
 				String outputFolder = (isFtp) ? show.getFtpDir() : show.getOutputFolder();
 				while (selectedEngine == null || outputFolder == null || selectedEngine.isEmpty()
 						|| outputFolder.isEmpty()) {
-					show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, show,
+					show = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null, null, show,
 							show.getName(), true, false, Messages.getString("WebGalleryView.select_web_gallery")); //$NON-NLS-1$
 					if (show == null)
 						return;

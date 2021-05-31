@@ -66,5 +66,11 @@
             label="%keyword.label.calls">
       </keyword>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.peer.internal.preferences.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

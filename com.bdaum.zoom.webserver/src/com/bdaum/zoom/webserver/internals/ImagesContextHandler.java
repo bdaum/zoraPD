@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2019 Berthold Daum  
+ * (c) 2019-2021 Berthold Daum  
  */
 package com.bdaum.zoom.webserver.internals;
 
@@ -58,6 +58,7 @@ import com.bdaum.zoom.cat.model.group.SmartCollection;
 import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.cat.model.meta.Meta;
 import com.bdaum.zoom.cat.model.meta.WatchedFolder;
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
@@ -188,8 +189,8 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 		} else if ("/file-upload".equals(path)) //$NON-NLS-1$
 			return upload(req, imagesPath);
 		else if (path.endsWith("/login")) { //$NON-NLS-1$
-			String password = preferenceStore.getString(PreferenceConstants.PASSWORD);
-			if (password != null && !password.isEmpty() && !password.equals(Core.decodeUrl(params.get("password")))) //$NON-NLS-1$
+			String password = CommonUtilities.decode(preferenceStore.getString(PreferenceConstants.PASSWORD));
+			if (!password.isEmpty() && !password.equals(Core.decodeUrl(params.get("password")))) //$NON-NLS-1$
 				return 401;
 			content = createUploadPage(substitutions);
 		} else {
@@ -336,8 +337,8 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 			} else if (path.endsWith("/uploads.html")) { //$NON-NLS-1$
 				if (!preferenceStore.getBoolean(PreferenceConstants.ALLOWUPLOADS))
 					return 403;
-				String password = preferenceStore.getString(PreferenceConstants.PASSWORD);
-				if (password != null && !password.isEmpty())
+				String password = CommonUtilities.decode(preferenceStore.getString(PreferenceConstants.PASSWORD));
+				if (!password.isEmpty())
 					return 403;
 				content = createUploadPage(substitutions);
 			} else if (path.endsWith("/login.html")) //$NON-NLS-1$
@@ -609,9 +610,9 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 			boolean allowUploads = preferenceStore.getBoolean(PreferenceConstants.ALLOWUPLOADS);
 			substitutions.put("{$$addons}", allowUploads ? null : ""); //$NON-NLS-1$ //$NON-NLS-2$
 			if (allowUploads) {
-				String password = preferenceStore.getString(PreferenceConstants.PASSWORD);
+				String password = CommonUtilities.decode(preferenceStore.getString(PreferenceConstants.PASSWORD));
 				substitutions.put("{$addonLink}", //$NON-NLS-1$
-						password == null || password.isEmpty() ? "uploads.html" : "login.html"); //$NON-NLS-1$ //$NON-NLS-2$
+						password.isEmpty() ?  "uploads.html" : "login.html"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			substitutions.put("{$$hasThumbnails}", //$NON-NLS-1$
 					thumbIds != null && !thumbIds.isEmpty() ? null : ""); //$NON-NLS-1$
@@ -833,13 +834,13 @@ final class ImagesContextHandler extends AbstractLightboxContextHandler {
 		if (isPhoto)
 			sb.append("<a href=\"view.html?imageId=").append(assetId) //$NON-NLS-1$
 					.append("\" target=\"_blank\">"); //$NON-NLS-1$
-//		else {
-//			isVideo = (isLocal || isWeb) && getMediaFlags(asset) == IMediaSupport.VIDEO
-//					&& ImageActivator.getDefault().getVideoService() != null;
-//			if (isVideo)
-//				sb.append("<a href=\"video.html?imageId=").append(assetId) //$NON-NLS-1$
-//						.append("\" target=\"_blank\">"); //$NON-NLS-1$
-//		}
+		// else {
+		// isVideo = (isLocal || isWeb) && getMediaFlags(asset) == IMediaSupport.VIDEO
+		// && ImageActivator.getDefault().getVideoService() != null;
+		// if (isVideo)
+		// sb.append("<a href=\"video.html?imageId=").append(assetId) //$NON-NLS-1$
+		// .append("\" target=\"_blank\">"); //$NON-NLS-1$
+		// }
 		String caption = toHtml(WebserverActivator.getDefault().getCaptionProcessor().computeImageCaption(asset,
 				scoreFormatter, null, null, template, false), false);
 		sb.append("<figure class=\"thumbnail"); //$NON-NLS-1$

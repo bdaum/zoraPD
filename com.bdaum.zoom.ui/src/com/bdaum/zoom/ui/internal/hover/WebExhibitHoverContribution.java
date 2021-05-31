@@ -120,10 +120,8 @@ public class WebExhibitHoverContribution extends AbstractHoverContribution imple
 	public Object getTarget(Object object) {
 		if (object instanceof HoverTestObject)
 			return new HoverTestAsset();
-		if (object instanceof WebExhibit) {
-			String assetId = ((WebExhibit) object).getAsset();
-			return Core.getCore().getDbManager().obtainAsset(assetId);
-		}
+		if (object instanceof WebExhibit)
+			return Core.getCore().getDbManager().obtainAsset(((WebExhibit) object).getAsset());
 		return null;
 	}
 }

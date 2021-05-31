@@ -23,10 +23,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -58,9 +58,9 @@ final class TextMenuListener implements MenuDetectListener {
 		Menu menu = new Menu(control.getShell(), SWT.POP_UP);
 		MenuItem item = new MenuItem(menu, SWT.PUSH);
 		item.setText(Messages.TextMenuListener_selectall);
-		item.addSelectionListener(new SelectionAdapter() {
+		item.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				textField.selectAll();
 			}
 		});
@@ -68,9 +68,9 @@ final class TextMenuListener implements MenuDetectListener {
 		if ((style & SWT.READ_ONLY) == 0) {
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_cut);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					textField.cut();
 				}
 			});
@@ -78,9 +78,9 @@ final class TextMenuListener implements MenuDetectListener {
 		}
 		item = new MenuItem(menu, SWT.PUSH);
 		item.setText(Messages.TextMenuListener_copy);
-		item.addSelectionListener(new SelectionAdapter() {
+		item.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				textField.copy();
 			}
 		});
@@ -88,9 +88,9 @@ final class TextMenuListener implements MenuDetectListener {
 		if ((style & SWT.READ_ONLY) == 0) {
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_paste);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					textField.paste();
 				}
 			});
@@ -100,18 +100,18 @@ final class TextMenuListener implements MenuDetectListener {
 			new MenuItem(menu, SWT.SEPARATOR);
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_undo);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					textField.undo();
 				}
 			});
 			item.setEnabled(textField.canUndo());
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_redo);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					textField.redo();
 				}
 			});
@@ -124,9 +124,9 @@ final class TextMenuListener implements MenuDetectListener {
 				for (String proposal : suggestions) {
 					item = new MenuItem(menu, SWT.PUSH);
 					item.setText(proposal);
-					item.addSelectionListener(new SelectionAdapter() {
+					item.addListener(SWT.Selection, new Listener() {
 						@Override
-						public void widgetSelected(SelectionEvent e) {
+						public void handleEvent(Event e) {
 							textField.applyCorrection(incident, proposal);
 						}
 					});
@@ -135,9 +135,9 @@ final class TextMenuListener implements MenuDetectListener {
 			}
 			item = new MenuItem(menu, SWT.PUSH);
 			item.setText(Messages.TextMenuListener_add_to_dict);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					incident.addWord();
 					textField.checkSpelling(true);
 				}

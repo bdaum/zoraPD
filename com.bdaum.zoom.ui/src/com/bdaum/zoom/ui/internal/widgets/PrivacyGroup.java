@@ -61,59 +61,69 @@ public class PrivacyGroup {
 					break;
 				}
 			}
-		privacyButtonGroup = new RadioButtonGroup(parent, lab, SWT.HORIZONTAL, Messages.PrivacyGroup_public,
-				Messages.PrivacyGroup_publicMedium, Messages.PrivacyGroup_all);
-		Layout layout = parent.getLayout();
-		if (layout instanceof GridLayout)
-			privacyButtonGroup.setLayoutData(
-					new GridData(SWT.FILL, SWT.BEGINNING, true, false, ((GridLayout) layout).numColumns, 1));
-		updateButtons();
+		if (hasModerate || hasPrivate) {
+			privacyButtonGroup = new RadioButtonGroup(parent, lab, SWT.HORIZONTAL, Messages.PrivacyGroup_public,
+					Messages.PrivacyGroup_publicMedium, Messages.PrivacyGroup_all);
+			Layout layout = parent.getLayout();
+			if (layout instanceof GridLayout)
+				privacyButtonGroup.setLayoutData(
+						new GridData(SWT.FILL, SWT.BEGINNING, true, false, ((GridLayout) layout).numColumns, 1));
+			updateButtons();
+		}
 	}
 
 	public void addListener(int type, Listener listener) {
-		privacyButtonGroup.addListener(type, listener);
+		if (privacyButtonGroup != null)
+			privacyButtonGroup.addListener(type, listener);
 	}
 
 	public void removeListener(int type, Listener listener) {
-		privacyButtonGroup.removeListener(type, listener);
+		if (privacyButtonGroup != null)
+			privacyButtonGroup.removeListener(type, listener);
 	}
 
 	public void setSelection(int rating) {
-		switch (rating) {
-		case QueryField.SAFETY_SAFE:
-			privacyButtonGroup.setSelection(0);
-			break;
-		case QueryField.SAFETY_MODERATE:
-			privacyButtonGroup.setSelection(1);
-			break;
-		case QueryField.SAFETY_RESTRICTED:
-			privacyButtonGroup.setSelection(2);
-			break;
+		if (privacyButtonGroup != null) {
+			switch (rating) {
+			case QueryField.SAFETY_SAFE:
+				privacyButtonGroup.setSelection(0);
+				break;
+			case QueryField.SAFETY_MODERATE:
+				privacyButtonGroup.setSelection(1);
+				break;
+			case QueryField.SAFETY_RESTRICTED:
+				privacyButtonGroup.setSelection(2);
+				break;
+			}
+			updateButtons();
 		}
-		updateButtons();
 	}
 
 	private void updateButtons() {
-		if (!hasPublic & privacyButtonGroup.getSelection() == 0)
-			privacyButtonGroup.setSelection(1);
-		if (!hasModerate & privacyButtonGroup.getSelection() == 1)
-			privacyButtonGroup.setSelection(2);
-		if (!hasPrivate & privacyButtonGroup.getSelection() == 2)
-			privacyButtonGroup.setSelection(0);
-		privacyButtonGroup.setEnabled(0, hasPublic && enabled);
-		privacyButtonGroup.setEnabled(1, hasModerate && enabled);
-		privacyButtonGroup.setEnabled(2, hasPrivate && enabled);
+		if (privacyButtonGroup != null) {
+			if (!hasPublic & privacyButtonGroup.getSelection() == 0)
+				privacyButtonGroup.setSelection(1);
+			if (!hasModerate & privacyButtonGroup.getSelection() == 1)
+				privacyButtonGroup.setSelection(2);
+			if (!hasPrivate & privacyButtonGroup.getSelection() == 2)
+				privacyButtonGroup.setSelection(0);
+			privacyButtonGroup.setEnabled(0, hasPublic && enabled);
+			privacyButtonGroup.setEnabled(1, hasModerate && enabled);
+			privacyButtonGroup.setEnabled(2, hasPrivate && enabled);
+		}
 	}
 
 	public int getSelection() {
-		switch (privacyButtonGroup.getSelection()) {
-		case 0:
-			return QueryField.SAFETY_SAFE;
-		case 1:
-			return QueryField.SAFETY_MODERATE;
-		default:
-			return QueryField.SAFETY_RESTRICTED;
-		}
+		if (privacyButtonGroup != null)
+			switch (privacyButtonGroup.getSelection()) {
+			case 0:
+				return QueryField.SAFETY_SAFE;
+			case 1:
+				return QueryField.SAFETY_MODERATE;
+			default:
+				return QueryField.SAFETY_RESTRICTED;
+			}
+		return QueryField.SAFETY_SAFE;
 	}
 
 	public void setEnabled(boolean enabled) {

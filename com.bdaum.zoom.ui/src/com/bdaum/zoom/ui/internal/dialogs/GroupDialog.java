@@ -26,8 +26,6 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -298,7 +296,7 @@ public class GroupDialog extends ZTitleAreaDialog implements Listener {
 		switch (e.type) {
 		case SWT.Modify:
 			validate();
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == overwriteButton) {
 				updateTable();
@@ -306,7 +304,6 @@ public class GroupDialog extends ZTitleAreaDialog implements Listener {
 			} else
 				PreferencesUtil.createPreferenceDialogOn(getShell(), AutoPreferencePage.ID, new String[0],
 						AutoPreferencePage.RULES).open();
-			break;
 		}
 	}
 
@@ -318,12 +315,7 @@ public class GroupDialog extends ZTitleAreaDialog implements Listener {
 		label.setText(Messages.GroupDialog_group_name);
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				validate();
-			}
-		});
+		nameField.addListener(SWT.Modify, this);
 		return composite;
 	}
 

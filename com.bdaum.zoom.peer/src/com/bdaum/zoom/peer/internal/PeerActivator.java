@@ -23,14 +23,12 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -272,7 +270,7 @@ public class PeerActivator extends ZUiPlugin
 	}
 
 	private Set<String> readBlockedNodes() {
-		blockedNodes = Collections.synchronizedSet(new HashSet<String>());
+		blockedNodes = ConcurrentHashMap.newKeySet();
 		IPreferencesService preferencesService = Platform.getPreferencesService();
 		String s = preferencesService.getString(PLUGIN_ID, PreferenceConstants.BLOCKEDNODES, "", null); //$NON-NLS-1$
 		StringTokenizer st = new StringTokenizer(s, "\n"); //$NON-NLS-1$
@@ -534,7 +532,7 @@ public class PeerActivator extends ZUiPlugin
 
 	public Map<String, PeerDefinition> getIncomingCalls() {
 		if (incomingCalls == null)
-			incomingCalls = Collections.synchronizedMap(new HashMap<String, PeerDefinition>());
+			incomingCalls = new ConcurrentHashMap<String, PeerDefinition>();
 		return incomingCalls;
 	}
 

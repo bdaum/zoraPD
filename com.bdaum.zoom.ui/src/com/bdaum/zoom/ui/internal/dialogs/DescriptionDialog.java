@@ -33,18 +33,16 @@ import java.util.zip.ZipInputStream;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -69,7 +67,7 @@ import com.bdaum.zoom.ui.internal.widgets.CheckedText;
 import com.bdaum.zoom.ui.widgets.DateInput;
 
 @SuppressWarnings("restriction")
-public class DescriptionDialog extends ZTitleAreaDialog {
+public class DescriptionDialog extends ZTitleAreaDialog implements IFocalLengthProvider, Listener {
 
 	private IIdentifiableObject description;
 	private RelationDescription result;
@@ -144,48 +142,16 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 		parmComposite.setLayout(layout);
 		parmFileField = new Text(parmComposite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		parmFileField.setLayoutData(new GridData(350, SWT.DEFAULT));
-		parmFileField.addModifyListener(new ModifyListener() {
-
-			public void modifyText(ModifyEvent e) {
-				updateButtons(validateParmFile());
-			}
-		});
+		parmFileField.addListener(SWT.Modify, this);
 		final Button browseButton = new Button(parmComposite, SWT.PUSH);
 		browseButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		browseButton.setText(Messages.DescriptionDialog_browse);
-		browseButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
-				dialog.setText(Messages.DescriptionDialog_select_parameter_file);
-				String id = description instanceof ComposedToImpl ? ((ComposedToImpl) description).getComposite()
-						: ((DerivedByImpl) description).getDerivative();
-				ICore core = Core.getCore();
-				AssetImpl a = core.getDbManager().obtainAsset(id);
-				if (a != null) {
-					URI uri = core.getVolumeManager().findExistingFile(a, true);
-					if (uri != null)
-						dialog.setFilterPath((new File(uri)).getParent());
-				}
-				String file = dialog.open();
-				if (file != null) {
-					File f = new File(file);
-					parmFileField.setText(f.toURI().toString());
-					updateButtons(validateParmFile());
-				}
-			}
-		});
+		browseButton.addListener(SWT.Selection, this);
 		if (description instanceof DerivedByImpl) {
 			restoreButton = new Button(parmComposite, SWT.PUSH);
 			restoreButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 			restoreButton.setText(Messages.DescriptionDialog_restore);
-			restoreButton.addSelectionListener(new SelectionAdapter() {
-
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					restoreRecipe();
-				}
-			});
+			restoreButton.addListener(SWT.Selection, this);
 			String parameterFile = ((DerivedByImpl) description).getParameterFile();
 			if (parameterFile != null && getParmFile(parameterFile) != null) {
 				new Label(comp, SWT.NONE);
@@ -282,23 +248,22 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 	private String getRecipeContent(String parameterFile) {
 		List<IRecipeDetector> recipeDetectors = CoreActivator.getDefault().getRecipeDetectors();
 		for (IRecipeDetector detector : recipeDetectors) {
-			Recipe recipe = detector.loadRecipe(parameterFile, false, new IFocalLengthProvider() {
-				public double get35mm() {
-					return asset.getFocalLengthIn35MmFilm();
-				}
-			}, null);
+			Recipe recipe = detector.loadRecipe(parameterFile, false, this, null);
 			if (recipe != null)
 				return recipe.toString();
 		}
 		return null;
 	}
 
+	public double get35mm() {
+		return asset.getFocalLengthIn35MmFilm();
+	}
+
 	protected void updateButtons(boolean valid) {
 		getShell().setModified(!readonly);
 		if (restoreButton != null)
-			restoreButton
-					.setEnabled(!parmFileField.getText().isEmpty() && valid && description instanceof DerivedByImpl
-							&& ((DerivedByImpl) description).getArchivedRecipe() != null);
+			restoreButton.setEnabled(!parmFileField.getText().isEmpty() && valid && description instanceof DerivedByImpl
+					&& ((DerivedByImpl) description).getArchivedRecipe() != null);
 		Button okButton = getButton(IDialogConstants.OK_ID);
 		if (okButton != null)
 			okButton.setEnabled(!readonly);
@@ -311,7 +276,7 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 			CssActivator.getDefault().setColors(parmFileField);
 			return false;
 		}
-		parmFileField.setData(CSSProperties.ID, null); 
+		parmFileField.setData(CSSProperties.ID, null);
 		CssActivator.getDefault().setColors(parmFileField);
 		return !parmFileField.getText().isEmpty();
 	}
@@ -338,5 +303,32 @@ public class DescriptionDialog extends ZTitleAreaDialog {
 
 	public RelationDescription getResult() {
 		return result;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Modify)
+			updateButtons(validateParmFile());
+		else if (e.widget == restoreButton)
+			restoreRecipe();
+		else {
+			FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+			dialog.setText(Messages.DescriptionDialog_select_parameter_file);
+			String id = description instanceof ComposedToImpl ? ((ComposedToImpl) description).getComposite()
+					: ((DerivedByImpl) description).getDerivative();
+			ICore core = Core.getCore();
+			AssetImpl a = core.getDbManager().obtainAsset(id);
+			if (a != null) {
+				URI uri = core.getVolumeManager().findExistingFile(a, true);
+				if (uri != null)
+					dialog.setFilterPath((new File(uri)).getParent());
+			}
+			String file = dialog.open();
+			if (file != null) {
+				File f = new File(file);
+				parmFileField.setText(f.toURI().toString());
+				updateButtons(validateParmFile());
+			}
+		}
 	}
 }

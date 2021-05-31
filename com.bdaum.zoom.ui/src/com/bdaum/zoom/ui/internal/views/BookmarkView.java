@@ -35,6 +35,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.resource.ColorRegistry;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.CellEditor;
@@ -65,16 +66,16 @@ import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -115,7 +116,8 @@ import com.bdaum.zoom.ui.internal.actions.ZoomActionFactory;
 import com.bdaum.zoom.ui.internal.hover.HoverManager;
 
 @SuppressWarnings("restriction")
-public class BookmarkView extends ViewPart implements CatalogListener, IDragHost, IDropHost {
+public class BookmarkView extends ViewPart implements CatalogListener, IDragHost, IDropHost, ISelectionChangedListener,
+		IPartListener2, IMenuListener, IDoubleClickListener {
 
 	private final class BookmarkDropTargetListener extends EffectDropTargetListener {
 		private final FileTransfer fileTransfer;
@@ -189,18 +191,19 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	}
 
 	private static class BookmarkToolTipSupport extends DefaultToolTip {
-//		private final SimpleDateFormat sf = new SimpleDateFormat(Messages.getString("BookmarkView.date_format")); //$NON-NLS-1$
+		private static final String TOOLTIP_BG = "tooltipBg"; //$NON-NLS-1$
 		private final ColumnViewer viewer;
 		private Image image;
-		private Color bgColor;
 
 		protected BookmarkToolTipSupport(ColumnViewer viewer, int style, boolean manualActivation) {
 			super(viewer.getControl(), style, manualActivation);
 			this.viewer = viewer;
 			setHideDelay(10000);
 			setPopupDelay(500);
-			bgColor = new Color(viewer.getControl().getDisplay(), 250, 250, 230);
-			setBackgroundColor(bgColor);
+			ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
+			if (!colorRegistry.hasValueFor(TOOLTIP_BG))
+				colorRegistry.put(TOOLTIP_BG, new RGB(250, 250, 230));
+			setBackgroundColor(colorRegistry.get(TOOLTIP_BG));
 			setShift(new Point(15, 20));
 		}
 
@@ -216,6 +219,7 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 			String text = hoverManager.getHoverText("com.bdaum.zoom.ui.hover.bookmark", b, null); //$NON-NLS-1$
 			String title = hoverManager.getHoverTitle("com.bdaum.zoom.ui.hover.bookmark", b, null); //$NON-NLS-1$
 			Composite area = new Composite(parent, SWT.NONE);
+			Color bgColor = JFaceResources.getColorRegistry().get(TOOLTIP_BG);
 			area.setBackground(bgColor);
 			area.setLayout(new GridLayout(2, false));
 			CLabel imageLabel = new CLabel(area, getStyle(event));
@@ -252,10 +256,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 
 		@Override
 		public void deactivate() {
-			if (bgColor != null) {
-				bgColor.dispose();
-				bgColor = null;
-			}
 			if (image != null) {
 				image.dispose();
 				image = null;
@@ -278,55 +278,52 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	private boolean isVisible;
 	private boolean dragging;
 
-	private IPartListener2 partListener = new IPartListener2() {
-
-		public void partActivated(IWorkbenchPartReference partRef) {
-			if (partRef.getPart(false) == BookmarkView.this) {
-				isVisible = true;
-				show();
-			}
+	public void partActivated(IWorkbenchPartReference partRef) {
+		if (partRef.getPart(false) == BookmarkView.this) {
+			isVisible = true;
+			show();
 		}
+	}
 
-		public void partBroughtToTop(IWorkbenchPartReference partRef) {
-			if (partRef.getPart(false) == BookmarkView.this) {
-				isVisible = true;
-				show();
-			}
+	public void partBroughtToTop(IWorkbenchPartReference partRef) {
+		if (partRef.getPart(false) == BookmarkView.this) {
+			isVisible = true;
+			show();
 		}
+	}
 
-		public void partClosed(IWorkbenchPartReference partRef) {
-			// do nothing
-		}
+	public void partClosed(IWorkbenchPartReference partRef) {
+		// do nothing
+	}
 
-		public void partDeactivated(IWorkbenchPartReference partRef) {
-			// do nothing
-		}
+	public void partDeactivated(IWorkbenchPartReference partRef) {
+		// do nothing
+	}
 
-		public void partHidden(IWorkbenchPartReference partRef) {
-			if (partRef.getPart(false) == BookmarkView.this) {
-				isVisible = false;
-			}
+	public void partHidden(IWorkbenchPartReference partRef) {
+		if (partRef.getPart(false) == BookmarkView.this) {
+			isVisible = false;
 		}
+	}
 
-		public void partInputChanged(IWorkbenchPartReference partRef) {
-			// do nothing
-		}
+	public void partInputChanged(IWorkbenchPartReference partRef) {
+		// do nothing
+	}
 
-		public void partOpened(IWorkbenchPartReference partRef) {
-			if (partRef.getPart(false) == BookmarkView.this) {
-				refresh();
-				updateActions();
-				isVisible = true;
-			}
+	public void partOpened(IWorkbenchPartReference partRef) {
+		if (partRef.getPart(false) == BookmarkView.this) {
+			refresh();
+			updateActions();
+			isVisible = true;
 		}
+	}
 
-		public void partVisible(IWorkbenchPartReference partRef) {
-			if (partRef.getPart(false) == BookmarkView.this) {
-				isVisible = true;
-				show();
-			}
+	public void partVisible(IWorkbenchPartReference partRef) {
+		if (partRef.getPart(false) == BookmarkView.this) {
+			isVisible = true;
+			show();
 		}
-	};
+	}
 
 	private void show() {
 		if (isDirty) {
@@ -360,10 +357,6 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	private void refresh() {
 		disposeImages();
 		viewer.setInput(this);
-	}
-
-	private void addPartListener() {
-		getSite().getWorkbenchWindow().getPartService().addPartListener(partListener);
 	}
 
 	@SuppressWarnings("unused")
@@ -517,32 +510,32 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 				return (sortDirection == SWT.DOWN) ? s1.compareToIgnoreCase(s2) : s2.compareToIgnoreCase(s1);
 			}
 		});
-		addPartListener();
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateActions();
-			}
-		});
+		getSite().getWorkbenchWindow().getPartService().addPartListener(this);
+		viewer.addSelectionChangedListener(this);
 		new ColumnLayoutManager(viewer, COLUMNWIDTHS, null);
 		switchSort(table, col1.getColumn());
 		new AssetDragSourceListener(this, DND.DROP_COPY | DND.DROP_MOVE);
 		new BookmarkDropTargetListener(DND.DROP_MOVE | DND.DROP_COPY);
 		makeActions();
 		hookContextMenu();
-		hookDoubleClickAction();
+		viewer.addDoubleClickListener(this);
 		contributeToActionBars();
 		installHoveringController();
 		core.addCatalogListener(this);
 		catalogOpened(false);
 	}
 
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateActions();
+	}
+
 	private TableViewerColumn createColumn(final TableViewer tViewer, String lab, int w) {
 		final TableViewerColumn column = new TableViewerColumn(tViewer, SWT.NONE);
 		column.getColumn().setText(lab);
 		column.getColumn().setWidth(w);
-		column.getColumn().addSelectionListener(new SelectionAdapter() {
+		column.getColumn().addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				switchSort(tViewer.getTable(), column.getColumn());
 			}
 		});
@@ -608,13 +601,13 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				BookmarkView.this.fillContextMenu(manager);
-			}
-		});
+		menuMgr.addMenuListener(this);
 		getControl().setMenu(menuMgr.createContextMenu(getControl()));
 		getSite().registerContextMenu(menuMgr, viewer);
+	}
+
+	public void menuAboutToShow(IMenuManager manager) {
+		BookmarkView.this.fillContextMenu(manager);
 	}
 
 	protected void fillContextMenu(IMenuManager menuManager) {
@@ -624,16 +617,12 @@ public class BookmarkView extends ViewPart implements CatalogListener, IDragHost
 		menuManager.add(deleteAction);
 	}
 
-	private void hookDoubleClickAction() {
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					gotoBookmarkAction.setBookmark((Bookmark) selection.getFirstElement());
-					gotoBookmarkAction.run();
-				}
-			}
-		});
+	public void doubleClick(DoubleClickEvent event) {
+		IStructuredSelection selection = viewer.getStructuredSelection();
+		if (!selection.isEmpty()) {
+			gotoBookmarkAction.setBookmark((Bookmark) selection.getFirstElement());
+			gotoBookmarkAction.run();
+		}
 	}
 
 	protected void contributeToActionBars() {

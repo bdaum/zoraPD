@@ -45,12 +45,10 @@ public class FindSeriesJob extends CustomJob {
 
 	private final IWorkbenchWindow window;
 	private DuplicatesView duplicatesView;
-	private final boolean ignoreDerivates;
+	private final boolean ignoreDerivates, separateFormats;
 	private final IDbManager dbManager;
 	private final SmartCollection coll;
-	private final int interval;
-	private final int minLength;
-	private final boolean separateFormats;
+	private final int interval, minLength;
 	private int type;
 
 	public FindSeriesJob(IWorkbenchWindow window, SmartCollection coll,

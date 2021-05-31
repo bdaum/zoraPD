@@ -42,7 +42,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class EditWallDialog extends ZTitleAreaDialog {
+public class EditWallDialog extends ZTitleAreaDialog implements Listener{
 
 	private static final String SETTINGSID = "com.bdaum.zoom.wallProperties"; //$NON-NLS-1$
 
@@ -63,14 +63,6 @@ public class EditWallDialog extends ZTitleAreaDialog {
 	private WebColorGroup selectColorGroup;
 
 	private IDialogSettings settings;
-	
-	private final Listener listener = new Listener() {
-		@Override
-		public void handleEvent(Event event) {
-			updateButtons();
-		}
-	};
-
 
 	public EditWallDialog(Shell parentShell, WallImpl current, String title) {
 		super(parentShell, HelpContextIds.EDITWALL_DIALOG);
@@ -97,7 +89,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 
 		nameField = new Text(comp, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addListener(SWT.Modify, listener);
+		nameField.addListener(SWT.Modify, this);
 
 		new Label(comp, SWT.NONE).setText(Messages.EditWallDialog_dimensions);
 
@@ -112,7 +104,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		widthField.setIncrement(10);
 		widthField.setPageIncrement(100);
 		widthField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		widthField.addListener(SWT.Selection, listener);
+		widthField.addListener(SWT.Selection, this);
 
 		new Label(parm, SWT.NONE).setText(Messages.EditWallDialog_height);
 		heightField = new NumericControl(parm, SWT.BORDER);
@@ -122,7 +114,7 @@ public class EditWallDialog extends ZTitleAreaDialog {
 		heightField.setIncrement(10);
 		heightField.setPageIncrement(100);
 		heightField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		heightField.addListener(SWT.Selection, listener);
+		heightField.addListener(SWT.Selection, this);
 
 		selectColorGroup = new WebColorGroup(comp, Messages.EditWallDialog_wall_color);
 		initValues();
@@ -195,6 +187,11 @@ public class EditWallDialog extends ZTitleAreaDialog {
 
 	public WallImpl getResult() {
 		return current;
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

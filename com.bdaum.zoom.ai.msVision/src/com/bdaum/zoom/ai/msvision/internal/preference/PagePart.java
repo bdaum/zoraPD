@@ -41,18 +41,19 @@ import com.bdaum.zoom.ai.internal.preference.AiPreferencePage;
 import com.bdaum.zoom.ai.msvision.internal.MsVisionActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
+import com.bdaum.zoom.ui.internal.widgets.Password;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePagePart;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
-import com.microsoft.projectoxford.vision.VisionServiceRestClient;
+import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionClient;
 
 @SuppressWarnings("restriction")
 public class PagePart extends AbstractPreferencePagePart implements Listener {
 
-	private Text keyField;
+	private Password keyField;
 	private NumericControl conceptField;
 	private NumericControl confidenceField;
 	private Timer timer = new Timer();
@@ -67,6 +68,7 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 	private NumericControl aboveField;
 	private CheckboxButton knownButton;
 	private TimerTask task;
+	private Text endpointField;
 
 	@SuppressWarnings("unused")
 	@Override
@@ -78,16 +80,27 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		((GridLayout) composite.getLayout()).verticalSpacing = 0;
 		new Label(composite, SWT.NONE).setText("Microsoft Computer Vision API"); //$NON-NLS-1$
 		new Label(composite, SWT.NONE);
-		CGroup eGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_account_credentials);
+		CGroup eGroup = new CGroup(composite, SWT.NONE);
+		eGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		eGroup.setLayout(new GridLayout(3, false));
+		eGroup.setText(Messages.PagePart_account_credentials);
 		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_key1_or_key2);
-		keyField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
-		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		keyField = new Password(eGroup, SWT.BORDER);
+		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		keyField.addListener(SWT.Modify, this);
-		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_status);
+		new Label(eGroup, SWT.NONE).setText(Messages.PagePart_endpoint);
+		endpointField = new Text(eGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
+		endpointField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		endpointField.addListener(SWT.Modify, this);
+		Label label = new Label(eGroup, SWT.WRAP);
+		label.setText(Messages.PagePart_status);
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		statusField = new Label(eGroup, SWT.WRAP);
-		statusField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+		layoutData.heightHint = 30;
+		statusField.setLayoutData(layoutData);
 		CLink link = new CLink(eGroup, SWT.NONE);
-		link.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		link.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
 		link.setText(Messages.PagePart_visit_account);
 		link.addListener(SWT.Selection, this);
 		CGroup tGroup = UiUtilities.createGroup(composite, 2, Messages.PagePart_usage);
@@ -101,17 +114,22 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		confidenceField.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		confidenceField.setMaximum(99);
 		confidenceField.setMinimum(0);
-		new Label(tGroup, SWT.NONE).setText(Messages.PagePart_mark_above);
+		Composite kwcomp = new Composite(tGroup, SWT.NONE);
+		kwcomp.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = layout.marginHeight = 0;
+		kwcomp.setLayout(layout);
+		new Label(kwcomp, SWT.NONE).setText(Messages.PagePart_mark_above);
+		knownButton = WidgetFactory.createCheckButton(kwcomp, Messages.PagePart_mark_known,
+				new GridData(SWT.END, SWT.CENTER, false, false, 2, 1), Messages.PagePart_mark_known_tooltip);
 		aboveField = new NumericControl(tGroup, SWT.BORDER);
 		aboveField.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 		aboveField.setMaximum(100);
 		aboveField.setMinimum(0);
-		knownButton = WidgetFactory.createCheckButton(tGroup, Messages.PagePart_mark_known,
-				new GridData(SWT.END, SWT.CENTER, false, false, 2, 1), Messages.PagePart_mark_known_tooltip);
 
 		Composite buttonArea1 = new Composite(tGroup, SWT.NONE);
 		buttonArea1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
-		buttonArea1.setLayout(new GridLayout(4, false));
+		buttonArea1.setLayout(new GridLayout(2, false));
 		adultButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_sfw, null,
 				Messages.PagePart_sfw_tooltip);
 		faceButton = WidgetFactory.createCheckButton(buttonArea1, Messages.PagePart_faces, null,
@@ -149,11 +167,10 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 					// should never happen
 				}
 			}
-			break;
+			return;
 		case SWT.Modify:
 			if (enabled)
 				checkCredentials(parentPage);
-			break;
 		}
 	}
 
@@ -165,7 +182,7 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 				String msg;
 				boolean error;
 				MsVisionActivator activator = MsVisionActivator.getDefault();
-				VisionServiceRestClient client = activator.getClient();
+				ComputerVisionClient client = activator.getClient();
 				if (client != null) {
 					msg = Messages.PagePart_verified;
 					activator.disposeClient();
@@ -199,6 +216,7 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		keyField.removeListener(SWT.Modify, this);
 		IPreferenceStore preferenceStore = getPreferenceStore();
 		keyField.setText(preferenceStore.getString(PreferenceConstants.KEY));
+		endpointField.setText(preferenceStore.getString(PreferenceConstants.ENDPOINT));
 		conceptField.setSelection(preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS));
 		confidenceField.setSelection(preferenceStore.getInt(PreferenceConstants.MINCONFIDENCE));
 		aboveField.setSelection(preferenceStore.getInt(PreferenceConstants.MARKABOVE));
@@ -211,7 +229,7 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 		translateCatButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.TRANSLATE_CATEGORIES));
 		translateTagButton.setSelection(preferenceStore.getBoolean(PreferenceConstants.TRANSLATE_TAGS));
 		MsVisionActivator activator = MsVisionActivator.getDefault();
-		activator.setAccountCredentials(keyField.getText().trim());
+		activator.setAccountCredentials(keyField.getText().trim(), endpointField.getText().trim());
 		verifyAccountCredenials(100);
 		keyField.addListener(SWT.Modify, this);
 		updateButtons();
@@ -248,7 +266,8 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 	public void performOk() {
 		disposeTimerTask();
 		IPreferenceStore preferenceStore = getPreferenceStore();
-		preferenceStore.setValue(PreferenceConstants.KEY, keyField.getText());
+		preferenceStore.setValue(PreferenceConstants.KEY, keyField.getText().trim());
+		preferenceStore.setValue(PreferenceConstants.ENDPOINT, endpointField.getText().trim());
 		preferenceStore.setValue(PreferenceConstants.MAXCONCEPTS, conceptField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MINCONFIDENCE, confidenceField.getSelection());
 		preferenceStore.setValue(PreferenceConstants.MARKABOVE, aboveField.getSelection());
@@ -315,8 +334,13 @@ public class PagePart extends AbstractPreferencePagePart implements Listener {
 				showStatus(Messages.PagePart_no_app_key, true);
 				return;
 			}
+			String endpoint = endpointField.getText().trim();
+			if (endpoint.isEmpty()) {
+				showStatus(Messages.PagePart_no_endpoint, true);
+				return;
+			}
 			showStatus("", false); //$NON-NLS-1$
-			MsVisionActivator.getDefault().setAccountCredentials(key);
+			MsVisionActivator.getDefault().setAccountCredentials(key, endpoint);
 			verifyAccountCredenials(500);
 		}
 	}

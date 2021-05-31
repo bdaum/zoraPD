@@ -64,7 +64,7 @@ public class UpdateJob extends AbstractUpdateJob {
 	private File downloadFile;
 	private List<String> packages = new ArrayList<String>(4);
 	private final Version publishedVersion;
-	MessageDigest sha1;
+	private MessageDigest sha1;
 	protected int result;
 
 	public UpdateJob(Version publishedVersion, File downloadFile) {

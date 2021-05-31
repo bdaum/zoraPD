@@ -51,10 +51,6 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -104,7 +100,7 @@ import com.bdaum.zoom.ui.internal.job.DecorateJob;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class TableView extends AbstractGalleryView implements IExtendedColorModel {
+public class TableView extends AbstractGalleryView implements IExtendedColorModel, IPreferenceChangeListener, ISelectionChangedListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.views.TableView"; //$NON-NLS-1$
 
@@ -384,14 +380,14 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		setDecorator(gallery.getControl(), new TableDecorateJob(this, gallery));
 		setSortCriterion();
 		updateActions(false);
-		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
-				.addPreferenceChangeListener(new IPreferenceChangeListener() {
-					public void preferenceChange(PreferenceChangeEvent event) {
-						if (PreferenceConstants.TABLECOLUMNS.equals(event.getKey())) {
-							recreateGallery();
-						}
-					}
-				});
+		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID).addPreferenceChangeListener(this);
+	}
+
+	public void preferenceChange(PreferenceChangeEvent event) {
+		if (PreferenceConstants.TABLECOLUMNS.equals(event.getKey()))
+			recreateGallery();
+		else
+			super.preferenceChange(event);
 	}
 
 	private void createGallery(Composite parent, boolean recreate) {
@@ -432,9 +428,9 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		icolumn.setResizable(false);
 		icolumn.setText(Messages.getString("TableView.configure")); //$NON-NLS-1$
 		imageColumn.setLabelProvider(new ThumbnailLabelProvider());
-		icolumn.addSelectionListener(new SelectionAdapter() {
+		icolumn.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				ConfigureColumnsDialog dialog = new ConfigureColumnsDialog(getSite().getShell());
 				dialog.create();
 				dialog.getShell().setLocation(gallery.getControl().toDisplay(e.x, e.y));
@@ -459,15 +455,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 			}
 		}
 		gallery.setColumnProperties(props.toArray(new String[props.size()]));
-		gallery.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				if (refreshing <= 0) {
-					stopAudio();
-					selection = doGetAssetSelection();
-					fireSelection();
-				}
-			}
-		});
+		gallery.addSelectionChangedListener(this);
 		ZColumnViewerToolTipSupport.enableFor(gallery);
 		addKeyListener();
 		addGestureListener(gallery.getTable());
@@ -475,6 +463,14 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		addDragDropSupport();
 		hookContextMenu();
 		hookDoubleClickAction();
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (refreshing <= 0) {
+			stopAudio();
+			selection = doGetAssetSelection();
+			fireSelection();
+		}
 	}
 
 	private TableViewerColumn createColumn(final Table table, QueryField qfield, String label, int defaultWidth,
@@ -487,17 +483,17 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 		Integer w = columnWidths.get(key);
 		column.setWidth(w != null ? w : defaultWidth);
 		column.setResizable(true);
-		column.addControlListener(new ControlAdapter() {
+		column.addListener(SWT.Resize, new Listener() {
 			@Override
-			public void controlResized(ControlEvent e) {
+			public void handleEvent(Event e) {
 				int width = column.getWidth();
 				if (width > 0)
 					columnWidths.put(key, width);
 			}
 		});
-		column.addSelectionListener(new SelectionAdapter() {
+		column.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				if (refreshing > 0)
 					return;
 				switchSort(table, key, column);
@@ -548,13 +544,7 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	}
 
 	protected void hookDoubleClickAction() {
-		gallery.getTable().addListener(SWT.MouseDoubleClick, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				event.data = gallery.getStructuredSelection().getFirstElement();
-				viewImageAction.runWithEvent(event);
-			}
-		});
+		gallery.getTable().addListener(SWT.MouseDoubleClick, this);
 	}
 
 	@Override
@@ -736,7 +726,8 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 
 	public AssetSelection getAssetSelection() {
 		SmartCollectionImpl currentCollection = getAssetProvider().getCurrentCollection();
-		AssetSelection assetSelection = selection instanceof AssetSelection ? (AssetSelection) selection : doGetAssetSelection();
+		AssetSelection assetSelection = selection instanceof AssetSelection ? (AssetSelection) selection
+				: doGetAssetSelection();
 		assetSelection.setContext(currentCollection);
 		return assetSelection;
 	}
@@ -844,6 +835,19 @@ public class TableView extends AbstractGalleryView implements IExtendedColorMode
 	@Override
 	protected void setDefaultPartName() {
 		setPartName(Messages.getString("TableView.table")); //$NON-NLS-1$
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.MouseDoubleClick:
+			e.data = gallery.getStructuredSelection().getFirstElement();
+			viewImageAction.runWithEvent(e);
+			return;
+		default:
+			super.handleEvent(e);
+		}
+
 	}
 
 }

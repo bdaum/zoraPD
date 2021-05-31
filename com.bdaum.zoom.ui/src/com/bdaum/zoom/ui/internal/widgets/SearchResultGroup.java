@@ -57,7 +57,7 @@ import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class SearchResultGroup implements Listener {
+public class SearchResultGroup implements Listener, ISelectionChangedListener {
 
 	private static final String MAX_NUMBER = "maxNumber"; //$NON-NLS-1$
 	private static final String SCORE = "score"; //$NON-NLS-1$
@@ -125,11 +125,7 @@ public class SearchResultGroup implements Listener {
 			gridData.widthHint = 250;
 			gridData.horizontalIndent = 15;
 			algoExplanation.setLayoutData(gridData);
-			algoViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-				public void selectionChanged(SelectionChangedEvent event) {
-					updateControls();
-				}
-			});
+			algoViewer.addSelectionChangedListener(this);
 			link = new CLink(methodGroup, SWT.NONE);
 			link.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
 			link.setText(Messages.SearchResultGroup_configure);
@@ -173,7 +169,7 @@ public class SearchResultGroup implements Listener {
 
 	@Override
 	public void handleEvent(Event e) {
-		if (e.widget == link) {
+		if (e.widget == link)
 			BusyIndicator.showWhile(link.getDisplay(), () -> {
 				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 				if (activeWorkbenchWindow != null) {
@@ -190,9 +186,8 @@ public class SearchResultGroup implements Listener {
 					}
 				}
 			});
-		} else {
+		else
 			scale.setToolTipText(String.valueOf(scale.getMaximum() - scale.getSelection()));
-		}
 	}
 
 	private void fillAlgoViewer() {
@@ -342,6 +337,10 @@ public class SearchResultGroup implements Listener {
 	 */
 	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
 		algoViewer.removeSelectionChangedListener(listener);
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateControls();
 	}
 
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Berthold Daum.
+ * Copyright (c) 2015-2021 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@ package com.bdaum.zoom.program;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.batch.internal.BatchActivator;
 
@@ -116,14 +118,28 @@ public abstract class AbstractRawConverter implements IRawConverter {
 		return usesRecipes;
 	}
 
-	public boolean isValid() {
+	public String isValid() {
 		String p = getPath();
-		return p != null && !p.isEmpty() && new File(p).exists();
+		return testExecutable(p != null && !p.isEmpty() ? new File(p) : null);
+	}
+	
+	@Override
+	public String testExecutable(File f) {
+		if (f == null)
+			return Messages.getString("AbstractRawConverter.no_converter_specified"); //$NON-NLS-1$
+		if (!f.exists())
+			return NLS.bind(Messages.getString("AbstractRawConverter.converter_does_not_exist"), f); //$NON-NLS-1$
+		return null;
 	}
 	
 	@Override
 	public void unget() {
 		BatchActivator.getDefault().ungetRawConverter(this);
+	}
+	
+	@Override
+	public String getLibPath() {
+		return null;
 	}
 
 }

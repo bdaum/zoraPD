@@ -27,7 +27,7 @@ import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboCatFilter;
 import com.bdaum.zoom.ui.internal.widgets.GroupComboLabelProvider;
 
-public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
+public class TemplateFieldSelectionDialog extends ZTitleAreaDialog implements ISelectionChangedListener {
 
 	private ComboViewer groupCombo;
 	private ComboViewer fieldCombo;
@@ -62,12 +62,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 		groupCombo.setLabelProvider(new GroupComboLabelProvider());
 		groupCombo.setInput(categories);
 		groupCombo.getControl().setLayoutData(new GridData(100, SWT.DEFAULT));
-		groupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				fillFieldCombo();
-				fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
-			}
-		});
+		groupCombo.addSelectionChangedListener(this);
 		new Label(composite, SWT.NONE).setText(Messages.TemplateFieldSelectionDialog_field);
 		fieldCombo = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
 		comboControl = fieldCombo.getCombo();
@@ -86,11 +81,7 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 			}
 		});
 		fieldCombo.setComparator(ZViewerComparator.INSTANCE);
-		fieldCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				validate();
-			}
-		});
+		fieldCombo.addSelectionChangedListener(this);
 		return area;
 	}
 
@@ -141,6 +132,17 @@ public class TemplateFieldSelectionDialog extends ZTitleAreaDialog {
 	 */
 	public FieldDescriptor getResult() {
 		return result;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (event.getSource() == groupCombo) {
+			fillFieldCombo();
+			fieldCombo.setSelection(new StructuredSelection(fields.get(0)));
+		} else {
+			validate();
+		}
+		
 	}
 
 }

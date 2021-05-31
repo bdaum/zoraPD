@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015 Berthold Daum.
+ * Copyright (c) 2015-2021 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -234,7 +234,7 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 * Tests if there is a valid executable
 	 * @return true if there is a valid executable
 	 */
-	boolean isValid();
+	String isValid();
 
 	/**
 	 * Releases the raw converter
@@ -246,5 +246,7 @@ public interface IRawConverter extends IConverter, IRecipeProvider {
 	 * @return output color profile
 	 */
 	int getOutputProfile();
+
+	String testExecutable(File f);
 
 }

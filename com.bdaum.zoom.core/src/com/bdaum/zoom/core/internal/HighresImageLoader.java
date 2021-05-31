@@ -202,13 +202,18 @@ public class HighresImageLoader {
 			if (isRawOrDng) {
 				BatchActivator activator = BatchActivator.getDefault();
 				rawConverter = activator.getCurrentRawConverter(false);
-				if (rawConverter == null || !rawConverter.isValid()) {
+				if (rawConverter == null || rawConverter.isValid() != null) {
 					if (!activator.isRawQuestionAsked()) {
 						rawConverter = Core.getCore().getDbFactory().getErrorHandler().showRawDialog(null);
 						activator.setRawQuestionAsked(true);
 					}
-					if (rawConverter == null || !rawConverter.isValid()) {
+					if (rawConverter == null) {
 						addErrorStatus(status, Messages.HighresImageLoader_no_raw_converter, null);
+						return null;
+					}
+					String errorMsg = rawConverter.isValid();
+					if (errorMsg != null) {
+						addErrorStatus(status, errorMsg, null);
 						return null;
 					}
 				}

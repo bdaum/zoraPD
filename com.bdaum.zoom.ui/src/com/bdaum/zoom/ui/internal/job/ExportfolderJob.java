@@ -77,12 +77,10 @@ public class ExportfolderJob extends AbstractExportJob {
 	private static final int[] p3x8 = new int[] { 8, 8, 8 };
 	private static final String[] EMPTYSTRINGARRAY = new String[0];
 	private File folder;
-	private final int target;
+	private final int target, cropMode;
 	private final FtpAccount acc;
 	private List<SourceAndTarget> todo = new ArrayList<SourceAndTarget>();
-	private final boolean addToCat;
-	private final int cropMode;
-	private final boolean addToWatched;
+	private final boolean addToCat, addToWatched;
 	private final String subfolderOption;
 	private SimpleDateFormat df;
 	private Set<File> errands;
@@ -201,18 +199,22 @@ public class ExportfolderJob extends AbstractExportJob {
 			}
 		}
 		if (target == Constants.FTP) {
-			TransferJob transferJob = new TransferJob(targetFolder.listFiles(), acc, true);
-			transferJob.schedule();
-			if (acc.isTrackExport()) {
-				List<TrackRecord> track = new ArrayList<TrackRecord>();
-				for (SourceAndTarget sourceAndTarget : todo) {
-					String serviceId = "ftp." + acc.getHost(); //$NON-NLS-1$
-					TrackRecord record = new TrackRecordImpl(TrackRecord_type.type_ftp, serviceId, serviceId,
-							acc.getName(), sourceAndTarget.getOutfile().getName(), new Date(), false, acc.getWebUrl());
-					record.setAsset_track_parent(sourceAndTarget.getAsset().getStringId());
+			File[] files = targetFolder.listFiles();
+			if (files != null && files.length > 0) {
+				TransferJob transferJob = new TransferJob(files, acc, true);
+				transferJob.schedule();
+				if (acc.isTrackExport()) {
+					List<TrackRecord> track = new ArrayList<TrackRecord>();
+					for (SourceAndTarget sourceAndTarget : todo) {
+						String serviceId = "ftp." + acc.getHost(); //$NON-NLS-1$
+						TrackRecord record = new TrackRecordImpl(TrackRecord_type.type_ftp, serviceId, serviceId,
+								acc.getName(), sourceAndTarget.getOutfile().getName(), new Date(), false,
+								acc.getWebUrl());
+						record.setAsset_track_parent(sourceAndTarget.getAsset().getStringId());
+					}
+					if (!track.isEmpty())
+						OperationJob.executeOperation(new AddTrackRecordsOperation(track), adaptable);
 				}
-				if (!track.isEmpty())
-					OperationJob.executeOperation(new AddTrackRecordsOperation(track), adaptable);
 			}
 		}
 		if (addToCat) {

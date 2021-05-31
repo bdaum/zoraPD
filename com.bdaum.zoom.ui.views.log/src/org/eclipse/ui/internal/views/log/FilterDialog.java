@@ -116,11 +116,11 @@ public class FilterDialog extends ZTrayDialog implements Listener{
 		switch (e.type) {
 		case SWT.Selection:
 			limitText.setEnabled(((Button) e.widget).getSelection());
-			break;
+			return;
 		case SWT.Verify:
 			if (Character.isLetter(e.character))
 				e.doit = false;
-			break;
+			return;
 		case SWT.Modify:
 			try {
 				if (okButton == null)
@@ -130,7 +130,6 @@ public class FilterDialog extends ZTrayDialog implements Listener{
 			} catch (NumberFormatException e1) {
 				okButton.setEnabled(false);
 			}
-			break;
 		}
 	}
 

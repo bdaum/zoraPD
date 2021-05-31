@@ -697,7 +697,7 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 					postSelection(new StructuredSelection(collection));
 					String partId = current.getActivePart();
 					IViewPart view = null;
-					if (partId != null) {
+					if (partId != null)
 						try {
 							String secondaryId = current.getSecondaryId();
 							view = secondaryId != null
@@ -706,7 +706,6 @@ public class NavigationHistory implements IPerspectiveListener, ISelectionChange
 						} catch (PartInitException e) {
 							// ignore
 						}
-					}
 					if (current.isPicked()) {
 						String[] selectedIds = current.getSelectedAssets();
 						List<Asset> assets = new ArrayList<Asset>(selectedIds.length);

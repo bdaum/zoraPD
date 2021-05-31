@@ -80,13 +80,22 @@ public class SpellCheckingService implements ISpellCheckingService {
 		File folder = new File(Platform.getInstallLocation().getURL().getPath() + DICTFOLDER);
 		String fileName = null;
 		List<File> allFiles = new ArrayList<File>();
-		if (folder.exists())
-			allFiles.addAll(Arrays.asList(folder.listFiles()));
+		if (folder.exists()) {
+			File[] files = folder.listFiles();
+			if (files != null)
+				allFiles.addAll(Arrays.asList(files));
+		}
 		File parentFolder = new File(folder.getParentFile().getParentFile(), DICTFOLDER);
-		if (parentFolder.exists())
-			allFiles.addAll(Arrays.asList(parentFolder.listFiles()));
-		for (File dictFolder : getDictFolders())
-			allFiles.addAll(Arrays.asList(dictFolder.listFiles()));
+		if (parentFolder.exists()) {
+			File[] files = parentFolder.listFiles();
+			if (files != null)
+				allFiles.addAll(Arrays.asList(files));
+		}
+		for (File dictFolder : getDictFolders()) {
+			File[] files = dictFolder.listFiles();
+			if (files != null)
+				allFiles.addAll(Arrays.asList(files));
+		}
 		if (!allFiles.isEmpty()) {
 			File[] files = allFiles.toArray(new File[allFiles.size()]);
 			File file = findDict(files, locale);

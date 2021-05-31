@@ -24,9 +24,9 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "com.bdaum.zoom.webserver.internals.preferences.messages"; //$NON-NLS-1$
 	public static String IpDialog_address;
-	public static String IpDialog_adresses;
 	public static String IpDialog_interface;
 	public static String IpDialog_name;
+	public static String MetadataPreferencePageExtension_made_visible;
 	public static String MetadataPreferencePageExtension_web;
 	public static String MetadataPreferencePageExtension_web_tooltip;
 	public static String WebserverPreferencePage_0;
@@ -88,12 +88,12 @@ public class Messages extends NLS {
 	public static String WebserverPreferencePage_metadata;
 	public static String WebserverPreferencePage_metadata_tooltip;
 	public static String WebserverPreferencePage_moderate;
-	public static String WebserverPreferencePage_navigation;
+	public static String WebserverPreferencePage_modify_css;
+	public static String WebserverPreferencePage_modify_html;
 	public static String WebserverPreferencePage_no_file_format;
 	public static String WebserverPreferencePage_no_thumbnails;
 	public static String WebserverPreferencePage_no_transfer_folder;
 	public static String WebserverPreferencePage_oeverview_page;
-	public static String WebserverPreferencePage_offline;
 	public static String WebserverPreferencePage_orphans;
 	public static String WebserverPreferencePage_orphans_tooltip;
 	public static String WebserverPreferencePage_output_quality;
@@ -109,6 +109,7 @@ public class Messages extends NLS {
 	public static String WebserverPreferencePage_restart_tooltip;
 	public static String WebserverPreferencePage_rights;
 	public static String WebserverPreferencePage_rights_content;
+	public static String WebserverPreferencePage_select_page;
 	public static String WebserverPreferencePage_settings;
 	public static String WebserverPreferencePage_settings_tooltip;
 	public static String WebserverPreferencePage_show_folder;
@@ -137,6 +138,7 @@ public class Messages extends NLS {
 	public static String WebserverPreferencePage_web_galleries_title_empty;
 	public static String WebserverPreferencePage_webserver;
 	public static String WebserverPreferencePage_webserver_description;
+	public static String WebserverPreferencePage_webserver_failed;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contexts>
-   <context id="pref_page_context" title="Microsoft-Vision-Einstellungen">
-      <description>Einstellungen für den Microsoft-Computer-Vision-Webdienst</description>
+   <context id="pref_page_context">
       <topic href="html/msVision.html" label="Microsoft-Computer-Vision-Einstellungen"/>
    </context>
    

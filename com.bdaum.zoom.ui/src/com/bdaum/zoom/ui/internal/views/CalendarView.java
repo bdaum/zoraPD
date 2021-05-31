@@ -220,6 +220,9 @@ public class CalendarView extends BasicView {
 	private Timer timer = new Timer();
 	private Point mouseDown;
 	private TimerTask task;
+	private int h;
+	private int w;
+	private int xoff;
 
 	@Override
 	public ISelection getSelection() {
@@ -418,9 +421,9 @@ public class CalendarView extends BasicView {
 
 	private void paintControl(Event e) {
 		Rectangle clientArea = canvas.getClientArea();
-		int h = clientArea.height / 6;
+		h = clientArea.height / 6;
 		int ww = h / 5;
-		int w = (clientArea.width - ww) / 7;
+		w = (clientArea.width - ww) / 7;
 		size = Math.min(w, h);
 		GC gc = e.gc;
 		gc.setTextAntialias(SWT.ON);
@@ -428,7 +431,7 @@ public class CalendarView extends BasicView {
 		w = size * 7;
 		ww = size / 5;
 		yoff = (clientArea.height - h) / 2;
-		int xoff = (clientArea.width - w) / 2;
+		xoff = (clientArea.width - w) / 2;
 		dayRect.x = wxo = xoff + ww;
 		dayRect.y = yoff;
 		dayRect.width = w;
@@ -441,14 +444,14 @@ public class CalendarView extends BasicView {
 		coff = (workingCal.get(GregorianCalendar.DAY_OF_WEEK) - workingCal.getFirstDayOfWeek() + 7) % 7;
 		gc.setBackground(canvas.getForeground());
 		gc.setAlpha(64);
-		gc.fillRectangle(xoff, yoff, ww, size * 6);
+		gc.fillRectangle(xoff, yoff, ww, h);
 		gc.setAlpha(128);
 		if (coff > 0)
 			gc.fillRectangle(xoff + ww, yoff, coff * size, size);
 		int obsolete = 42 - coff - daysInMonth;
 		if (obsolete > 7) {
 			gc.fillRectangle(wxo + (14 - obsolete) * size, yoff + 4 * size, (obsolete % 7) * size, size);
-			gc.fillRectangle(wxo, yoff + 5 * size, 7 * size, size);
+			gc.fillRectangle(wxo, yoff + 5 * size, w, size);
 		} else
 			gc.fillRectangle(wxo + (7 - obsolete) * size, yoff + 5 * size, obsolete * size, size);
 		gc.setBackground(canvas.getBackground());
@@ -535,7 +538,14 @@ public class CalendarView extends BasicView {
 				showWeek(((e.y - yoff) / size));
 			else if (dayRect.contains(e.x, e.y))
 				showDay(((e.y - yoff) / size) * 7 + (e.x - wxo) / size - coff);
-
+			else if (e.x < xoff)
+				previousMonthAction.run();
+			else if (e.x > xoff + w)
+				nextMonthAction.run();
+			else if (e.y < yoff)
+				previousYearAction.run();
+			else if (e.y > yoff + h)
+				nextYearAction.run();
 			break;
 		case SWT.MouseMove:
 			if (titleRect.contains(e.x, e.y)) {

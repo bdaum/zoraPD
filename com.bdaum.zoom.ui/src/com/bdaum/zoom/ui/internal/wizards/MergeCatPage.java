@@ -57,7 +57,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
+public class MergeCatPage extends ColoredWizardPage implements IAdaptable, Listener {
 
 	protected IDbManager externalDb = CoreActivator.NULLDBMANAGER;
 	private final String filename;
@@ -197,12 +197,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		fileEditor = new FileEditor(header, SWT.OPEN | SWT.READ_ONLY, Messages.MergeCatPage_file_name, true,
 				activator.getCatFileExtensions(), activator.getSupportedCatFileNames(), null,
 				'*' + Constants.CATALOGEXTENSION, true, getWizard().getDialogSettings());
-		fileEditor.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				validatePage();
-			}
-		});
+		fileEditor.addListener(SWT.Selection, this);
 	}
 
 	private void createOptionsGroup(Composite comp) {
@@ -213,12 +208,7 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 		policyButtonGroup = new RadioButtonGroup(header, null, SWT.NONE, Messages.MergeCatPage_skip,
 				Messages.MergeCatPage_replace, Messages.MergeCatPage_merge);
 		policyButtonGroup.setSelection(2);
-		policyButtonGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				getWizard().getContainer().updateButtons();
-			}
-		});
+		policyButtonGroup.addListener(SWT.Selection, this);
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -244,6 +234,15 @@ public class MergeCatPage extends ColoredWizardPage implements IAdaptable {
 
 	public Shell getShell(IAdaptable adaptable) {
 		return null;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == policyButtonGroup)
+			getWizard().getContainer().updateButtons();
+		else
+			validatePage();
+		
 	}
 
 }

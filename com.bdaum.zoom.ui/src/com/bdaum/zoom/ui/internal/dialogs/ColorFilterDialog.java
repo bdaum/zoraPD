@@ -233,7 +233,7 @@ public class ColorFilterDialog extends ZTitleAreaDialog implements Listener {
 					gc.dispose();
 					button.setImage(customImage[j]);
 				}
-				break;
+				return;
 			}
 	}
 

@@ -47,7 +47,9 @@ public class HoverManager {
 	}
 
 	public IHoverContribution getHoverContribution(String key) {
-		return getHoverContributions().get(key);
+		IHoverContribution contrib = getHoverContributions().get(key);
+		contrib.init();
+		return contrib;
 	}
 
 	public Map<String, IHoverContribution> getHoverContributions() {

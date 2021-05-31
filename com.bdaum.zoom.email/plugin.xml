@@ -17,7 +17,7 @@
             class="com.bdaum.zoom.email.internal.PDFWizard:pdf"
             icon="icons/PDF_Icon.gif"
             id="com.bdaum.zoom.email.PDFWizard"
-            name="PDF">
+            name="%wizard.name">
          <description>
             %wizard.description.export.pdf
          </description>
@@ -40,9 +40,9 @@
             class="com.bdaum.zoom.email.internal.PDFWizard:html"
             icon="icons/HTM_Icon.png"
             id="com.bdaum.zoom.email.HTMLWizard"
-            name="HTML">
+            name="%wizard.name.0">
          <description>
-            Creates an HTML page containing downscaled versions of the selected images.
+            %wizard.description.html
          </description>
       </wizard>
    </extension>
@@ -74,12 +74,36 @@
             file="tocOthers.xml"
             primary="false">
       </toc>
+      <toc
+            file="tocprefs.xml"
+            primary="false">
+      </toc>
    </extension>
    <extension
          point="org.eclipse.help.index">
       <index
             file="index.xml">
       </index>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.bdaum.zoom.email.internal.MailPreferencePage"
+            id="com.bdaum.zoom.email.mailPage"
+            name="%page.name.email">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.bdaum.zoom.email.internal.MailPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.email.internal.PreferenceConstants">
+      </constants>
    </extension>
 
 </plugin>

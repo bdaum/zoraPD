@@ -28,7 +28,6 @@ Tree {color:rgb(224,224,224);selected-background-color:rgb(96,96,96);selected-co
 Table {color:rgb(224,224,224);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-background-color:rgb(96,96,96);selected-color:rgb(255,255,255);disabled-color:rgb(144,144,144);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
 Gallery {color:rgb(224,224,224);selected-background-color:rgb(224,224,224);selected-color:rgb(60,60,60);offline-color:rgb(128, 160, 0);remote-color:rgb(128, 128, 240);selected-offline-color:red;selected-remote-color:rgb(64, 64, 128);}
 CGroup {background-color:transparent;}
-Shell#slideshow {color:rgb(224,224,224);background-color:black;}
 Shell {color:rgb(224,224,224);}
 CBanner {}
 Coolbar {}

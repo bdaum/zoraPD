@@ -1235,6 +1235,18 @@
            sequence="F8">
      </key>
      <key
+           commandId="com.bdaum.zoom.ui.command.showInFolder"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+M3+F">
+     </key>
+     <key
+           commandId="com.bdaum.zoom.ui.command.showInTimeline"
+           contextId="org.eclipse.ui.contexts.window"
+           schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
+           sequence="M1+M3+Z">
+     </key>
+     <key
            commandId="com.bdaum.zoom.ui.command.revertSelection"
            contextId="org.eclipse.ui.contexts.window"
            schemeId="com.bdaum.zoom.defaultAcceleratorConfiguration"
@@ -1535,6 +1547,7 @@
          </command>
          <command
                commandId="com.bdaum.zoom.ui.RenameCatalogCommand"
+               icon="icons/rename.png"
                label="%command.label.1"
                mnemonic="%command.mnemonic.1"
                style="push"
@@ -1549,12 +1562,14 @@
             locationURI="menu:catalog?after=catExt1">
          <command
                commandId="com.bdaum.zoom.ui.PropertiesCommand"
+               icon="icons/props_orange.png"
                label="%command.label.2"
                mnemonic="%command.mnemonic.2"
                style="push"
                tooltip="%command.tooltip.2">
          </command>
          <menu
+               icon="icons/maintenance.png"
                label="%menu.label.3"
                mnemonic="%menu.mnemonic.3">
             <separator
@@ -1629,6 +1644,7 @@
             allPopups="false"
             locationURI="menu:catalog?after=catExt2">
          <menu
+               icon="icons/search.png"
                id="catalog.find"
                label="%menu.label.0"
                mnemonic="%menu.mnemonic.2">
@@ -1697,6 +1713,7 @@
             </visibleWhen>
          </command>
          <menu
+               icon="icons/import_wiz.gif"
                id="import"
                label="%menu.label.1"
                mnemonic="%menu.mnemonic.0">
@@ -1805,9 +1822,10 @@
                allPopups="false"
                locationURI="menu:file?after=fileExt1">
              <menu
-                  id="voice"
-                  label="%menu.label.2"
-                  mnemonic="%menu.mnemonic.1">
+                   icon="icons/voice.png"
+                   id="voice"
+                   label="%menu.label.2"
+                   mnemonic="%menu.mnemonic.1">
                <separator
                      name="voiceStart"
                      visible="false">
@@ -1905,6 +1923,14 @@
                   style="push"
                   tooltip="%command.tooltip.24">
             </command>
+            <command
+                  commandId="com.bdaum.zoom.ui.command.showInTimeline"
+                  icon="icons/time.png"
+                  label="%command.label.timeline"
+                  mnemonic="%command.mnemonic.timeline"
+                  style="push"
+                  tooltip="%command.tooltip.timeline">
+            </command>
          </menuContribution>
          <menuContribution
                allPopups="false"
@@ -1931,6 +1957,7 @@
                locationURI="menu:edit?after=editStart">
             <command
                   commandId="org.eclipse.ui.edit.undo"
+                  icon="icons/undo.png"
                   label="%command.label.70"
                   mnemonic="%command.mnemonic.55"
                   style="push"
@@ -1945,6 +1972,7 @@
             </command>
             <command
                   commandId="org.eclipse.ui.edit.redo"
+                  icon="icons/redo.png"
                   label="%command.label.71"
                   mnemonic="%command.mnemonic.56"
                   style="push"
@@ -1979,6 +2007,7 @@
             </command>
             <command
                   commandId="org.eclipse.ui.edit.paste"
+                  icon="icons/paste_edit.png"
                   label="%command.label.74"
                   mnemonic="%command.mnemonic.59"
                   style="push"
@@ -2297,17 +2326,19 @@
                locationURI="menu:help?after=helpUpdate">
             <command
                   commandId="com.bdaum.zoom.ui.command.reportProblem"
+                  icon="icons/bug.png"
                   label="%command.label.51"
                   mnemonic="%command.mnemonic.46"
                   style="push"
                   tooltip="%command.tooltip.49">
            </command>
            <command
-                  commandId="com.bdaum.zoom.ui.command.checkUpdates"
-                  label="%command.label.52"
-                  mnemonic="%command.mnemonic.47"
-                  style="push"
-                  tooltip="%command.tooltip.50">
+                 commandId="com.bdaum.zoom.ui.command.checkUpdates"
+                 icon="icons/sync.png"
+                 label="%command.label.52"
+                 mnemonic="%command.mnemonic.47"
+                 style="push"
+                 tooltip="%command.tooltip.50">
              </command>
          </menuContribution>
         <menuContribution
@@ -2737,5 +2768,11 @@
             class="com.bdaum.zoom.ui.internal.hover.WatchedFolderHoverContribution"
             id="com.bdaum.zoom.ui.hover.watchedFolder">
       </hoverContribution>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.ui.preferences.PreferenceConstants">
+      </constants>
    </extension>
 </plugin>

@@ -22,7 +22,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 
 import java.io.File;
 import java.text.ParseException;
-import java.util.Date;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -38,6 +37,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.core.Format;
+import com.bdaum.zoom.image.ImageConstants;
 
 public class WatermarkGroup implements Listener {
 	public static final String COPYRIGHT = "copyright"; //$NON-NLS-1$
@@ -71,6 +71,7 @@ public class WatermarkGroup implements Listener {
 		fileButton = new Button(composite, SWT.PUSH);
 		fileButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		fileButton.setText(Messages.WatermarkGroup_select_file);
+		fileButton.setToolTipText(Messages.WatermarkGroup_select_watermark_file);
 		fileButton.addListener(SWT.Selection, this);
 		updateButtons();
 	}
@@ -125,7 +126,7 @@ public class WatermarkGroup implements Listener {
 			String copyright = settings.get(COPYRIGHT);
 			if (copyright == null || copyright.trim().isEmpty()
 					|| copyright.trim().length() == 4 && testYear(copyright))
-				copyrightField.setText(Format.YEAR_FORMAT.get().format(new Date()) + " "); //$NON-NLS-1$
+				copyrightField.setText(Format.YEAR_FORMAT.get().format(System.currentTimeMillis()) + " "); //$NON-NLS-1$
 			createWatermarkButton.setSelection(settings.getBoolean(WATERMARK));
 			if (copyright != null)
 				copyrightField.setText(copyright);
@@ -169,6 +170,9 @@ public class WatermarkGroup implements Listener {
 				}
 				return Messages.WatermarkGroup_does_not_exist;
 			}
+			int p = text.lastIndexOf('.');
+			if (p > 0 && ImageConstants.isImageExt(text.substring(p+1)))
+				return Messages.WatermarkGroup_only_png_bmp;
 		}
 		return null;
 	}

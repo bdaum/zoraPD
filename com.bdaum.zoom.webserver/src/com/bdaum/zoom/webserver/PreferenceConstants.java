@@ -1,6 +1,17 @@
 package com.bdaum.zoom.webserver;
 
-public class PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry;
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+import com.bdaum.zoom.webserver.internals.WebserverActivator;
+
+public class PreferenceConstants implements IPreferenceConstants {
 
 	public static final String PORT = "com.bdaum.zoom.webserver.port"; //$NON-NLS-1$
 	public static final String STARTPAGE = "com.bdaum.zoom.webserver.startPage"; //$NON-NLS-1$
@@ -20,21 +31,19 @@ public class PreferenceConstants {
 	public static final String GALLERIES = "com.bdaum.zoom.webserver.galleries"; //$NON-NLS-1$
 	public static final String SLIDESHOWSPATH = "com.bdaum.zoom.webserver.slideshowspath"; //$NON-NLS-1$
 	public static final String SLIDESHOWSTITLE = "com.bdaum.zoom.webserver.slideshowstitle"; //$NON-NLS-1$
-	public static final String SLIDESHOWS ="com.bdaum.zoom.webserver.slideshows"; //$NON-NLS-1$
+	public static final String SLIDESHOWS = "com.bdaum.zoom.webserver.slideshows"; //$NON-NLS-1$
 
-	
 	public static final String METADATA = "com.bdaum.zoom.webserver.metadata"; //$NON-NLS-1$
 	public static final String FULLSIZE = "com.bdaum.zoom.webserver.fullsize"; //$NON-NLS-1$
 	public static final String DOWNLOAD = "com.bdaum.zoom.webserver.download"; //$NON-NLS-1$
 	public static final String GEO = "com.bdaum.zoom.webserver.geo"; //$NON-NLS-1$
 	public static final String ORPHANS = "com.bdaum.zoom.webserver.orphans"; //$NON-NLS-1$
 
-	public static final String APPLY_SHARPENING ="com.bdaum.zoom.webserver.sharpening"; //$NON-NLS-1$
-	public static final String RADIUS ="com.bdaum.zoom.webserver.radius"; //$NON-NLS-1$
+	public static final String APPLY_SHARPENING = "com.bdaum.zoom.webserver.sharpening"; //$NON-NLS-1$
+	public static final String RADIUS = "com.bdaum.zoom.webserver.radius"; //$NON-NLS-1$
 	public static final String AMOUNT = "com.bdaum.zoom.webserver.amount"; //$NON-NLS-1$
 	public static final String THRESHOLD = "com.bdaum.zoom.webserver.threshold"; //$NON-NLS-1$
 
-	
 	public static final String ALLOWUPLOADS = "com.bdaum.zoom.webserver.allowUploads"; //$NON-NLS-1$
 	public static final String PASSWORD = "com.bdaum.zoom.webserver.password"; //$NON-NLS-1$
 	public static final String ALLOWMETADATAMOD = "com.bdaum.zoom.webserver.allowMetadataMod"; //$NON-NLS-1$
@@ -50,8 +59,10 @@ public class PreferenceConstants {
 	public static final String STATUS = "status.html"; //$NON-NLS-1$
 	public static final String ERROR = "error.html"; //$NON-NLS-1$
 	public static final String HELP = "help.html"; //$NON-NLS-1$
-	public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX, VIEW, SLIDESHOW, LOGIN, UPLOADS, STATUS, ERROR, HELP };
-//	public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX, VIEW, VIDEO, SLIDESHOW, LOGIN, UPLOADS, STATUS, ERROR, HELP };
+	public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX, VIEW, SLIDESHOW, LOGIN, UPLOADS, STATUS,
+			ERROR, HELP };
+	// public static final String[] HTMLTYPES = new String[] { INDEX, LIGHTBOX,
+	// VIEW, VIDEO, SLIDESHOW, LOGIN, UPLOADS, STATUS, ERROR, HELP };
 	public static final String CSS = "com.bdaum.zoom.webserver.css"; //$NON-NLS-1$
 
 	public static final String GROUPS = "com.bdaum.zoom.webserver.groups"; //$NON-NLS-1$
@@ -65,4 +76,30 @@ public class PreferenceConstants {
 	public static final int RATINGS = 1 << 7;
 	public static final int TIMELINE = 1 << 8;
 	public static final int USER = 1 << 9;
+
+	public static final String WEBSERVER = Messages.PreferenceConstants_webserver;
+
+	@Override
+	public List<Object> getRootElements() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == PreferenceRegistry.INTERNET)
+			return Arrays.asList(WEBSERVER);
+		if (group == WEBSERVER)
+			return Arrays.asList(PORT, STARTPAGE, AUTOSTART, WEBMETADATA, IMAGEPATH, EXHIBITIONPATH, GALLERYPATH,
+					THUMBNAILSPERPAGE, PRIVACY, FORMATS, IMAGESTITLE, EXHIBITIONSTITLE, GALLERIESTITLE, IMAGES,
+					EXHIBITIONS, GALLERIES, SLIDESHOWSPATH, SLIDESHOWSTITLE, SLIDESHOWS, METADATA, FULLSIZE, DOWNLOAD,
+					GEO, ORPHANS, APPLY_SHARPENING, RADIUS, AMOUNT, THRESHOLD, ALLOWUPLOADS, PASSWORD, ALLOWMETADATAMOD,
+					TRANSFERFOLDER, CSS, GROUPS);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(WebserverActivator.PLUGIN_ID);
+	}
+
 }

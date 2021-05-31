@@ -38,5 +38,11 @@
             class="com.bdaum.zoom.ai.internal.preference.PreferenceInitializer">
       </initializer>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.ai.internal.preference.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

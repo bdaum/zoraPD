@@ -32,13 +32,13 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.meta.Category;
 import com.bdaum.zoom.cat.model.meta.CategoryImpl;
@@ -48,7 +48,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
-public class CategoryGroup {
+public class CategoryGroup implements ICheckStateListener, Listener {
 
 	private Object result;
 	private CheckboxTreeViewer treeViewer;
@@ -80,41 +80,11 @@ public class CategoryGroup {
 
 		addButton = new Button(buttonGroup, SWT.NONE);
 		addButton.setText(Messages.CategoryGroup_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				EditCategoryDialog inputDialog = new EditCategoryDialog(parent.getShell(), null, categories, null, null,
-						false);
-				if (inputDialog.open() == Window.OK) {
-					String label = inputDialog.getLabel();
-					CategoryImpl category = new CategoryImpl(label);
-					category.setSynonyms(inputDialog.getSynonyms());
-					categories.put(label, category);
-					treeViewer.setInput(categories);
-				}
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 
 		refineButton = new Button(buttonGroup, SWT.NONE);
 		refineButton.setText(Messages.CategoryGroup_refine);
-		refineButton.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Category firstElement = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
-				EditCategoryDialog inputDialog = new EditCategoryDialog(parent.getShell(), null, categories, null,
-						firstElement, false);
-				if (inputDialog.open() == Window.OK) {
-					String label = inputDialog.getLabel();
-					Category subCategory = new CategoryImpl(label);
-					subCategory.setSynonyms(inputDialog.getSynonyms());
-					firstElement.putSubCategory(subCategory);
-					treeViewer.add(firstElement, subCategory);
-					treeViewer.expandToLevel(firstElement, 2);
-				}
-			}
-		});
+		refineButton.addListener(SWT.Selection, this);
 		treeViewer.setInput(categories);
 		if (style == SWT.MULTI) {
 			String[] cats = (String[]) category;
@@ -124,18 +94,7 @@ public class CategoryGroup {
 		} else {
 			if (category != null)
 				setCheckMarks(categories, (String) category);
-			treeViewer.addCheckStateListener(new ICheckStateListener() {
-				public void checkStateChanged(CheckStateChangedEvent event) {
-					if (event.getChecked()) {
-						Object element = event.getElement();
-						Object[] checkedElements = treeViewer.getCheckedElements();
-						for (Object object : checkedElements) {
-							if (object != element)
-								treeViewer.setChecked(object, false);
-						}
-					}
-				}
-			});
+			treeViewer.addCheckStateListener(this);
 		}
 	}
 
@@ -185,6 +144,45 @@ public class CategoryGroup {
 
 	public Object getResult() {
 		return result;
+	}
+	
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		if (event.getChecked()) {
+			Object element = event.getElement();
+			Object[] checkedElements = treeViewer.getCheckedElements();
+			for (Object object : checkedElements) {
+				if (object != element)
+					treeViewer.setChecked(object, false);
+			}
+		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == addButton) {
+			EditCategoryDialog inputDialog = new EditCategoryDialog(addButton.getShell(), null, categories, null, null,
+					false);
+			if (inputDialog.open() == Window.OK) {
+				String label = inputDialog.getLabel();
+				CategoryImpl category = new CategoryImpl(label);
+				category.setSynonyms(inputDialog.getSynonyms());
+				categories.put(label, category);
+				treeViewer.setInput(categories);
+			}
+		} else {
+			Category firstElement = (Category) ((IStructuredSelection) treeViewer.getSelection()).getFirstElement();
+			EditCategoryDialog inputDialog = new EditCategoryDialog(addButton.getShell(), null, categories, null,
+					firstElement, false);
+			if (inputDialog.open() == Window.OK) {
+				String label = inputDialog.getLabel();
+				Category subCategory = new CategoryImpl(label);
+				subCategory.setSynonyms(inputDialog.getSynonyms());
+				firstElement.putSubCategory(subCategory);
+				treeViewer.add(firstElement, subCategory);
+				treeViewer.expandToLevel(firstElement, 2);
+			}
+		}
+		
 	}
 
 }

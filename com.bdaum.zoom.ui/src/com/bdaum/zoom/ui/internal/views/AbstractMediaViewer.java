@@ -88,11 +88,10 @@ public abstract class AbstractMediaViewer extends AbstractKiosk implements IMedi
 			if (keyDown)
 				releaseKey(e);
 			keyDown = true;
-			break;
+			return;
 		case SWT.KeyUp:
 			releaseKey(e);
 			keyDown = false;
-			break;
 		}
 	}
 

@@ -93,5 +93,11 @@
             plugin="com.bdaum.zoom.ai">
       </contexts>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.ai.clarifai.internal.preference.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

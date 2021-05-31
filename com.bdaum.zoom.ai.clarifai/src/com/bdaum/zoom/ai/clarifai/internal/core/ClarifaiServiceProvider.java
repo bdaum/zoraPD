@@ -25,7 +25,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -60,7 +59,6 @@ import clarifai2.dto.prediction.Detection;
 import clarifai2.dto.prediction.Embedding;
 import clarifai2.dto.prediction.FaceEmbedding;
 
-@SuppressWarnings("restriction")
 public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 	// Models
 	private static final String GENERAL_ID = "aaa03c23b3724a16a56b629203edc62c"; //$NON-NLS-1$
@@ -109,10 +107,12 @@ public class ClarifaiServiceProvider extends AbstractAiServiceProvider {
 							}
 							try {
 								String translate = translatorClient.translate(sb.toString());
+								if (translate == null)
+									translate = sb.toString();
 								StringTokenizer st = new StringTokenizer(translate, ","); //$NON-NLS-1$
-								Iterator<Token> it = result.iterator();
-								while (st.hasMoreTokens() && it.hasNext())
-									it.next().setLabel(st.nextToken().trim());
+								int i = 0;
+								while (st.hasMoreTokens() && i < result.size())
+									result.get(i++).setLabel(st.nextToken().trim());
 							} catch (Exception e) {
 								// don't translate
 							}

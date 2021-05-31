@@ -18,8 +18,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -48,7 +46,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ImportTargetPage extends ColoredWizardPage {
+public class ImportTargetPage extends ColoredWizardPage implements Listener {
 
 	public class PreviewJob extends Job {
 
@@ -198,28 +196,7 @@ public class ImportTargetPage extends ColoredWizardPage {
 		targetDirField.setFont(JFaceResources.getBannerFont());
 		targetDirField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		WidgetFactory.createPushButton(fileComp, Messages.ImportFromDeviceWizard_browse, SWT.END)
-				.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						DirectoryDialog dialog = new DirectoryDialog(parent.getShell());
-						dialog.setText(Messages.ImportTargetPage_target_folder);
-						dialog.setMessage(Messages.ImportTargetPage_select_folder);
-						String lastTargetDir = targetDirField.getText();
-						dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
-						String dir = dialog.open();
-						if (dir != null) {
-							if (!dir.endsWith(File.separator))
-								dir += File.separator;
-							String[] items = targetDirField.getItems();
-							items = UiUtilities.addToHistoryList(items, dir);
-							targetDirField.setItems(items);
-							targetDirField.setText(dir);
-							updateSpaceLabel();
-							startPreviewJob();
-						}
-					}
-				});
-
+				.addListener(SWT.Selection, this);
 		new Label(targetComp, SWT.NONE).setText(Messages.ImportFromDeviceWizard_create_subfolder);
 
 		subfolderCombo = new Combo(targetComp, SWT.READ_ONLY);
@@ -228,22 +205,11 @@ public class ImportTargetPage extends ColoredWizardPage {
 				Messages.ImportFromDeviceWizard_by_year_month_day, Messages.ImportTargetPage_by_year_week,
 				Messages.ImportTargetPage_by_year_wek_day });
 		subfolderCombo.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
-		subfolderCombo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateDepthGroup();
-				startPreviewJob();
-			}
-		});
+		subfolderCombo.addListener(SWT.Selection, this);
 		depthGroup = new RadioButtonGroup(targetComp, null, SWT.HORIZONTAL, Messages.ImportTargetPage_two_levels,
 				Messages.ImportTargetPage_three_levels);
 		depthGroup.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
-		depthGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				startPreviewJob();
-			}
-		});
+		depthGroup.addListener(SWT.Selection, this);
 		new Label(targetComp, SWT.SEPARATOR | SWT.HORIZONTAL)
 				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		previewLabel = new Label(targetComp, SWT.NONE);
@@ -449,6 +415,34 @@ public class ImportTargetPage extends ColoredWizardPage {
 		int policy = subfolderCombo.getSelectionIndex();
 		depthGroup.setEnabled(policy == ImportFromDeviceData.SUBFOLDERPOLICY_YEARMONTHDAY
 				|| policy == ImportFromDeviceData.SUBFOLDERPOLICY_YEARWEEKDAY);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == depthGroup)
+			startPreviewJob();
+		else if (e.widget == subfolderCombo) {
+			updateDepthGroup();
+			startPreviewJob();
+		} else {
+			DirectoryDialog dialog = new DirectoryDialog(subfolderCombo.getShell());
+			dialog.setText(Messages.ImportTargetPage_target_folder);
+			dialog.setMessage(Messages.ImportTargetPage_select_folder);
+			String lastTargetDir = targetDirField.getText();
+			dialog.setFilterPath(lastTargetDir.isEmpty() ? null : lastTargetDir);
+			String dir = dialog.open();
+			if (dir != null) {
+				if (!dir.endsWith(File.separator))
+					dir += File.separator;
+				String[] items = targetDirField.getItems();
+				items = UiUtilities.addToHistoryList(items, dir);
+				targetDirField.setItems(items);
+				targetDirField.setText(dir);
+				updateSpaceLabel();
+				startPreviewJob();
+			}
+		}
+
 	}
 
 }

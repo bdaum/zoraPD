@@ -19,14 +19,14 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.cat.model.meta.WatchedFolderImpl;
 import com.bdaum.zoom.core.Core;
@@ -34,7 +34,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
-public class FilterPage extends ColoredWizardPage {
+public class FilterPage extends ColoredWizardPage implements ISelectionChangedListener, Listener {
 
 	private static class Filter {
 		String pattern;
@@ -250,99 +250,26 @@ public class FilterPage extends ColoredWizardPage {
 			}
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.END, true, false));
 		buttonGroup.setLayout(new GridLayout(1, false));
 		addFolderButton = new Button(buttonGroup, SWT.PUSH);
 		addFolderButton.setText(Messages.FilterPage_add_folder);
-		addFolderButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				DirectoryDialog dialog = new DirectoryDialog(getShell());
-				try {
-					String parentPath = new File(new URI(watchedFolder.getUri())).getAbsolutePath();
-					dialog.setFilterPath(parentPath);
-					dialog.setText(Messages.FilterPage_select_subfolder);
-					dialog.setMessage(Messages.FilterPage_select_subfolder_msg);
-					String subdir = dialog.open();
-					if (subdir != null && subdir.length() > parentPath.length() + 1 && subdir.startsWith(parentPath)) {
-						String folderPath = new File(subdir).getAbsolutePath();
-						Filter f = new Filter('-' + folderPath.substring(parentPath.length() + 1) + '/');
-						filters.add(f);
-						viewer.insert(f, -1);
-						viewer.setSelection(new StructuredSelection(f));
-					}
-				} catch (URISyntaxException ex) {
-					// Should never happen
-				}
-			}
-		});
+		addFolderButton.addListener(SWT.Selection, this);
 		addButton = new Button(buttonGroup, SWT.PUSH);
 		addButton.setText(Messages.FileFilterDialog_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Filter f = new Filter("+*.*"); //$NON-NLS-1$
-				filters.add(f);
-				viewer.insert(f, -1);
-				viewer.setSelection(new StructuredSelection(f));
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		removeButton = new Button(buttonGroup, SWT.PUSH);
 		removeButton.setText(Messages.FileFilterDialog_remove);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					Filter f = (Filter) selection.getFirstElement();
-					filters.remove(f);
-					viewer.remove(f);
-				}
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
 		new Label(buttonGroup, SWT.SEPARATOR | SWT.HORIZONTAL);
 		upButton = new Button(buttonGroup, SWT.PUSH);
 		upButton.setText(Messages.FilterPage_up);
-		upButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				if (!selection.isEmpty()) {
-					Filter f = (Filter) selection.getFirstElement();
-					int index = filters.indexOf(f);
-					if (index > 0) {
-						filters.remove(f);
-						filters.add(index - 1, f);
-						viewer.setInput(filters);
-						viewer.setSelection(new StructuredSelection(f));
-					}
-				}
-			}
-		});
+		upButton.addListener(SWT.Selection, this);
 		downButton = new Button(buttonGroup, SWT.PUSH);
 		downButton.setText(Messages.FilterPage_down);
-		downButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object firstElement = viewer.getStructuredSelection().getFirstElement();
-				if (firstElement instanceof Filter) {
-					Filter f = (Filter) firstElement;
-					int index = filters.indexOf(f);
-					if (index < filters.size() - 1) {
-						filters.remove(f);
-						filters.add(index + 1, f);
-						viewer.setInput(filters);
-						viewer.setSelection(new StructuredSelection(f));
-					}
-				}
-			}
-		});
+		downButton.addListener(SWT.Selection, this);
 		setControl(composite);
 		setHelp(HelpContextIds.WATCHED_FOLDER_FILTER);
 		setTitle(getName());
@@ -393,4 +320,66 @@ public class FilterPage extends ColoredWizardPage {
 
 	}
 
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == addButton) {
+			Filter f = new Filter("+*.*"); //$NON-NLS-1$
+			filters.add(f);
+			viewer.insert(f, -1);
+			viewer.setSelection(new StructuredSelection(f));
+		} else if (e.widget == removeButton) {
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			if (!selection.isEmpty()) {
+				Filter f = (Filter) selection.getFirstElement();
+				filters.remove(f);
+				viewer.remove(f);
+			}
+		} else if (e.widget == upButton) {
+			IStructuredSelection selection = viewer.getStructuredSelection();
+			if (!selection.isEmpty()) {
+				Filter f = (Filter) selection.getFirstElement();
+				int index = filters.indexOf(f);
+				if (index > 0) {
+					filters.remove(f);
+					filters.add(index - 1, f);
+					viewer.setInput(filters);
+					viewer.setSelection(new StructuredSelection(f));
+				}
+			}
+		} else if (e.widget == downButton) {
+			Object firstElement = viewer.getStructuredSelection().getFirstElement();
+			if (firstElement instanceof Filter) {
+				Filter f = (Filter) firstElement;
+				int index = filters.indexOf(f);
+				if (index < filters.size() - 1) {
+					filters.remove(f);
+					filters.add(index + 1, f);
+					viewer.setInput(filters);
+					viewer.setSelection(new StructuredSelection(f));
+				}
+			}
+		} else if (e.widget == addFolderButton) {
+			DirectoryDialog dialog = new DirectoryDialog(getShell());
+			try {
+				String parentPath = new File(new URI(watchedFolder.getUri())).getAbsolutePath();
+				dialog.setFilterPath(parentPath);
+				dialog.setText(Messages.FilterPage_select_subfolder);
+				dialog.setMessage(Messages.FilterPage_select_subfolder_msg);
+				String subdir = dialog.open();
+				if (subdir != null && subdir.length() > parentPath.length() + 1 && subdir.startsWith(parentPath)) {
+					String folderPath = new File(subdir).getAbsolutePath();
+					Filter f = new Filter('-' + folderPath.substring(parentPath.length() + 1) + '/');
+					filters.add(f);
+					viewer.insert(f, -1);
+					viewer.setSelection(new StructuredSelection(f));
+				}
+			} catch (URISyntaxException ex) {
+				// Should never happen
+			}
+		}
+	}
 }

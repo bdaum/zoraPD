@@ -9,6 +9,7 @@ public class Messages extends NLS {
 	public static String PagePart_celebs_tooltip;
 	public static String PagePart_description;
 	public static String PagePart_description_tooltip;
+	public static String PagePart_endpoint;
 	public static String PagePart_faces;
 	public static String PagePart_faces_tooltip;
 	public static String PagePart_key1_or_key2;
@@ -19,6 +20,7 @@ public class Messages extends NLS {
 	public static String PagePart_max_proposals;
 	public static String PagePart_min_core;
 	public static String PagePart_no_app_key;
+	public static String PagePart_no_endpoint;
 	public static String PagePart_sfw;
 	public static String PagePart_sfw_tooltip;
 	public static String PagePart_status;

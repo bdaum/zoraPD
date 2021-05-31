@@ -42,8 +42,8 @@ public class SafeArrayList<T> extends ArrayList<T> implements AomList<T> {
 		 * @see java.util.Iterator#remove()
 		 */
 		public void remove() {
-			int index = it.nextIndex();
-			Object currentObject = (index < 0) ? null : list.get(index);
+			int index = it.previousIndex();
+			Object currentObject = (index < 0 || index >= list.size()) ? null : list.get(index);
 			it.remove();
 			if (list.size() < minOcc)
 				throw new IllegalArgumentException(ModelMessages.getString(
@@ -54,7 +54,6 @@ public class SafeArrayList<T> extends ArrayList<T> implements AomList<T> {
 			if (currentObject != null)
 				fireValueChanged(SafeArrayList.this, currentObject, null, id,
 						index);
-			currentObject = null;
 		}
 
 		/*

@@ -1,8 +1,12 @@
 package com.bdaum.zoom.cat.model;
 
-import java.util.*;
-import java.lang.String;
-import com.bdaum.aoModeling.runtime.*;
+import java.util.Date;
+
+import com.bdaum.aoModeling.runtime.AomConstants;
+import com.bdaum.aoModeling.runtime.AomObject;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.ErrorMessages;
+import com.bdaum.aoModeling.runtime.ModelMessages;
 
 /**
  * Generated with KLEEN Java Generator V.1.3
@@ -85,7 +89,7 @@ public class WebGallery_typeImpl extends AomObject implements WebGallery_type {
 			Font_type captionFont, Font_type descriptionFont,
 			Font_type footerFont, Font_type controlsFont,
 			String selectedEngine, String outputFolder, String ftpDir,
-			boolean isFtp, String pageName, String poweredByText,
+			boolean isFtp, String pageName, String poweredByText, int imageFormat,
 			boolean applySharpening, float radius, float amount, int threshold,
 			String headHtml, String topHtml, String footerHtml,
 			int jpegQuality, int scalingMethod, Date lastAccessDate,
@@ -127,6 +131,7 @@ public class WebGallery_typeImpl extends AomObject implements WebGallery_type {
 		this.isFtp = isFtp;
 		this.pageName = pageName;
 		this.poweredByText = poweredByText;
+		this.imageFormat = imageFormat;
 		this.applySharpening = applySharpening;
 		this.radius = radius;
 		this.amount = amount;
@@ -1106,6 +1111,29 @@ public class WebGallery_typeImpl extends AomObject implements WebGallery_type {
 	public String getPoweredByText() {
 		return poweredByText;
 	}
+	
+	/* *** Property imageFormat *** */
+
+	private int imageFormat;
+
+	/**
+	 * Set value of property imageFormat
+	 *
+	 * @param _value - new field value
+	 */
+	public void setImageFormat(int _value) {
+		imageFormat = _value;
+	}
+
+	/**
+	 * Get value of property imageFormat
+	 *
+	 * @return - value of field imageFormat
+	 */
+	public int getImageFormat() {
+		return imageFormat;
+	}
+
 
 	/* *** Property applySharpening *** */
 

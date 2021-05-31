@@ -38,6 +38,7 @@ public class Messages extends NLS {
 	public static String CommunityAccount_bad_url;
 	public static String CommunityAccount_internal_protocol_error;
 	public static String ImageUploadApi_communication_error;
+	public static String PreferenceConstants_communities;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

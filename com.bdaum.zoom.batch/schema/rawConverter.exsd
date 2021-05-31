@@ -89,6 +89,9 @@
                <documentation>
                   Name of converter
                </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
             </annotation>
          </attribute>
          <attribute name="id" type="string" use="required">

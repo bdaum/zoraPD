@@ -19,9 +19,46 @@
  */
 package com.bdaum.zoom.ai.internal.preference;
 
-public class PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.ai.internal.AiActivator;
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+
+public class PreferenceConstants implements IPreferenceConstants {
 	public static final String ENABLE = "com.bdaum.zoom.ai.enable"; //$NON-NLS-1$
 	public static final String ACTIVEPROVIDER  = "com.bdaum.zoom.ai.activeProvider"; //$NON-NLS-1$
 	public static final String TRANSLATORKEY  = "com.bdaum.zoom.ai.translatorKey"; //$NON-NLS-1$
 	public static final String LANGUAGE = "com.bdaum.zoom.ai.language"; //$NON-NLS-1$
+	public static final String TRANSLATORENDPOINT = "com.bdaum.zoom.ai.translatorEndpoint"; //$NON-NLS-1$
+	
+	public static final Object AI = Messages.PreferenceConstants_ai;
+	public static final String AIGENERAL = Messages.PreferenceConstants_general;
+	public static final String TRANSLATOR = Messages.PreferenceConstants_translator;
+	
+	@Override
+	public List<Object> getRootElements() {
+		return Arrays.asList(AI);
+	}
+	
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == AI)
+			return Arrays.asList(AIGENERAL, TRANSLATOR);
+		if (group == AIGENERAL)
+			return Arrays.asList(ENABLE, ACTIVEPROVIDER);
+		if (group == TRANSLATOR)
+			return Arrays.asList(TRANSLATORKEY, LANGUAGE, TRANSLATORENDPOINT);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(AiActivator.PLUGIN_ID);
+	}
+
 }

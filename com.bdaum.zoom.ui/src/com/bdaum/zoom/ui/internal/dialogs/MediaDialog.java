@@ -22,7 +22,6 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
-public class MediaDialog extends ZTitleAreaDialog {
+public class MediaDialog extends ZTitleAreaDialog implements ISelectionChangedListener {
 
 	private static final int REMOVE = 9999;
 	private TableViewer viewer;
@@ -146,7 +145,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			public String getText(Object element) {
 				if (element instanceof LastDeviceImport) {
 					long timestamp = ((LastDeviceImport) element).getTimestamp();
-					return timestamp == 0L ? " - " : Format.YMD_TIME_FORMAT.get().format(new Date(timestamp)); //$NON-NLS-1$
+					return timestamp == 0L ? " - " : Format.YMD_TIME_FORMAT.get().format(timestamp); //$NON-NLS-1$
 				}
 				return element.toString();
 			}
@@ -168,7 +167,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 			@Override
 			protected Object getValue(Object element) {
 				if (element instanceof LastDeviceImport)
-					return Format.YMD_TIME_FORMAT.get().format(new Date(((LastDeviceImport) element).getTimestamp()));
+					return Format.YMD_TIME_FORMAT.get().format(((LastDeviceImport) element).getTimestamp());
 				return ""; //$NON-NLS-1$
 			}
 
@@ -249,11 +248,7 @@ public class MediaDialog extends ZTitleAreaDialog {
 				return false;
 			}
 		} });
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		return area;
 	}
 	
@@ -308,6 +303,10 @@ public class MediaDialog extends ZTitleAreaDialog {
 			imports.put(imp.getVolume(), imp);
 		dbManager.safeTransaction(toBeDeleted, toBeStored);
 		super.okPressed();
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 }

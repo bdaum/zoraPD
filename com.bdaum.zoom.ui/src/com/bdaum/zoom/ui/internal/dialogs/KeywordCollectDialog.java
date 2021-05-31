@@ -36,13 +36,13 @@ import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.AssetImpl;
@@ -51,7 +51,7 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.fileMonitor.internal.filefilter.FilterChain;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
-public class KeywordCollectDialog extends ZProgressDialog {
+public class KeywordCollectDialog extends ZProgressDialog implements ICheckStateListener, Listener {
 
 	private class CollectJob extends Job {
 
@@ -172,18 +172,8 @@ public class KeywordCollectDialog extends ZProgressDialog {
 		viewer1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		viewer1.setComparator(ZViewerComparator.INSTANCE);
 		viewer1.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		viewer1.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				validate();
-			}
-		});
-		new AllNoneGroup(viewerComp1, new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				viewer1.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
-				validate();
-			}
-		});
+		viewer1.addCheckStateListener(this);
+		new AllNoneGroup(viewerComp1, this);
 		Composite viewerComp2 = new Composite(composite, SWT.NONE);
 		viewerComp2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		layout = new GridLayout(2, false);
@@ -195,19 +185,20 @@ public class KeywordCollectDialog extends ZProgressDialog {
 		viewer2.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		viewer2.setComparator(ZViewerComparator.INSTANCE);
 		viewer2.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		viewer2.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				validate();
-			}
-		});
-		new AllNoneGroup(viewerComp2, new SelectionAdapter() {
+		viewer2.addCheckStateListener(this);
+		new AllNoneGroup(viewerComp2, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				viewer2.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
 				validate();
 			}
 		});
-
+	}
+	
+	@Override
+	public void handleEvent(Event e) {
+		viewer1.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
+		validate();
 	}
 
 	@Override
@@ -229,6 +220,11 @@ public class KeywordCollectDialog extends ZProgressDialog {
 
 	public String[] getToRemove() {
 		return toRemove;
+	}
+
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		validate();
 	}
 
 }

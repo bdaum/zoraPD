@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal;
 
@@ -27,6 +27,6 @@ public interface IMailer {
 
 	IStatus sendMail(String label, List<String> to,
 			List<String> cc, List<String> bcc, String subject, String message,
-			List<String> attachments, List<String> originalNames) throws Exception;
+			List<String> attachments, List<String> originalNames, String vcard) throws Exception;
 
 }

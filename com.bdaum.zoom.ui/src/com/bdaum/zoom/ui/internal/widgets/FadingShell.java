@@ -34,6 +34,7 @@ public class FadingShell {
 	private boolean supportsTransparency = false;
 	private Region region;
 	private final int blendingEffect;
+	private Region externalRegion;
 
 	public FadingShell(Shell shell, boolean fading, int blendingEffect) {
 		this.shell = shell;
@@ -85,6 +86,10 @@ public class FadingShell {
 			region.dispose();
 			region = null;
 		}
+		if (externalRegion != null) {
+			externalRegion.dispose();
+			externalRegion = null;
+		}
 	}
 
 	public void setActive() {
@@ -121,7 +126,7 @@ public class FadingShell {
 			shell.setAlpha(255);
 			if (region != null) {
 				if (alpha >= 255)
-					shell.setRegion(null);
+					shell.setRegion(externalRegion);
 				else {
 					Rectangle bounds = shell.getBounds();
 					int height = bounds.height;
@@ -191,6 +196,8 @@ public class FadingShell {
 					region.add(x, y, w, h);
 					region.add(width - 1, 0, 1, 1); // Avoid crippling the shell horizontally
 					region.add(0, height - 1, 1, 1); // Avoid crippling the shell vertically
+					if (externalRegion != null)
+						region.intersect(externalRegion);
 					shell.setRegion(region);
 				}
 			}
@@ -216,6 +223,22 @@ public class FadingShell {
 
 	public Point getLocation() {
 		return shell.getLocation();
+	}
+
+	/**
+	 * Sets a region to this shell The region is disposed when the shell is closed
+	 * 
+	 * @param region
+	 */
+	public void setRegion(Region externalRegion) {
+		this.externalRegion = externalRegion;
+		if (externalRegion != null) {
+			if (region == null)
+				shell.setRegion(externalRegion);
+			else
+				region.intersect(externalRegion);
+		} else if (region == null)
+			shell.setRegion(null);
 	}
 
 }

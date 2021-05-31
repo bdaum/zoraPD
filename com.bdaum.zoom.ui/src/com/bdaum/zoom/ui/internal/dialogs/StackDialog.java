@@ -21,21 +21,19 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 
-public class StackDialog extends ZTitleAreaDialog {
+public class StackDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final char[] BADCHARS = new char[] { '#', '!', '=', '/', '[', ']', '{', '}', '"', ':', ';', ',', '?',
 			'*', '\\', '<', '>', '|', '&' };
@@ -69,17 +67,8 @@ public class StackDialog extends ZTitleAreaDialog {
 		new Label(composite, SWT.NONE).setText(Messages.StackDialog_stack_name);
 		nameField = new Combo(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
-		nameField.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateButtons();
-			}
-		});
+		nameField.addListener(SWT.Modify, this);
+		nameField.addListener(SWT.Selection, this);
 		return area;
 	}
 
@@ -113,6 +102,11 @@ public class StackDialog extends ZTitleAreaDialog {
 
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

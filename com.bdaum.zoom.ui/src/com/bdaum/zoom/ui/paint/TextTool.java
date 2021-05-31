@@ -11,8 +11,6 @@
 package com.bdaum.zoom.ui.paint;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -20,6 +18,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -118,31 +117,25 @@ public class TextTool extends BasicPaintSession implements PaintTool {
 				Button ok = new Button(buttons, SWT.PUSH);
 				ok.setText(PaintExample.getResourceString("OK")); //$NON-NLS-1$
 				ok.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-				ok.addSelectionListener(new SelectionAdapter() {
-
+				Listener listener = new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
-						drawText = field.getText();
+					public void handleEvent(Event e) {
+						if (e.widget == ok)
+							drawText = field.getText();
 						dialog.dispose();
 					}
-				});
+				};
+				ok.addListener(SWT.Selection, listener);
 				Button cancel = new Button(buttons, SWT.PUSH);
 				cancel.setText(PaintExample.getResourceString("Cancel")); //$NON-NLS-1$
-				cancel.addSelectionListener(new SelectionAdapter() {
-
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						dialog.dispose();
-					}
-				});
+				cancel.addListener(SWT.Selection, listener);
 				dialog.setDefaultButton(ok);
 				dialog.pack();
 				dialog.open();
 				Display display = dialog.getDisplay();
-				while (!shell.isDisposed() && !dialog.isDisposed()) {
+				while (!shell.isDisposed() && !dialog.isDisposed())
 					if (!display.readAndDispatch())
 						display.sleep();
-				}
 			}
 			break;
 		case SWT.MouseMove:

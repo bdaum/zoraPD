@@ -237,30 +237,30 @@ public class VolumeManager implements IVolumeManager {
 			File[] list = File.listRoots();
 			if (list == null)
 				return;
-			if (list.length < roots.length) {
+			int length = list.length;
+			if (length < roots.length) {
 				roots = list;
 				dcims = null;
 				fireDeviceEjected();
 				return;
 			}
 			boolean inserted = false;
-			if (list.length > roots.length) {
+			if (length > roots.length) {
 				inserted = true;
 				roots = list;
-				timeStamps = new long[roots.length];
-				volumes = new String[roots.length];
-				for (int i = 0; i < roots.length; i++) {
+				timeStamps = new long[length];
+				volumes = new String[length];
+				for (int i = 0; i < length; i++) {
 					volumes[i] = obtainVolumeLabel(roots[i]);
 					timeStamps[i] = roots[i].lastModified();
 				}
 			} else
-				for (int i = 0; i < list.length; i++) {
+				for (int i = 0; i < length; i++) {
 					long lastModified = list[i].lastModified();
 					if (timeStamps[i] != lastModified || !roots[i].equals(list[i])) {
 						inserted = true;
-						roots[i] = list[i];
 						timeStamps[i] = lastModified;
-						volumes[i] = obtainVolumeLabel(roots[i]);
+						volumes[i] = obtainVolumeLabel(roots[i] = list[i]);
 					}
 				}
 			if (inserted)
@@ -434,16 +434,14 @@ public class VolumeManager implements IVolumeManager {
 				try (BufferedReader r = new BufferedReader(new FileReader(new File(iniUri.getPath())))) {
 					String line;
 					List<Pattern> patterns = new ArrayList<Pattern>(3);
-					while ((line = r.readLine()) != null) {
-						if (line.startsWith("#")) //$NON-NLS-1$
-							continue;
-						try {
-							patterns.add(Pattern.compile(line.trim()));
-						} catch (PatternSyntaxException e) {
-							CoreActivator.getDefault().logError(
-									NLS.bind(Messages.VolumeManager_error_compiling_pattern, line, iniUri), e);
-						}
-					}
+					while ((line = r.readLine()) != null)
+						if (!line.startsWith("#")) //$NON-NLS-1$
+							try {
+								patterns.add(Pattern.compile(line.trim()));
+							} catch (PatternSyntaxException e) {
+								CoreActivator.getDefault().logError(
+										NLS.bind(Messages.VolumeManager_error_compiling_pattern, line, iniUri), e);
+							}
 					volumePatterns = patterns.toArray(new Pattern[patterns.size()]);
 				} catch (Exception e) {
 					volumePatterns = new Pattern[0];

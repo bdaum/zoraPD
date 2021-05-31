@@ -3,11 +3,9 @@ package com.bdaum.zoom.ui.internal.widgets;
 import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.ui.Ui;
@@ -32,7 +30,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
  *
  * (c) 2009-2018 Berthold Daum  
  */
-public class ProposalListener implements VerifyListener, KeyListener {
+public class ProposalListener implements Listener {
 	private String lastProposal;
 	private String[] proposals;
 	private Point pnt = new Point(0, 0);
@@ -41,7 +39,7 @@ public class ProposalListener implements VerifyListener, KeyListener {
 		this.proposals = proposals;
 	}
 
-	public void verifyText(VerifyEvent e) {
+	private void verifyText(Event e) {
 		if (e.character == SWT.BS || e.character == SWT.DEL)
 			return;
 		Text textField = (Text) e.widget;
@@ -60,11 +58,11 @@ public class ProposalListener implements VerifyListener, KeyListener {
 					int kwend = getWordEnd(start, text);
 					StringBuilder sb = new StringBuilder(text);
 					sb.replace(kwstart, kwend, keyword);
-					textField.removeVerifyListener(this);
+					textField.removeListener(SWT.Verify, this);
 					textField.setText(sb.toString());
 					pnt.x = pnt.y = start;
 					textField.setSelection(pnt);
-					textField.addVerifyListener(this);
+					textField.addListener(SWT.Verify, this);
 					e.doit = false;
 					return;
 				}
@@ -86,13 +84,13 @@ public class ProposalListener implements VerifyListener, KeyListener {
 			String keyword = findMatchingKeyword(orig);
 			e.doit = false;
 			if (keyword != null) {
-				textField.removeVerifyListener(this);
+				textField.removeListener(SWT.Verify, this);
 				lastProposal = text.substring(0, kwstart) + keyword;
 				keyword = orig + keyword.substring(orig.length());
 				textField.setText(text.substring(0, kwstart) + keyword);
 				pnt.x = pnt.y = start + insert.length();
 				textField.setSelection(pnt);
-				textField.addVerifyListener(this);
+				textField.addListener(SWT.Verify, this);
 			} else {
 				lastProposal = null;
 				Ui.getUi().playSound("warning", null); //$NON-NLS-1$
@@ -100,11 +98,11 @@ public class ProposalListener implements VerifyListener, KeyListener {
 		} else {
 			if (lastProposal != null && text.toLowerCase().startsWith(lastProposal.toLowerCase()))
 				text = lastProposal + text.substring(lastProposal.length());
-			textField.removeVerifyListener(this);
+			textField.removeListener(SWT.Verify, this);
 			textField.setText(text);
 			pnt.x = pnt.y = text.length();
 			textField.setSelection(pnt);
-			textField.addVerifyListener(this);
+			textField.addListener(SWT.Verify, this);
 			e.doit = false;
 		}
 	}
@@ -137,8 +135,7 @@ public class ProposalListener implements VerifyListener, KeyListener {
 		return text.length();
 	}
 
-	@Override
-	public void keyPressed(KeyEvent e) {
+	private void keyPressed(Event e) {
 		int keyCode = e.keyCode;
 		if (keyCode == SWT.ARROW_UP || keyCode == SWT.ARROW_DOWN || keyCode == SWT.PAGE_DOWN
 				|| keyCode == SWT.PAGE_UP) {
@@ -155,32 +152,39 @@ public class ProposalListener implements VerifyListener, KeyListener {
 			else if (keyCode == SWT.ARROW_DOWN && index >= 0 && index < proposals.length - 1)
 				text = proposals[index + 1];
 			if (text != null) {
-				textField.removeVerifyListener(this);
+				textField.removeListener(SWT.Verify, this);
 				textField.setText(text);
 				pnt.x = pnt.y = 0;
 				textField.setSelection(pnt);
-				textField.addVerifyListener(this);
+				textField.addListener(SWT.Verify, this);
 			}
 			e.doit = false;
 		}
 	}
 
-	@Override
-	public void keyReleased(KeyEvent e) {
-		// do nothing
-	}
-
 	public void addTo(Text textField) {
-		textField.addVerifyListener(this);
-		textField.addKeyListener(this);
+		textField.addListener(SWT.Verify, this);
+		textField.addListener(SWT.KeyDown, this);
 	}
 
 	public void removeFrom(Text textField) {
-		textField.removeVerifyListener(this);
-		textField.removeKeyListener(this);
+		textField.removeListener(SWT.Verify,this);
+		textField.removeListener(SWT.KeyDown, this);
 	}
 
 	public String validate(String text) {
 		return text.equalsIgnoreCase(findMatchingKeyword(text)) ? null : Messages.ProposalListener_not_valid;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Verify:
+			verifyText(e);
+			return;
+		case SWT.KeyDown:
+			keyPressed(e);
+		}
+		
 	}
 }

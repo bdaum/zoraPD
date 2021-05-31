@@ -34,19 +34,15 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -62,7 +58,7 @@ import com.bdaum.zoom.ui.internal.FieldDescriptor;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 
 @SuppressWarnings("restriction")
-public class TemplateEditDialog extends ZTitleAreaDialog {
+public class TemplateEditDialog extends ZTitleAreaDialog implements Listener, ISelectionChangedListener {
 
 	protected static final String INVALIDCAHRS = "<>?\":|\\/*."; //$NON-NLS-1$
 	private Text templateField;
@@ -130,30 +126,12 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_name);
 		nameField = new Text(composite, SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
-
+		nameField.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_template);
 		templateField = new Text(composite, SWT.BORDER);
 		templateField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		templateField.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				for (int i = 0; i < e.text.length(); i++)
-					if (INVALIDCAHRS.indexOf(e.text.charAt(i)) >= 0) {
-						e.doit = false;
-						return;
-					}
-			}
-		});
-		templateField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-				computeExample();
-			}
-		});
+		templateField.addListener(SWT.Verify, this);
+		templateField.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setText(Messages.TemplateEditDialog_example);
 		exampleField = new Text(composite, SWT.READ_ONLY | SWT.BORDER);
 		final GridData gd_exampleField = new GridData(SWT.FILL, SWT.CENTER, true, false);
@@ -164,27 +142,10 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 		final GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 2;
 		buttonComp.setLayout(gridLayout);
-		final ISelectionChangedListener varListener = new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				templateField
-						.insert(selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement());
-				varViewer.getCombo().setVisible(false);
-			}
-		};
 		addVariableButton = new Button(buttonComp, SWT.PUSH);
 		addVariableButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		addVariableButton.setText(Messages.TemplateEditDialog_add_var);
-		addVariableButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				varViewer.getCombo().setVisible(true);
-				if (selectedVar != null) {
-					varViewer.removeSelectionChangedListener(varListener);
-					varViewer.setSelection(new StructuredSelection(selectedVar));
-					varViewer.addSelectionChangedListener(varListener);
-				}
-			}
-		});
+		addVariableButton.addListener(SWT.Selection, this);
 		varViewer = new ComboViewer(buttonComp, SWT.NONE);
 		Combo vcontrol = varViewer.getCombo();
 		vcontrol.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -203,24 +164,13 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 				return super.getText(element);
 			}
 		});
-		varViewer.addSelectionChangedListener(varListener);
+		varViewer.addSelectionChangedListener(this);
 		varViewer.setInput(variables);
 		if (asset != null) {
 			addMetadataButton = new Button(buttonComp, SWT.PUSH);
 			addMetadataButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 			addMetadataButton.setText(Messages.TemplateEditDialog_add_metadata);
-			addMetadataButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(getShell());
-					if (dialog.open() != TemplateFieldSelectionDialog.OK)
-						return;
-					FieldDescriptor fd = dialog.getResult();
-					templateField.insert(Constants.TV_META
-							+ (fd.subfield == null ? fd.qfield.getId() : fd.qfield.getId() + '&' + fd.subfield.getId())
-							+ '}');
-				}
-			});
+			addMetadataButton.addListener(SWT.Selection, this);
 			new Label(buttonComp, SWT.NONE).setText(Messages.TemplateEditDialog_example_shows_metadata);
 		}
 		return comp;
@@ -229,13 +179,12 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 	protected void computeExample() {
 		int maxLength = BatchConstants.MAXPATHLENGTH;
 		String filename = "_1072417.JPG"; //$NON-NLS-1$
-		if (asset != null) {
+		if (asset != null)
 			try {
 				file = new File(new URI(asset.getUri()));
 			} catch (URISyntaxException e) {
 				// use default
 			}
-		}
 		if (file != null) {
 			filename = file.getName();
 			String ext = ""; //$NON-NLS-1$
@@ -322,6 +271,47 @@ public class TemplateEditDialog extends ZTitleAreaDialog {
 
 	public RenamingTemplate getResult() {
 		return template;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		templateField.insert(selectedVar = (String) ((IStructuredSelection) event.getSelection()).getFirstElement());
+		varViewer.getCombo().setVisible(false);
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			updateButtons();
+			if (e.widget == templateField)
+				computeExample();
+			return;
+		case SWT.Verify:
+			for (int i = 0; i < e.text.length(); i++)
+				if (INVALIDCAHRS.indexOf(e.text.charAt(i)) >= 0) {
+					e.doit = false;
+					return;
+				}
+			return;
+		case SWT.Selection:
+			if (e.widget == addVariableButton) {
+				varViewer.getCombo().setVisible(true);
+				if (selectedVar != null) {
+					varViewer.removeSelectionChangedListener(TemplateEditDialog.this);
+					varViewer.setSelection(new StructuredSelection(selectedVar));
+					varViewer.addSelectionChangedListener(TemplateEditDialog.this);
+				}
+			} else {
+				TemplateFieldSelectionDialog dialog = new TemplateFieldSelectionDialog(getShell());
+				if (dialog.open() != TemplateFieldSelectionDialog.OK)
+					return;
+				FieldDescriptor fd = dialog.getResult();
+				templateField.insert(Constants.TV_META
+						+ (fd.subfield == null ? fd.qfield.getId() : fd.qfield.getId() + '&' + fd.subfield.getId())
+						+ '}');
+			}
+		}
 	}
 
 }

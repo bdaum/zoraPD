@@ -11,7 +11,32 @@
 
 package com.bdaum.zoom.gps.naming.geonaming.internal;
 
-public class PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+
+public class PreferenceConstants implements IPreferenceConstants {
 	public static final String GEONAMESPARMS = "com.bdaum.zoom.gps.geoNamesParms"; //$NON-NLS-1$
 	public static final String SEARCHPARAMETERS = "com.bdaum.zoom.gps.geoNamesSearchParms"; //$NON-NLS-1$
+	@Override
+	public List<Object> getRootElements() {
+		return Collections.emptyList();
+	}
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == com.bdaum.zoom.gps.internal.preferences.PreferenceConstants.GEO)
+			return Arrays.asList(GEONAMESPARMS, SEARCHPARAMETERS);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(GeonamingActivator.PLUGIN_ID);
+	}
+
 }

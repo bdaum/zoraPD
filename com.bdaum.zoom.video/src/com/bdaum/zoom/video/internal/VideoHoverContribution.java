@@ -23,7 +23,6 @@ import com.bdaum.zoom.cat.model.asset.Asset;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.internal.IMediaSupport;
-import com.bdaum.zoom.core.internal.peer.IPeerService;
 import com.bdaum.zoom.ui.internal.hover.AbstractHoverContribution;
 import com.bdaum.zoom.ui.internal.hover.HoverTestAsset;
 import com.bdaum.zoom.ui.internal.hover.IHoverContext;
@@ -35,8 +34,8 @@ public class VideoHoverContribution extends AbstractHoverContribution implements
 	private static final String ORIGIN = Constants.HV_ORIGIN;
 	private static final String METADATA = Constants.HV_METADATA;
 
-	private static final String[] TITLETAGS = new String[] { };
-	private static final String[] TITLELABELS = new String[] { };
+	private static final String[] TITLETAGS = new String[] {};
+	private static final String[] TITLELABELS = new String[] {};
 	private static final String[] TAGS = new String[] { ORIGIN, METADATA };
 	private static final String[] LABELS = new String[] { Messages.VideoHoverContribution_network_orig,
 			Messages.VideoHoverContribution_meta_block };
@@ -89,17 +88,12 @@ public class VideoHoverContribution extends AbstractHoverContribution implements
 	@Override
 	public String getValue(String key, Object object, IHoverContext context) {
 		if (object instanceof HoverTestAsset) {
-			if (ORIGIN.equals(key)) {
-				IPeerService peerService = Core.getCore().getPeerService();
-				if (peerService != null) {
-					StringBuilder sb = new StringBuilder();
-					sb.append(Messages.VideoHoverContribution_origin);
-					sb.append(Core.getCore().getDbManager().getFile().getName());
-					sb.append('\n');
-					return sb.toString();
-				}
-			}
-		} else if (ORIGIN.equals(key) && object instanceof Asset)
+			if (ORIGIN.equals(key) && Core.getCore().getPeerService() != null)
+				return new StringBuilder().append(Messages.VideoHoverContribution_origin)
+						.append(Core.getCore().getDbManager().getFile().getName()).append('\n').toString();
+			return null;
+		}
+		if (object instanceof Asset && ORIGIN.equals(key))
 			return context.getValue(key, object);
 		return null;
 	}

@@ -28,16 +28,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
@@ -52,7 +50,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class PeerDefinitionDialog extends ZTitleAreaDialog {
+public class PeerDefinitionDialog extends ZTitleAreaDialog implements Listener {
 
 	private final PeerDefinition currentDefiniton;
 	private Text ipField;
@@ -107,11 +105,7 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_computer_name);
 				ipField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 				ipField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-				ipField.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						validate();
-					}
-				});
+				ipField.addListener(SWT.Modify, this);
 				ipField.selectAll();
 				ipField.setFocus();
 			} else {
@@ -126,17 +120,8 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				String[] array = itemList.toArray(new String[itemList.size()]);
 				Arrays.sort(array);
 				ipCombo.setItems(array);
-				ipCombo.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						validate();
-					}
-				});
-				ipCombo.addModifyListener(new ModifyListener() {
-					public void modifyText(ModifyEvent e) {
-						validate();
-					}
-				});
+				ipCombo.addListener(SWT.Selection, this);
+				ipCombo.addListener(SWT.Modify, this);
 			}
 			if (!withRights) {
 				new Label(composite, SWT.NONE).setText(Messages.PeerDefinitionDialog_port);
@@ -144,12 +129,7 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 				portField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 				portField.setMaximum(65535);
 				portField.setIncrement(1);
-				portField.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						validate();
-					}
-				});
+				portField.addListener(SWT.Selection, this);
 			}
 		}
 		if (withRights) {
@@ -255,5 +235,10 @@ public class PeerDefinitionDialog extends ZTitleAreaDialog {
 
 	public PeerDefinition getResult() {
 		return result;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		validate();
 	}
 }

@@ -42,10 +42,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -97,7 +93,8 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErrorHandler, Listener {
+public class EditCommunityAccountDialog extends ZTitleAreaDialog
+		implements IErrorHandler, Listener, ICheckStateListener {
 
 	private static final Object[] EMPTY = new Object[0];
 	private static final String SETTINGSID = "editCommunitiesAccountDialog"; //$NON-NLS-1$
@@ -306,10 +303,23 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 					SWT.READ_ONLY, 1);
 		}
 	}
-	
+
 	@Override
-	public void handleEvent(Event event) {
-		bandwidthField.setEnabled(limitedButton.getSelection());
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			if (e.widget == visitField)
+				updateTestButton();
+			else
+				updateButtons();
+			return;
+		case SWT.Selection:
+			if (e.widget == testUrlButton)
+				testUrl();
+			else
+				bandwidthField.setEnabled(limitedButton.getSelection());
+		}
+		
 	}
 
 	private Listener accessTypeSelectionListener = new Listener() {
@@ -360,18 +370,8 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		visitField = createTextField(group1, Messages.EditCommunityAccountDialog_web_url, 250, SWT.NONE, 1);
 		testUrlButton = new Button(group1, SWT.PUSH);
 		testUrlButton.setText(Messages.EditCommunityAccountDialog_test);
-		testUrlButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				testUrl();
-			}
-		});
-		visitField.addModifyListener(new ModifyListener() {
-
-			public void modifyText(ModifyEvent e) {
-				updateTestButton();
-			}
-		});
+		testUrlButton.addListener(SWT.Selection, this);
+		visitField.addListener(SWT.Modify, this);
 		trackField = WidgetFactory.createCheckButton(group1, Messages.EditCommunityAccountDialog_track_exports,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		IConfigurationElement[] children = configuration.getChildren("accessType"); //$NON-NLS-1$
@@ -500,19 +500,15 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 		});
 		albumViewer.setComparator(ZViewerComparator.INSTANCE);
-		albumViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				updateAlbumsButton();
-			}
-		});
+		albumViewer.addCheckStateListener(this);
 		albumViewer.setInput(photosets);
 		importAlbumsButton = new Button(composite, SWT.PUSH);
 		importAlbumsButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		importAlbumsButton.setText(Messages.EditCommunityAccountDialog_import_into_catalog);
-		importAlbumsButton.addSelectionListener(new SelectionAdapter() {
+		importAlbumsButton.addListener(SWT.Selection, new Listener() {
 
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				BusyIndicator.showWhile(e.display, () -> importAlbums());
 			}
 
@@ -535,7 +531,8 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 								null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 						sm.setGroup_rootCollection_parent(Constants.GROUP_ID_IMPORTED_ALBUMS);
 						List<Criterion> criteria = new ArrayList<Criterion>(1);
-						criteria.add(new CriterionImpl(Constants.OID, null, sm.getStringId(), null, QueryField.XREF, false));
+						criteria.add(
+								new CriterionImpl(Constants.OID, null, sm.getStringId(), null, QueryField.XREF, false));
 						sm.setCriterion(criteria);
 						importedAlbums.addRootCollection(sm.getStringId());
 					} else
@@ -553,15 +550,31 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		updateAlbumsButton();
 	}
 
+	public void checkStateChanged(CheckStateChangedEvent e) {
+		if (e.getSource() == allCatViewer) {
+			Object element = e.getElement();
+			if (!externalCategories.contains(((org.scohen.juploadr.app.Category) element).getTitle()))
+				allCatViewer.setChecked(element, false);
+			updateCatButtons();
+		} else if (e.getSource() == usedCatViewer) {
+			Object element = e.getElement();
+			if (element instanceof Category && e.getChecked()) {
+				if (!externalUsedCat.contains(element))
+					usedCatViewer.setChecked(element, false);
+				else {
+					Category pcat = ((Category) element).getCategory_subCategory_parent();
+					if (pcat != null && externalUsedCat.contains(pcat))
+						usedCatViewer.setChecked(pcat, true);
+				}
+			}
+			updateCatButtons();
+		} else
+			updateAlbumsButton();
+	}
+
 	private void updateAlbumsButton() {
 		importAlbumsButton.setEnabled(albumViewer.getCheckedElements().length > 0);
 	}
-
-	private ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
-			updateButtons();
-		}
-	};
 
 	private void createCategoryGroup(Composite parent) {
 		List<? extends org.scohen.juploadr.app.Category> categories = account.getCategories();
@@ -601,21 +614,14 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 		});
 		allCatViewer.setComparator(ZViewerComparator.INSTANCE);
-		allCatViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				Object element = event.getElement();
-				if (!externalCategories.contains(((org.scohen.juploadr.app.Category) element).getTitle()))
-					allCatViewer.setChecked(element, false);
-				updateCatButtons();
-			}
-		});
+		allCatViewer.addCheckStateListener(this);
 		allCatViewer.setInput(categories);
 		updateAllCatButton = new Button(composite, SWT.PUSH);
 		updateAllCatButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		updateAllCatButton.setText(Messages.EditCommunityAccountDialog_import_into_catalog);
-		updateAllCatButton.addSelectionListener(new SelectionAdapter() {
+		updateAllCatButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				BusyIndicator.showWhile(e.display, () -> importAllCats());
 			}
 
@@ -730,30 +736,16 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 
 		});
 		usedCatViewer.setComparator(ZViewerComparator.INSTANCE);
-		usedCatViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				Object element = event.getElement();
-				if (element instanceof Category && event.getChecked()) {
-					if (!externalUsedCat.contains(element))
-						usedCatViewer.setChecked(element, false);
-					else {
-						Category pcat = ((Category) element).getCategory_subCategory_parent();
-						if (pcat != null && externalUsedCat.contains(pcat))
-							usedCatViewer.setChecked(pcat, true);
-					}
-				}
-				updateCatButtons();
-			}
-		});
+		usedCatViewer.addCheckStateListener(this);
 		UiUtilities.installDoubleClickExpansion(usedCatViewer);
 		usedCatViewer.setInput(usedCategories);
 		usedCatViewer.expandAll();
 		updateUsedCatButton = new Button(composite, SWT.PUSH);
 		updateUsedCatButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, false));
 		updateUsedCatButton.setText(Messages.EditCommunityAccountDialog_import_into_catalog);
-		updateUsedCatButton.addSelectionListener(new SelectionAdapter() {
+		updateUsedCatButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				BusyIndicator.showWhile(e.display, () -> importAllUsedCats());
 			}
 
@@ -809,7 +801,7 @@ public class EditCommunityAccountDialog extends ZTitleAreaDialog implements IErr
 		GridData data = (width <= 0) ? new GridData(SWT.FILL, SWT.CENTER, true, false) : new GridData(width, -1);
 		data.horizontalSpan = span;
 		textField.setLayoutData(data);
-		textField.addModifyListener(modifyListener);
+		textField.addListener(SWT.Modify, this);
 		return textField;
 	}
 

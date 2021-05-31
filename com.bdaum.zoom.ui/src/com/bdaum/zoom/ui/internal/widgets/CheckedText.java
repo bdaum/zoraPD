@@ -31,12 +31,9 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
@@ -94,9 +91,10 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 		control = new StyledText(this, style);
 		setLayout(new FillLayout());
 		installUndoSupport();
-		if (spellingOptions != ISpellCheckingService.NOSPELLING)
+		if (spellingOptions != ISpellCheckingService.NOSPELLING) {
 			addListener(SWT.Modify, this);
-		control.addListener(SWT.Paint, this);
+			control.addListener(SWT.Paint, this);
+		}
 		installMenu(style);
 	}
 
@@ -146,12 +144,7 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 			};
 			addListener(SWT.Modify, afterListener);
 		}
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				createUndoPoint();
-			}
-		});
+		addListener(SWT.MouseDown, this);
 	}
 
 	@Override
@@ -165,31 +158,8 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 	}
 
 	protected void installMenu(int style) {
-		addFocusListener(new FocusListener() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (previousMenu != null) {
-					control.setMenu(previousMenu);
-					previousMenu = null;
-				}
-				if (menuListener != null)
-					control.removeMenuDetectListener(menuListener);
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-				Menu menu = control.getMenu();
-				if (menu != null) {
-					if (previousMenu != null)
-						previousMenu.dispose();
-					previousMenu = menu;
-					control.setMenu(null);
-				}
-				if (menuListener == null)
-					menuListener = createMenuListener(style);
-				control.addMenuDetectListener(menuListener);
-			}
-		});
+		addListener(SWT.FocusIn, this);
+		addListener(SWT.FocusOut, this);
 	}
 
 	protected MenuDetectListener createMenuListener(int style) {
@@ -264,21 +234,12 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
 		this.hint = hint;
 		if (!hint.isEmpty()) {
-			focusListener = new FocusListener() {
-				@Override
-				public void focusLost(FocusEvent e) {
-					showHint();
-				}
-
-				@Override
-				public void focusGained(FocusEvent e) {
-					removeHint();
-				}
-			};
 			showHint();
-			control.addFocusListener(focusListener);
+			control.addListener(SWT.FocusIn, this);
+			control.addListener(SWT.FocusOut, this);
 		} else if (focusListener != null) {
-			control.removeFocusListener(focusListener);
+			control.removeListener(SWT.FocusIn, this);
+			control.removeListener(SWT.FocusOut, this);
 			removeHint();
 		}
 	}
@@ -352,7 +313,7 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 		if (afterListener != null)
 			addListener(SWT.Modify, afterListener);
 	}
-	
+
 	public void addListener(int type, Listener listener) {
 		switch (type) {
 		case SWT.Verify:
@@ -379,13 +340,14 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 			break;
 		}
 	}
-	
+
 	public void removeListener(int type, Listener listener) {
 		switch (type) {
 		case SWT.Verify:
 			if (verifyListeners != null) {
 				verifyListeners.remove(listener);
-				control.removeListener(SWT.Verify, listener);}
+				control.removeListener(SWT.Verify, listener);
+			}
 			break;
 		case SWT.Modify:
 			if (modifyListeners != null) {
@@ -446,15 +408,42 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 		switch (e.type) {
 		case SWT.Paint:
 			paintControl(e);
-			break;
-
+			return;
 		case SWT.Modify:
 			if (!control.getText().isEmpty())
 				checkSpelling(true);
-			break;
+			return;
 		case SWT.KeyDown:
 			keyPressed(e);
-			break;
+			return;
+		case SWT.MouseDown:
+			createUndoPoint();
+			return;
+		case SWT.FocusIn:
+			if (e.widget == this) {
+				Menu menu = control.getMenu();
+				if (menu != null) {
+					if (previousMenu != null)
+						previousMenu.dispose();
+					previousMenu = menu;
+					control.setMenu(null);
+				}
+				if (menuListener == null)
+					menuListener = createMenuListener(style);
+				control.addMenuDetectListener(menuListener);
+			} else
+				removeHint();
+			return;
+		case SWT.FocusOut:
+			if (e.widget == this) {
+				if (previousMenu != null) {
+					control.setMenu(previousMenu);
+					previousMenu = null;
+				}
+				if (menuListener != null)
+					control.removeMenuDetectListener(menuListener);
+			} else
+				showHint();
 		}
 
 	}
@@ -550,7 +539,6 @@ public class CheckedText extends Composite implements ISpellCheckingTarget, List
 		coordinates[--length] = left.x + (w2 * peeks - WIDTH / 2);
 		return coordinates;
 	}
-
 
 	@Override
 	public void setFont(Font font) {

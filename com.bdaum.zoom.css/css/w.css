@@ -26,7 +26,6 @@ Tree {color:rgb(32,32,32);background-color:white;selected-background-color:rgb(2
 Table {color:rgb(32,32,32);background-color:white;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-background-color:rgb(224,224,224);selected-color:black;disabled-color:rgb(96,96,96);tooltip-background-color:rgb(255,255,240);tooltip-color:rgb(96,96,96);}
 Gallery {color:rgb(128,128,128);background-color:white;title-color:rgb(112,112,112);title-background-color:rgb(224,224,224);selected-background-color:rgb(144,144,144);selected-color:white;offline-color:rgb(128, 160, 0);remote-color:rgb(32, 32, 192);selected-offline-color:red;selected-remote-color:rgb(64, 64, 160);}
 CGroup {color:rgb(0,80,160);background-color:transparent;}
-Shell#slideshow {color:rgb(224,224,224);background-color:black;}
 Shell {color:rgb(128,128,128;}
 CBanner {}
 Coolbar {}

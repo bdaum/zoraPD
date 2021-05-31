@@ -144,12 +144,11 @@ public class SpellCheckingEngine {
 								if (words.isEmpty())
 									return null;
 								String[] suggestions = words.toArray(new String[words.size()]);
-								if (suggestions.length > nmax) {
-									String[] truncated = new String[nmax];
-									System.arraycopy(suggestions, 0, truncated, 0, nmax);
-									return truncated;
-								}
-								return suggestions;
+								if (suggestions.length <= nmax)
+									return suggestions;
+								String[] truncated = new String[nmax];
+								System.arraycopy(suggestions, 0, truncated, 0, nmax);
+								return truncated;
 							}
 
 							public int getOffset() {
@@ -163,7 +162,6 @@ public class SpellCheckingEngine {
 							public void addWord() {
 								addToDictionary(str);
 							}
-
 						};
 						for (IncendentListener listener : listeners)
 							if (listener.handleIncident(incident))

@@ -38,8 +38,6 @@ import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -64,7 +62,7 @@ import com.bdaum.zoom.ui.widgets.RangeControl;
 import com.bdaum.zoom.ui.wizards.ColoredWizardPage;
 
 @SuppressWarnings("restriction")
-public class ValuePage extends ColoredWizardPage implements Listener {
+public class ValuePage extends ColoredWizardPage implements Listener, ISelectionChangedListener {
 
 	private class ViewerComp extends Composite {
 
@@ -416,9 +414,9 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 		filterViewer.getControl().setLayoutData(layoutData);
 		filterViewer.setContentProvider(ArrayContentProvider.getInstance());
 		filterViewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
-		allNoneGroup = new AllNoneGroup(filterComp, new SelectionAdapter() {
+		allNoneGroup = new AllNoneGroup(filterComp, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				filterViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
 			}
 		});
@@ -433,13 +431,7 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 
 	protected ViewerComp createFieldViewer(Composite parent) {
 		ViewerComp viewer = new ViewerComp(parent);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateFields();
-				validatePage();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		return viewer;
 	}
 
@@ -653,6 +645,12 @@ public class ValuePage extends ColoredWizardPage implements Listener {
 			report.setThreshold(thresholdField.getSelection() * 0.1f);
 			report.setMode(mode);
 		}
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateFields();
+		validatePage();
 	}
 
 }

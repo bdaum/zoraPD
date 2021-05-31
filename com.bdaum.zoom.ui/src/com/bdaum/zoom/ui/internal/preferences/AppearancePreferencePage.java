@@ -54,7 +54,7 @@ import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class AppearancePreferencePage extends AbstractPreferencePage {
+public class AppearancePreferencePage extends AbstractPreferencePage implements ISelectionChangedListener {
 
 	private static final String PAGEID = "com.bdaum.zoom.ui.preferences.AppearancePreferencePage"; //$NON-NLS-1$
 	private static final String[] ratingOptions = new String[] { PreferenceConstants.SHOWRATING_NO,
@@ -137,14 +137,7 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		layoutData.horizontalIndent = 15;
 		comment.setLayoutData(layoutData);
 		comment.setVisible(false);
-		colorViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				Object newTheme = colorViewer.getStructuredSelection().getFirstElement();
-				comment.setVisible(
-						PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(newTheme) && !newTheme.equals(theme));
-			}
-		});
+		colorViewer.addSelectionChangedListener(this);
 		CGroup unitGroup = UiUtilities.createGroup(composite, 2, Messages.getString("AppearancePreferencePage.units")); //$NON-NLS-1$
 		new Label(unitGroup, SWT.NONE).setText(Messages.getString("AppearancePreferencePage.distances")); //$NON-NLS-1$
 		distViewer = new ComboViewer(unitGroup, SWT.NONE);
@@ -218,18 +211,19 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 					return name.toLowerCase().endsWith(CSS);
 				}
 			});
-			for (File f : members) {
-				String name = f.getName();
-				name = name.substring(0, name.length() - CSS.length());
-				if (!name.equals(PreferenceConstants.BACKGROUNDCOLOR_PLATFORM)
-						&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_BLACK)
-						&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_DARKGREY)
-						&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_GREY)
-						&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_WHITE)) {
-					if (!dropins.contains(name))
-						dropins.add(name);
+			if (members != null)
+				for (File f : members) {
+					String name = f.getName();
+					name = name.substring(0, name.length() - CSS.length());
+					if (!name.equals(PreferenceConstants.BACKGROUNDCOLOR_PLATFORM)
+							&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_BLACK)
+							&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_DARKGREY)
+							&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_GREY)
+							&& !name.equals(PreferenceConstants.BACKGROUNDCOLOR_WHITE)) {
+						if (!dropins.contains(name))
+							dropins.add(name);
+					}
 				}
-			}
 		}
 	}
 
@@ -322,6 +316,12 @@ public class AppearancePreferencePage extends AbstractPreferencePage {
 		preferenceStore.setValue(PreferenceConstants.SHOWROTATEBUTTONS, rotateButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWVOICENOTE, voiceNoteButton.getSelection());
 		preferenceStore.setValue(PreferenceConstants.SHOWEXPANDCOLLAPSE, expandButton.getSelection());
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		Object newTheme = colorViewer.getStructuredSelection().getFirstElement();
+		comment.setVisible(PreferenceConstants.BACKGROUNDCOLOR_PLATFORM.equals(newTheme) && !newTheme.equals(theme));
 	}
 
 }

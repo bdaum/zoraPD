@@ -38,7 +38,6 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1031,7 +1030,7 @@ public final class ChannelEndpointImpl implements ChannelEndpoint {
 		if (TRACE_TIME) {
 			startTime = System.currentTimeMillis();
 			StringBuffer buf = new StringBuffer("TIMING.START;");
-			buf.append(sdf.format(new Date(startTime))).append(";");
+			buf.append(sdf.format(startTime)).append(";");
 			buf.append((message==null?"":message));
 			LogService logService = RemoteOSGiServiceImpl.log;
 			if (logService != null && USE_LOG_SERVICE)
@@ -1044,7 +1043,7 @@ public final class ChannelEndpointImpl implements ChannelEndpoint {
 	void stopTiming(String message, Throwable exception) {
 		if (TRACE_TIME) {
 			StringBuffer buf = new StringBuffer("TIMING.END;");
-			buf.append(sdf.format(new Date(startTime))).append(";");
+			buf.append(sdf.format(startTime)).append(";");
 			buf.append((message==null?"":message));
 			buf.append(";duration(ms)=").append((System.currentTimeMillis()-startTime));
 			LogService logService = RemoteOSGiServiceImpl.log;

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2018 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.core;
@@ -40,9 +40,50 @@ import com.bdaum.zoom.core.internal.Utilities;
  *
  */
 public class Format {
-	
+
+	public abstract static class FormatAdapter implements IFormatter {
+		
+		public String format(Object o) {
+			if (o instanceof Double)
+				return format(((Double) o).doubleValue());
+			if (o instanceof Long)
+				return format(((Long) o).longValue());
+			if (o instanceof Integer)
+				return format(((Integer) o).intValue());
+			if (o instanceof Boolean)
+				return format(((Boolean) o).booleanValue());
+			if (o instanceof Date)
+				return format((Date) o);
+			return null;
+		}
+		
+		public String format(int v) {
+			return null;
+		}
+
+		public String format(double v) {
+			return null;
+		}
+
+		public String format(long v) {
+			return null;
+		}
+
+		public String format(boolean v) {
+			return null;
+		}
+
+		public String format(Date v) {
+			return null;
+		}
+
+		public Object parse(String s) throws ParseException {
+			return null;
+		}
+
+	}
+
 	/*** language dependent date formats ***/
-	
 
 	public static final ThreadLocal<SimpleDateFormat> TRACK_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
@@ -50,22 +91,21 @@ public class Format {
 			return new SimpleDateFormat(Messages.QueryField_track_date_format);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> EMDY_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_emdy_time);
 		}
 	};
-	
-	
+
 	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_SHORT_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_mdy_time_short);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_SECS_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -73,14 +113,13 @@ public class Format {
 		}
 	};
 
-	
 	public static final ThreadLocal<SimpleDateFormat> EMDY_TIME_LONG_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_emdy_time_long);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> MDY_TIME_LONG_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -94,21 +133,21 @@ public class Format {
 			return new SimpleDateFormat(Messages.Constants_ExtenalDateTimeFormat);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> YMDT_SLASH = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_ymdt_slash);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> WEEK = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_week);
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> WEEK_WY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -122,14 +161,7 @@ public class Format {
 			return new SimpleDateFormat(Messages.Format_week_ewy);
 		}
 	};
-	
-	public static final ThreadLocal<SimpleDateFormat> MDYHM_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-		@Override
-		protected synchronized SimpleDateFormat initialValue() {
-			return new SimpleDateFormat(Messages.Format_mdy_time);
-		}
-	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> MDY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -144,18 +176,10 @@ public class Format {
 		}
 	};
 
-
 	public static final ThreadLocal<SimpleDateFormat> YMD_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat(Messages.Format_ymd_time);
-		}
-	};
-
-	public static final ThreadLocal<SimpleDateFormat> YMD_SLASH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-		@Override
-		protected synchronized SimpleDateFormat initialValue() {
-			return new SimpleDateFormat(Messages.Format_ymd_slash);
 		}
 	};
 
@@ -185,9 +209,8 @@ public class Format {
 		}
 	};
 
-	
 	/*** language invariant date formats ***/
-	
+
 	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_ZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -201,7 +224,7 @@ public class Format {
 			return new SimpleDateFormat("yyyy"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> YEAR_MONTH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -229,7 +252,7 @@ public class Format {
 			return new SimpleDateFormat("YYYY-'W'ww-uu"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> YEAR_DAY_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -237,14 +260,13 @@ public class Format {
 		}
 	};
 
-
 	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_HYPHEN_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -252,7 +274,6 @@ public class Format {
 		}
 	};
 
-	
 	public static final ThreadLocal<SimpleDateFormat> DATE_TIME_SLASH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -260,21 +281,20 @@ public class Format {
 		}
 	};
 
-	
 	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:s"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_XZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> XML_DATE_TIME_ZZONED_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
@@ -282,39 +302,33 @@ public class Format {
 		}
 	};
 
-
-
 	public static final ThreadLocal<SimpleDateFormat> WEEKDAY_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("EEEEEEEEEEEEEEEEEEEE"); //$NON-NLS-1$
 		}
 	};
-	
-	public static final ThreadLocal<SimpleDateFormat>MONTH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+
+	public static final ThreadLocal<SimpleDateFormat> MONTH_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("MMMMMMMMM"); //$NON-NLS-1$
 		}
 	};
 
-	
 	public static final ThreadLocal<SimpleDateFormat> CODES_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("yyyyMMdd'T'HHmmssZ"); //$NON-NLS-1$
 		}
 	};
-	
+
 	public static final ThreadLocal<SimpleDateFormat> HMS_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected synchronized SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("HH:mm:ss"); //$NON-NLS-1$
 		}
 	};
-
-
-
 
 	private static final String AM = Messages.Format_am;
 	private static final String PM = Messages.Format_pm;
@@ -328,14 +342,17 @@ public class Format {
 
 	public final static IFormatter plusMinusFormatter = new PlusMinusFormatter();
 
-	private static final class PlusMinusFormatter implements IFormatter {
+	/**
+	 * Formatters
+	 */
 
-		public String toString(Object o) {
-			int d = (Integer) o;
+	private static final class PlusMinusFormatter extends FormatAdapter {
+
+		public String format(int d) {
 			return d > 0 ? "+" + d : String.valueOf(d); //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			try {
 				return Integer.parseInt(s);
 			} catch (NumberFormatException e) {
@@ -346,14 +363,13 @@ public class Format {
 
 	public final static IFormatter orientationFormatter = new OrientationFormatter();
 
-	private static final class OrientationFormatter implements IFormatter {
+	private static final class OrientationFormatter extends FormatAdapter {
 
-		public String toString(Object o) {
-			int d = (Integer) o;
-			return Utilities.orientationDegrees(d) + "°"; //$NON-NLS-1$
+		public String format(int v) {
+			return Utilities.orientationDegrees(v) + "°"; //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			if (s.endsWith("°")) //$NON-NLS-1$
 				s = s.substring(0, s.length() - 1);
 			try {
@@ -373,9 +389,9 @@ public class Format {
 		}
 	}
 
-	private static final class CurrencyExpressionFormatter implements IFormatter {
+	private static final class CurrencyExpressionFormatter extends FormatAdapter {
 
-		public String toString(Object obj) {
+		public String format(Object obj) {
 			if (obj != null)
 				try {
 					double v = evaluateCurrencyExpression(obj.toString());
@@ -387,13 +403,13 @@ public class Format {
 			return null;
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			return evaluateCurrencyExpression(s.trim());
 		}
 
 	}
 
-	private static final class GpsFormatter implements IFormatter {
+	private static final class GpsFormatter extends FormatAdapter {
 
 		private String neg;
 		private String pos;
@@ -403,8 +419,7 @@ public class Format {
 			this.pos = pos;
 		}
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			if (Double.isNaN(d))
 				return MISSINGENTRYSTRING;
 			StringBuilder sb = new StringBuilder();
@@ -420,7 +435,7 @@ public class Format {
 					.append(getDecimalUSFormat(2).format(seconds)).append('"').toString();
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim().toUpperCase();
 			NumberFormat af = getDecimalUSFormat(10);
 			try {
@@ -546,10 +561,9 @@ public class Format {
 		return nf;
 	}
 
-	public final static IFormatter exposureTimeFormatter = new IFormatter() {
+	public final static IFormatter exposureTimeFormatter = new FormatAdapter() {
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			if (Double.isNaN(d))
 				return MISSINGENTRYSTRING;
 			if (d > 0.5d || d <= 0)
@@ -557,7 +571,7 @@ public class Format {
 			return "1/" + ((int) ((1 / d) + 0.5d)); //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim();
 			try {
 				NumberFormat af = getDecimalFormat(3);
@@ -571,16 +585,15 @@ public class Format {
 	/**
 	 * Aperture
 	 */
-	public final static IFormatter apertureFormatter = new IFormatter() {
+	public final static IFormatter apertureFormatter = new FormatAdapter() {
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			if (Double.isNaN(d) || Double.isInfinite(d))
 				return MISSINGENTRYSTRING;
 			return formatDecimal(Math.pow(2d, d / 2), 1);
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim();
 			try {
 				return 2d * Math.log(getDecimalFormat(10).parse(s).doubleValue()) / Math.log(2);
@@ -593,16 +606,15 @@ public class Format {
 	/**
 	 * Geographic distance
 	 */
-	public final static IFormatter distanceFormatter = new IFormatter() {
+	public final static IFormatter distanceFormatter = new FormatAdapter() {
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			if (Double.isNaN(d) || Double.isInfinite(d))
 				return MISSINGENTRYSTRING;
 			return formatDecimal(d, 3);
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			return getDecimalFormat(10).parse(s.trim()).doubleValue();
 		}
 	};
@@ -618,10 +630,9 @@ public class Format {
 	/**
 	 * Image direction
 	 */
-	public final static IFormatter directionFormatter = new IFormatter() {
+	public final static IFormatter directionFormatter = new FormatAdapter() {
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			if (Double.isNaN(d))
 				return MISSINGENTRYSTRING;
 			while (d > 180.0)
@@ -632,7 +643,7 @@ public class Format {
 					.toString();
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim();
 			NumberFormat af = getDecimalFormat(10);
 			try {
@@ -646,9 +657,9 @@ public class Format {
 				if (s.endsWith("°")) //$NON-NLS-1$
 					s = s.substring(0, s.length() - 1).trim();
 				double d = sign * af.parse(s).doubleValue();
-				while (d < 0)
+				while (d < 0.0)
 					d += 360.0;
-				while (d >= 360)
+				while (d >= 360.0)
 					d -= 360.0;
 				return d;
 			} catch (ParseException e) {
@@ -660,14 +671,13 @@ public class Format {
 	/**
 	 * Altitude
 	 */
-	public final static IFormatter altitudeFormatter = new IFormatter() {
+	public final static IFormatter altitudeFormatter = new FormatAdapter() {
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			return getDecimalFormat(2).parse(s);
 		}
 
-		public String toString(Object o) {
-			double d = ((Double) o).doubleValue();
+		public String format(double d) {
 			return (Double.isNaN(d) || Double.isInfinite(d)) ? MISSINGENTRYSTRING : String.valueOf((int) (d + 0.5d));
 		}
 
@@ -676,13 +686,13 @@ public class Format {
 	/**
 	 * Boolean values
 	 */
-	public final static IFormatter booleanFormatter = new IFormatter() {
+	public final static IFormatter booleanFormatter = new FormatAdapter() {
 
-		public String toString(Object d) {
-			return ((Boolean) d).booleanValue() ? Messages.QueryField_yes : Messages.QueryField_no;
+		public String format(boolean b) {
+			return b ? Messages.QueryField_yes : Messages.QueryField_no;
 		}
 
-		public Object fromString(String s) {
+		public Object parse(String s) {
 			return (s.equalsIgnoreCase(Messages.QueryField_yes) || s.equals("1")) //$NON-NLS-1$
 					? true
 					: Boolean.parseBoolean(s);
@@ -692,13 +702,13 @@ public class Format {
 	/**
 	 * Date values without time
 	 */
-	public static IFormatter dayFormatter = new IFormatter() {
+	public static IFormatter dayFormatter = new FormatAdapter() {
 
-		public String toString(Object d) {
-			return YEAR_MONTH_DAY_FORMAT.get().format((Date) d);
+		public String format(Date d) {
+			return YEAR_MONTH_DAY_FORMAT.get().format(d);
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			return YEAR_MONTH_DAY_FORMAT.get().parse(s);
 		}
 	};
@@ -706,12 +716,11 @@ public class Format {
 	/**
 	 * Date values without time
 	 */
-	public static IFormatter timeFormatter = new IFormatter() {
+	public static IFormatter timeFormatter = new FormatAdapter() {
 
 		StringBuilder sb = new StringBuilder();
 
-		public String toString(Object t) {
-			int time = (Integer) t;
+		public String format(int time) {
 			if (time < 0)
 				return Messages.Format_undefined;
 			String ampm = null;
@@ -734,7 +743,7 @@ public class Format {
 			return sb.toString();
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			try {
 				s = s.trim().toLowerCase();
 				int offset = 0;
@@ -757,9 +766,9 @@ public class Format {
 	/**
 	 * File size
 	 */
-	public final static IFormatter sizeFormatter = new IFormatter() {
+	public final static IFormatter sizeFormatter = new FormatAdapter() {
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim().toUpperCase();
 			try {
 				if (s.endsWith("TB")) //$NON-NLS-1$
@@ -780,8 +789,7 @@ public class Format {
 			}
 		}
 
-		public String toString(Object o) {
-			long d = ((Long) o).longValue();
+		public String format(long d) {
 			if (d >= 1000000000000L)
 				return formatDecimal(d / 1000000000000d, 2) + " TB"; //$NON-NLS-1$
 			if (d >= 1000000000L)
@@ -798,13 +806,13 @@ public class Format {
 	/**
 	 * URIs
 	 */
-	public final static IFormatter uriFormatter = new IFormatter() {
+	public final static IFormatter uriFormatter = new FormatAdapter() {
 
-		public Object fromString(String s) {
+		public Object parse(String s) {
 			return Core.encodeUrlSegment(s.trim());
 		}
 
-		public String toString(Object o) {
+		public String format(Object o) {
 			return Core.decodeUrl((String) o);
 		}
 
@@ -813,17 +821,12 @@ public class Format {
 	/**
 	 * Track entries
 	 */
-	public final static IFormatter trackFormatter = new IFormatter() {
+	public final static IFormatter trackFormatter = new FormatAdapter() {
 
-		public Object fromString(String s) {
-			return null;
-		}
-
-		public String toString(Object o) {
+		public String format(Object o) {
 			if (o instanceof TrackRecord) {
-				SimpleDateFormat trackdateFormat = TRACK_DATE_FORMAT.get();
 				TrackRecord record = (TrackRecord) o;
-				String date = trackdateFormat.format(record.getExportDate());
+				String date = TRACK_DATE_FORMAT.get().format(record.getExportDate());
 				String postfix = record.getReplaced() ? Messages.QueryField_replacement : ""; //$NON-NLS-1$
 				String serviceName = record.getServiceName();
 				String target = record.getTarget();

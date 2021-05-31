@@ -20,8 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import java.text.SimpleDateFormat;
-
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -54,7 +52,7 @@ import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class ConflictDialog extends ZTitleAreaDialog {
+public class ConflictDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.conflictDialog"; //$NON-NLS-1$
 	private static final String STATUS = "status";//$NON-NLS-1$
@@ -166,19 +164,13 @@ public class ConflictDialog extends ZTitleAreaDialog {
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
 		resetIptcButton = WidgetFactory.createCheckButton(synchGroup, Messages.RefreshDialog_refresh_iptc,
 				new GridData(SWT.FILL, SWT.CENTER, true, false));
-		Listener selectionListener = new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				updateButtons();
-			}
-		};
-		conflictButtonGroup.addListener(SWT.Selection, selectionListener);
+		conflictButtonGroup.addListener(SWT.Selection, this);
 		if (multi) {
 			new Label(conflictButtonGroup, SWT.SEPARATOR | SWT.HORIZONTAL)
 					.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 2, 1));
 			allButton = WidgetFactory.createCheckButton(conflictButtonGroup, Messages.ConflictDialog_apply_to_all,
 					new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-			allButton.addListener(SWT.Selection, selectionListener);
+			allButton.addListener(SWT.Selection, this);
 			GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
 			gridData.horizontalIndent = 15;
 			newerButton = WidgetFactory.createCheckButton(parent, Messages.ConflictDialog_only_newer_items, gridData);
@@ -197,9 +189,9 @@ public class ConflictDialog extends ZTitleAreaDialog {
 			canvasLabel.setText(asset.getName());
 			Label importLabel = new Label(ccomp, SWT.NONE);
 			importLabel.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
-			SimpleDateFormat sdf = Format.EMDY_TIME_LONG_FORMAT.get();
 			String by = asset.getImportedBy();
-			importLabel.setText(NLS.bind(Messages.ConflictDialog_imported, sdf.format(asset.getImportDate()),
+			importLabel.setText(NLS.bind(Messages.ConflictDialog_imported,
+					Format.EMDY_TIME_LONG_FORMAT.get().format(asset.getImportDate()),
 					by == null ? Messages.ConflictDialog_unknown : by));
 			canvas.addPaintListener(new PaintListener() {
 				public void paintControl(PaintEvent e) {
@@ -270,11 +262,13 @@ public class ConflictDialog extends ZTitleAreaDialog {
 		super.okPressed();
 	}
 
-	/**
-	 * @return currentConfig
-	 */
 	public ImportConfiguration getCurrentConfig() {
 		return currentConfig;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		updateButtons();
 	}
 
 }

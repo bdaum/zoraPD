@@ -20,6 +20,12 @@
 package com.bdaum.zoom.ui.internal.hover;
 
 public interface IHoverContribution {
+	
+
+	/**
+	 * Initialize the contribution
+	 */
+	void init();
 
 	/**
 	 * @return true if this type of hover supports a title line

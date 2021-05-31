@@ -1389,7 +1389,7 @@ public class Utilities {
 			} else
 				toPattern(sb, backupLocation, 0, i);
 			String remainder = backupLocation.substring(i + Constants.DATEVAR.length());
-			backupLocation = backupLocation.substring(0, i) + Format.YEAR_MONTH_DAY_FORMAT.get().format(new Date())
+			backupLocation = backupLocation.substring(0, i) + Format.YEAR_MONTH_DAY_FORMAT.get().format(System.currentTimeMillis())
 					+ remainder;
 			sb.append("20\\d\\d\\-(0[1-9]|1[0-2])\\-(0[1-9]|[1-2]\\d|3[0-1])"); //$NON-NLS-1$
 			toPattern(sb, remainder, 0, remainder.length());

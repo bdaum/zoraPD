@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2018 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 package com.bdaum.zoom.program;
 
@@ -419,7 +419,7 @@ public class BatchUtilities {
 							file.getAbsolutePath() }, false);
 				else
 					BatchUtilities.executeCommand(new String[] { BatchConstants.OSX ? "open" : "xdg-open", //$NON-NLS-1$ //$NON-NLS-2$
-							select ? file.getParentFile().getAbsolutePath() : file.getAbsolutePath() }, null,
+							select ? file.getParentFile().getAbsolutePath() : file.getAbsolutePath() }, null, null,
 							Messages.getString("BatchUtilities.run_script"), IStatus.OK, IStatus.ERROR, 0, 1000L, //$NON-NLS-1$
 							"UTF-8", null); //$NON-NLS-1$
 			} catch (IOException e1) {
@@ -479,6 +479,8 @@ public class BatchUtilities {
 	 *            - command parameters
 	 * @param workingDir
 	 *            - working directory or null
+	 * @param libPath
+	 *            - java library path (e.g. for dynamic loading)
 	 * @param label
 	 *            - job label
 	 * @param logLevel
@@ -501,12 +503,16 @@ public class BatchUtilities {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	public static String executeCommand(String[] parms, File workingDir, String label, int logLevel, int errorLevel,
-			int errorHandling, long timeout, String charsetName, IProgressMonitor monitor)
+	public static String executeCommand(String[] parms, File workingDir, String libPath, String label, int logLevel,
+			int errorLevel, int errorHandling, long timeout, String charsetName, IProgressMonitor monitor)
 			throws IOException, ExecutionException {
 		StreamCapture inputGrabber = null;
 		StreamCapture errorGrabber = null;
+		String oldLibPath = null;
 		try {
+			if (libPath != null)
+				System.setProperty("java.library.path", //$NON-NLS-1$
+						libPath + ';' + (oldLibPath = System.getProperty("java.library.path"))); //$NON-NLS-1$
 			Process process = Runtime.getRuntime().exec(parms, null, workingDir);
 			inputGrabber = new StreamCapture(process.getInputStream(), charsetName, label,
 					Messages.getString("BatchUtilities.output"), logLevel); //$NON-NLS-1$
@@ -547,6 +553,8 @@ public class BatchUtilities {
 				inputGrabber.abort();
 			if (errorGrabber != null)
 				errorGrabber.abort();
+			if (oldLibPath != null)
+				System.setProperty("java.library.path", oldLibPath); //$NON-NLS-1$
 		}
 	}
 
@@ -663,20 +671,22 @@ public class BatchUtilities {
 		}
 	}
 
-	public static void exportPreferences(File path) {
+	public static void exportPreferences(File path, IPreferenceFilter filter) {
 		try (OutputStream out = new BufferedOutputStream(new FileOutputStream(path))) {
 			IPreferencesService preferencesService = Platform.getPreferencesService();
-			preferencesService.exportPreferences(preferencesService.getRootNode(),
-					new IPreferenceFilter[] { new IPreferenceFilter() {
-						public String[] getScopes() {
-							return new String[] { InstanceScope.SCOPE };
-						}
+			if (filter == null)
+				filter = new IPreferenceFilter() {
+					public String[] getScopes() {
+						return new String[] { InstanceScope.SCOPE };
+					}
 
-						@SuppressWarnings({ "rawtypes", "unchecked" })
-						public Map getMapping(String scope) {
-							return null;
-						}
-					} }, out);
+					@SuppressWarnings({ "rawtypes", "unchecked" })
+					public Map getMapping(String scope) {
+						return null;
+					}
+				};
+			preferencesService.exportPreferences(preferencesService.getRootNode(), new IPreferenceFilter[] { filter },
+					out);
 		} catch (CoreException e) {
 			BatchActivator.getDefault().logError(Messages.getString("BatchUtilities.internal_error"), e); //$NON-NLS-1$
 		} catch (IOException e1) {

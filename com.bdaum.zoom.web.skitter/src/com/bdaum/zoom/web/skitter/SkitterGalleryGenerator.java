@@ -27,7 +27,9 @@ public class SkitterGalleryGenerator extends AbstractGalleryGenerator {
 			832, // large
 			1024, // very large
 			512, // small
-			420 // very small
+			420, // very small
+			1920, // HD
+			4000 //4k
 	};
 
 	private Map<String, String> imageVarmap = new HashMap<String, String>();

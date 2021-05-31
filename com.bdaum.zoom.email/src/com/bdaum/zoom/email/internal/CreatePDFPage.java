@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal;
 
@@ -51,8 +51,7 @@ public class CreatePDFPage extends ColoredWizardPage {
 	private static final float MMPERINCH = 25.4f;
 	private List<Asset> assets;
 	private LayoutComponent layoutComponent;
-	private int commonWidth = -1;
-	private int commonHeight = -1;
+	private int commonWidth = -1, commonHeight = -1;
 	private final String type;
 	private boolean pdf;
 	private IAssetProvider assetProvider;
@@ -110,7 +109,7 @@ public class CreatePDFPage extends ColoredWizardPage {
 		PageLayout_typeImpl layout = dbManager.obtainById(PageLayout_typeImpl.class, id);
 		if (layout == null) {
 			String footer = pdf ? "- " + Constants.PT_PAGENO + " -" //$NON-NLS-1$ //$NON-NLS-2$
-					: "© " + new GregorianCalendar().get(Calendar.YEAR) + " " + dbManager.getMeta(true).getOwner(); //$NON-NLS-1$ //$NON-NLS-2$
+					: "ï¿½ " + new GregorianCalendar().get(Calendar.YEAR) + " " + dbManager.getMeta(true).getOwner(); //$NON-NLS-1$ //$NON-NLS-2$
 			layout = new PageLayout_typeImpl(null, pdf ? LayoutComponent.PDF : LayoutComponent.HTML,
 					Constants.PT_COLLECTION, Constants.PT_TODAY, footer, 240, pdf ? 4 : 5, 20, 10, pdf ? 10 : 20, 8, 10,
 					7, Constants.PI_NAME, Constants.PI_CREATIONDATE, Constants.PI_NAME, 2, false, false,
@@ -132,10 +131,8 @@ public class CreatePDFPage extends ColoredWizardPage {
 			if (pdf) {
 				PdfJob job = new PdfJob(assets, layout, file, w.getQuality(), w.getJpegQuality(),
 						Ui.getUi().getDisplayCMS(), w.getUnsharpMask(), collection);
-				if (w instanceof EmailPDFWizard) {
-					job.setSubject(((EmailPDFWizard) w).getSubject());
-					job.setMessage(((EmailPDFWizard) w).getMessage());
-				}
+				if (w instanceof EmailPDFWizard)
+					job.setEmailData(((EmailPDFWizard) w).getEmailData());
 				job.schedule();
 			} else {
 				String weblink = w.getWeblink();

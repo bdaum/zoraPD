@@ -39,7 +39,7 @@ public class CurrencyExpressionCellEditor extends TextCellEditor {
 			public String isValid(Object value) {
 				if (value != null) {
 					try {
-						formatter.fromString(value.toString());
+						formatter.parse(value.toString());
 					} catch (ParseException e1) {
 						return Messages
 								.getString("ExpressionCellEditor.bad_arithmetic_expr"); //$NON-NLS-1$
@@ -54,7 +54,7 @@ public class CurrencyExpressionCellEditor extends TextCellEditor {
 	protected Object doGetValue() {
 		Object v = super.doGetValue();
 		try {
-			return v == null ? null : formatter.fromString(v.toString());
+			return v == null ? null : formatter.parse(v.toString());
 		} catch (ParseException e) {
 			// should never happen
 			return 0d;
@@ -63,6 +63,6 @@ public class CurrencyExpressionCellEditor extends TextCellEditor {
 
 	@Override
 	protected void doSetValue(Object value) {
-		super.doSetValue(formatter.toString(value));
+		super.doSetValue(formatter.format(value));
 	}
 }

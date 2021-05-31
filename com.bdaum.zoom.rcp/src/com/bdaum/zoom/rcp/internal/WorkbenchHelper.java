@@ -90,7 +90,7 @@ public final class WorkbenchHelper {
 	 */
 	private IStatus saveState(IMemento memento) {
 		MultiStatus result = new MultiStatus(PlatformUI.PLUGIN_ID, IStatus.OK, "", null); //$NON-NLS-1$
-		result.add(advisor.saveState(memento.createChild(IWorkbenchConstants.TAG_WORKBENCH_ADVISOR)));
+		result.add(advisor.saveState(memento.createChild(IWorkbenchConstants.TAG_WORKBENCH)));
 		return result;
 	}
 
@@ -127,7 +127,7 @@ public final class WorkbenchHelper {
 				public void run() {
 					XMLMemento mem = readMementoFromFile();
 					if (mem != null)
-						advisor.restoreState(mem.getChild(IWorkbenchConstants.TAG_WORKBENCH_ADVISOR));
+						advisor.restoreState(mem.getChild(IWorkbenchConstants.TAG_WORKBENCH));
 				}
 
 				@Override

@@ -7,15 +7,13 @@ import java.util.Map.Entry;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -26,7 +24,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class EditCategoryDialog extends ZTitleAreaDialog implements ModifyListener, VerifyListener {
+public class EditCategoryDialog extends ZTitleAreaDialog implements Listener {
 
 	private Category category;
 	private Text nameField;
@@ -73,8 +71,8 @@ public class EditCategoryDialog extends ZTitleAreaDialog implements ModifyListen
 		new Label(composite, SWT.NONE).setText(Messages.EditCategoryDialog_name);
 		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		nameField.addModifyListener(this);
-		nameField.addVerifyListener(this);
+		nameField.addListener(SWT.Modify, this);
+		nameField.addListener(SWT.Verify, this);
 		if (category != null && !preserveName) {
 			new Label(composite, SWT.NONE);
 			applyButton = WidgetFactory.createCheckButton(composite, Messages.EditCategoryDialog_apply_changes, null);
@@ -86,24 +84,8 @@ public class EditCategoryDialog extends ZTitleAreaDialog implements ModifyListen
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = 250;
 		synField.setLayoutData(layoutData);
-		synField.addVerifyListener(this);
+		synField.addListener(SWT.Verify, this);
 		return area;
-	}
-
-	@Override
-	public void modifyText(ModifyEvent e) {
-		if (isProposal != null) {
-			String syn = synField.getText();
-			if (syn.isEmpty())
-				synField.setText(isProposal);
-			else {
-				int p = syn.indexOf(isProposal);
-				if (p < 0 || (p + isProposal.length() < syn.length() && syn.charAt(p + isProposal.length()) != '\n'))
-					synField.setText(isProposal + '\n' + syn);
-			}
-			isProposal = null;
-		}
-		updateButtons();
 	}
 
 	private void updateButtons() {
@@ -170,17 +152,6 @@ public class EditCategoryDialog extends ZTitleAreaDialog implements ModifyListen
 	}
 
 	@Override
-	public void verifyText(VerifyEvent e) {
-		for (int i = 0; i < e.text.length(); i++) {
-			char c = e.text.charAt(i);
-			if (c == '.' || c == ',' || c == ';' || c == '/') {
-				e.doit = false;
-				break;
-			}
-		}
-	}
-
-	@Override
 	protected void okPressed() {
 		label = nameField.getText();
 		List<String> synlist = Core.fromStringList(synField.getText(), "\n"); //$NON-NLS-1$
@@ -199,6 +170,35 @@ public class EditCategoryDialog extends ZTitleAreaDialog implements ModifyListen
 
 	public boolean getApply() {
 		return apply;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Modify:
+			if (isProposal != null) {
+				String syn = synField.getText();
+				if (syn.isEmpty())
+					synField.setText(isProposal);
+				else {
+					int p = syn.indexOf(isProposal);
+					if (p < 0 || (p + isProposal.length() < syn.length() && syn.charAt(p + isProposal.length()) != '\n'))
+						synField.setText(isProposal + '\n' + syn);
+				}
+				isProposal = null;
+			}
+			updateButtons();
+			return;
+		case SWT.Verify:
+			for (int i = 0; i < e.text.length(); i++) {
+				char c = e.text.charAt(i);
+				if (c == '.' || c == ',' || c == ';' || c == '/') {
+					e.doit = false;
+					break;
+				}
+			}
+		}
+		
 	}
 
 }

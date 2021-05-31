@@ -25,10 +25,6 @@ import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -52,7 +48,7 @@ import com.bdaum.zoom.core.internal.Utilities;
 import com.ibm.icu.util.StringTokenizer;
 
 @SuppressWarnings("restriction")
-public class DrawExample extends PaintExample {
+public class DrawExample extends PaintExample implements Listener {
 
 	private static final int Eraser_tool = 1;
 	private static final int[] LINEWIDTHS = new int[] { 2, 4, 8, 16, 32 };
@@ -195,17 +191,8 @@ public class DrawExample extends PaintExample {
 		};
 		paletteCanvas.addListener(SWT.Resize, refreshListener);
 		paletteCanvas.addListener(SWT.Paint, refreshListener);
-		paintCanvas.addControlListener(new ControlListener() {
-			@Override
-			public void controlResized(ControlEvent e) {
-				repaintSurface();
-			}
-
-			@Override
-			public void controlMoved(ControlEvent e) {
-				repaintSurface();
-			}
-		});
+		paletteCanvas.addListener(SWT.Resize, this);
+		paletteCanvas.addListener(SWT.Move, this);
 		addUndoKeyListener();
 	}
 
@@ -231,9 +218,9 @@ public class DrawExample extends PaintExample {
 			gc.drawLine(5, lw / 2 + 5, 45, lw / 2 + 5);
 			gc.dispose();
 			item.setImage(image);
-			item.addSelectionListener(new SelectionAdapter() {
+			item.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					toolSettings.pencilRadius = lw;
 					updateToolSettings();
 				}
@@ -417,6 +404,11 @@ public class DrawExample extends PaintExample {
 			SAXParserFactory.newInstance().newSAXParser().parse(is, dh);
 			repaintSurface();
 		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		repaintSurface();
 	}
 
 }

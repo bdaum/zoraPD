@@ -44,8 +44,8 @@ public class RTRawConverter extends AbstractRawConverter {
 			return null;
 		List<String> parms = new ArrayList<String>();
 		parms.add(rt.getAbsolutePath());
-//		if (BatchConstants.WIN32)
-//			parms.add("-w"); //$NON-NLS-1$
+		// if (BatchConstants.WIN32)
+		// parms.add("-w"); //$NON-NLS-1$
 		parms.add("-o"); //$NON-NLS-1$
 		parms.add(outFile.getAbsolutePath());
 		if (options != null) {
@@ -108,9 +108,9 @@ public class RTRawConverter extends AbstractRawConverter {
 		} else if (Constants.LINUX) {
 			if (parentFile == null) {
 				try {
-					String result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null,
-							Messages.RTRawConverter_locate_rawtherapee, IStatus.OK, IStatus.WARNING, -1, 1000L,
-							"UTF-8", null); //$NON-NLS-1$
+					String result = BatchUtilities.executeCommand(LOCATERAWTHERAPEE, null, null,
+							Messages.RTRawConverter_locate_rawtherapee, IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8", //$NON-NLS-1$
+							null);
 					if (result != null) {
 						StringTokenizer st = new StringTokenizer(result, "\n"); //$NON-NLS-1$
 						while (st.hasMoreTokens()) {
@@ -168,8 +168,8 @@ public class RTRawConverter extends AbstractRawConverter {
 	}
 
 	@Override
-	public boolean isValid() {
-		return rt != null ? true : super.isValid();
+	public String isValid() {
+		return rt != null ? null : super.isValid();
 	}
 
 	@Override
@@ -190,12 +190,10 @@ public class RTRawConverter extends AbstractRawConverter {
 		}
 		return path;
 	}
-	
 
 	@Override
 	public int getOutputProfile() {
 		return -1;
 	}
-
 
 }

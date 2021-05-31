@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Berthold Daum.
+ * Copyright (c) 2009-2021 Berthold Daum.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,8 +29,10 @@ public class Activator extends Plugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.dcraw"; //$NON-NLS-1$
-	
+
 	public final static String DCRAW = BatchConstants.WIN32 ? "dcraw.exe" : "dcraw"; //$NON-NLS-1$//$NON-NLS-2$
+
+	public final static String DCRAWEMU = BatchConstants.WIN32 ? "dcraw_emu.exe" : "dcraw_emu"; //$NON-NLS-1$//$NON-NLS-2$
 
 	// The shared instance
 	private static Activator plugin;
@@ -38,8 +40,7 @@ public class Activator extends Plugin {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
 	 */
 
 	@Override
@@ -49,24 +50,34 @@ public class Activator extends Plugin {
 	}
 
 	public File locateDCRAW() {
-		File installFolder = new File(Platform.getInstallLocation().getURL()
-				.getPath());
-		File dcrawFile = new File(new File(installFolder,
-				BatchConstants.DROPINFOLDER), DCRAW);
+		File installFolder = new File(Platform.getInstallLocation().getURL().getPath());
+		File dcrawemuFile = new File(new File(installFolder, BatchConstants.DROPINFOLDER), DCRAWEMU);
+		if (dcrawemuFile.exists())
+			return dcrawemuFile;
+		dcrawemuFile = new File(new File(installFolder.getParent(), BatchConstants.DROPINFOLDER), DCRAW);
+		if (dcrawemuFile.exists())
+			return dcrawemuFile;
+		File dcrawFile = new File(new File(installFolder, BatchConstants.DROPINFOLDER), DCRAW);
 		if (dcrawFile.exists())
 			return dcrawFile;
-		dcrawFile = new File(new File(installFolder.getParent(),
-				BatchConstants.DROPINFOLDER), DCRAW);
+		dcrawFile = new File(new File(installFolder.getParent(), BatchConstants.DROPINFOLDER), DCRAW);
 		if (dcrawFile.exists())
 			return dcrawFile;
 		if (!BatchConstants.LINUX) {
 			try {
-				return FileLocator.findFile(getBundle(), "/" + DCRAW); //$NON-NLS-1$
+				return FileLocator.findFile(getBundle(), "/" + DCRAWEMU); //$NON-NLS-1$
 			} catch (Exception e) {
-				logError(Messages.getString("Activator.Error_locating"), e); //$NON-NLS-1$
+				try {
+					return FileLocator.findFile(getBundle(), "/" + DCRAW); //$NON-NLS-1$
+				} catch (Exception e1) {
+					logError(Messages.getString("Activator.Error_locating"), e1); //$NON-NLS-1$
+				}
 			}
 		} else {
-			File linuxFile = new File("/usr/bin/dcraw"); //$NON-NLS-1$
+			File linuxFile = new File("/usr/bin/dcraw_emu"); //$NON-NLS-1$
+			if (linuxFile.exists())
+				return linuxFile;
+			linuxFile = new File("/usr/bin/dcraw"); //$NON-NLS-1$
 			if (linuxFile.exists())
 				return linuxFile;
 		}
@@ -80,8 +91,7 @@ public class Activator extends Plugin {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
 	 */
 
 	@Override

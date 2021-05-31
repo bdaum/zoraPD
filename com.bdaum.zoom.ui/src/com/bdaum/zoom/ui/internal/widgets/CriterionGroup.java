@@ -438,17 +438,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		} else
 			initGroup(null);
 		if (groupCombo != null)
-			groupCombo.getCombo().addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					fillFieldCombo(crit);
-					fromStack.resetValues();
-					if (toStack != null)
-						toStack.resetValues();
-					validate();
-					signalModification(event);
-				}
-			});
+			groupCombo.getCombo().addListener(SWT.Selection, this);
 		if (relationCombo != null)
 			relationCombo.setVisibleItemCount(8);
 		boolean ranged = enabled && (rel == QueryField.BETWEEN || rel == QueryField.NOTBETWEEN);
@@ -465,26 +455,9 @@ public class CriterionGroup extends AbstractCriterionGroup {
 		updateStacks(false, null, false, null, 0);
 		createButtons(parent);
 		if (fieldCombo != null)
-			fieldCombo.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					fillRelationCombo(crit);
-					fromStack.resetValues();
-					if (toStack != null)
-						toStack.resetValues();
-					validate();
-					signalModification(e);
-				}
-			});
+			fieldCombo.addListener(SWT.Selection, this);
 		if (relationCombo != null)
-			relationCombo.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					updateValueFields(crit, true);
-					validate();
-					signalModification(e);
-				}
-			});
+			relationCombo.addListener(SWT.Selection, this);
 		fillFieldCombo(crit);
 		Event e = new Event();
 		e.widget = parent;
@@ -518,29 +491,11 @@ public class CriterionGroup extends AbstractCriterionGroup {
 
 	private void createButtons(final Composite parent) {
 		orButton = createButton(parent, Messages.CriterionGroup_OR);
-		orButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				CriterionGroup.this.collectionEditGroup.addGroup(parent, CriterionGroup.this, null, false);
-				signalModification(e);
-			}
-		});
+		orButton.addListener(SWT.Selection, this);
 		andButton = createButton(parent, Messages.CriterionGroup_AND);
-		andButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				CriterionGroup.this.collectionEditGroup.addGroup(parent, CriterionGroup.this, null, true);
-				signalModification(e);
-			}
-		});
+		andButton.addListener(SWT.Selection, this);
 		clearButton = createButton(parent, Icons.delete.getImage());
-		clearButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				CriterionGroup.this.collectionEditGroup.removeGroup(CriterionGroup.this);
-				signalModification(e);
-			}
-		});
+		clearButton.addListener(SWT.Selection, this);
 		clearButton.setVisible(enabled && groupNo > 0);
 	}
 
@@ -649,7 +604,7 @@ public class CriterionGroup extends AbstractCriterionGroup {
 						if (crit != null) {
 							fromStack.select(crit.getValue());
 							if (range && toStack != null)
-								toStack.select(crit.getTo()); 
+								toStack.select(crit.getTo());
 						}
 					} else if (range) {
 						updateStacks(false, null, true, fieldDescriptor, rel);
@@ -745,6 +700,39 @@ public class CriterionGroup extends AbstractCriterionGroup {
 
 	public String getErrorMessage() {
 		return errorMessage;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == groupCombo.getCombo()) {
+			fillFieldCombo(crit);
+			fromStack.resetValues();
+			if (toStack != null)
+				toStack.resetValues();
+			validate();
+			signalModification(e);
+		} else if (e.widget == fieldCombo) {
+			fillRelationCombo(crit);
+			fromStack.resetValues();
+			if (toStack != null)
+				toStack.resetValues();
+			validate();
+			signalModification(e);
+		} else if (e.widget == relationCombo) {
+			updateValueFields(crit, true);
+			validate();
+			signalModification(e);
+		} else if (e.widget == orButton) {
+			CriterionGroup.this.collectionEditGroup.addGroup(orButton.getParent(), CriterionGroup.this, null, false);
+			signalModification(e);
+		} else if (e.widget == andButton) {
+			CriterionGroup.this.collectionEditGroup.addGroup(andButton.getParent(), CriterionGroup.this, null, true);
+			signalModification(e);
+		} else if (e.widget == clearButton) {
+			CriterionGroup.this.collectionEditGroup.removeGroup(CriterionGroup.this);
+			signalModification(e);
+		} else
+			super.handleEvent(e);
 	}
 
 }

@@ -31,8 +31,7 @@ import com.bdaum.zoom.core.Core;
 
 public class ExhibitionPropertiesOperation extends AbstractOperation {
 
-	private ExhibitionImpl backup;
-	private ExhibitionImpl exhibition;
+	private final ExhibitionImpl backup, exhibition;
 	private ExhibitionImpl redo;
 
 	public ExhibitionPropertiesOperation(ExhibitionImpl backup, ExhibitionImpl exhibition) {

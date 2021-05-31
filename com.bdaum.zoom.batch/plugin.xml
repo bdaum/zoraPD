@@ -2,5 +2,11 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point id="rawConverter" name="Raw Converter" schema="schema/rawConverter.exsd"/>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.batch.internal.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

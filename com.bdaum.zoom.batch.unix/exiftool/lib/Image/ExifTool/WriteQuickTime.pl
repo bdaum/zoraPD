@@ -144,7 +144,7 @@ sub PrintInvGPSCoordinates($)
         $v[2] = Image::ExifTool::ToFloat($v[2]) * ($below ? -1 : 1) if @v == 3;
         return "@v";
     }
-    return $val if $val =~ /^([-+]\d+(\.\d*)?){2,3}(CRS.*)?$/; # already in ISO6709 format?
+    return $val if $val =~ /^([-+]\d+(\.\d*)?){2,3}(CRS.*)?\/?$/; # already in ISO6709 format?
     return undef;
 }
 
@@ -159,15 +159,16 @@ sub ConvInvISO6709($)
     my @a = split ' ', $val;
     if (@a == 2 or @a == 3) {
         # latitude must have 2 digits before the decimal, and longitude 3,
-        # and all values must start with a "+" or "-"
-        my @fmt = ('%s%02d','%s%03d','%s%d');
+        # and all values must start with a "+" or "-", and Google Photos
+        # requires at least 3 digits after the decimal point
+        my @fmt = ('%s%02d.%s%s','%s%03d.%s%s','%s%d.%s%s');
         foreach (@a) {
             return undef unless Image::ExifTool::IsFloat($_);
-            $_ =~ s/^([-+]?)(\d+)/sprintf(shift(@fmt), $1 || '+', $2)/e;
+            $_ =~ s/^([-+]?)(\d+)\.?(\d*)/sprintf(shift(@fmt),$1||'+',$2,$3,length($3)<3 ? '0'x(3-length($3)) : '')/e;
         }
-        return join '', @a;
+        return join '', @a, '/';
     }
-    return $val if $val =~ /^([-+]\d+(\.\d*)?){2,3}(CRS.*)?$/; # already in ISO6709 format?
+    return $val if $val =~ /^([-+]\d+(\.\d*)?){2,3}(CRS.*)?\/?$/; # already in ISO6709 format?
     return undef;
 }
 
@@ -300,15 +301,19 @@ sub CheckQTValue($$$)
 
 #------------------------------------------------------------------------------
 # Format QuickTime value for writing
-# Inputs: 0) ExifTool ref, 1) value ref, 2) Format (or undef)
+# Inputs: 0) ExifTool ref, 1) value ref, 2) Format (or undef), 3) Writable (or undef)
 # Returns: Flags for QT data type, and reformats value as required
-sub FormatQTValue($$;$)
+sub FormatQTValue($$;$$)
 {
-    my ($et, $valPt, $format) = @_;
+    my ($et, $valPt, $format, $writable) = @_;
     my $flags;
     if ($format and $format ne 'string') {
         $$valPt = WriteValue($$valPt, $format);
-        $flags = $qtFormat{$format} || 0;
+        if ($writable and $qtFormat{$writable}) {
+            $flags = $qtFormat{$writable};
+        } else {
+            $flags = $qtFormat{$format} || 0;
+        }
     } elsif ($$valPt =~ /^\xff\xd8\xff/) {
         $flags = 0x0d;  # JPG
     } elsif ($$valPt =~ /^(\x89P|\x8aM|\x8bJ)NG\r\n\x1a\n/) {
@@ -457,94 +462,101 @@ sub WriteItemInfo($$$)
     return () unless $items and $raf;
 
     # extract information from EXIF/XMP metadata items
-    if ($items and $raf) {
-        my $curPos = $raf->Tell();
-        my $primary = $$et{PrimaryItem} || 0;
-        my $id;
-        foreach $id (sort { $a <=> $b } keys %$items) {
-            my $item = $$items{$id};
-            # only edit primary EXIF/XMP metadata
-            next unless $$item{RefersTo} and $$item{RefersTo}{$primary};
-            my $type = $$item{ContentType} || $$item{Type} || next;
-            # get ExifTool name for this item
-            $name = { Exif => 'EXIF', 'application/rdf+xml' => 'XMP' }->{$type};
-            next unless $name;  # only care about EXIF and XMP
-            next unless $$et{EDIT_DIRS}{$name};
-            $did{$name} = 1;    # set flag to prevent creating this metadata
-            my ($warn, $extent, $buff, @edit);
-            $warn = 'Missing iloc box' unless $$boxPos{iloc};
-            $warn = "No Extents for $type item" unless $$item{Extents} and @{$$item{Extents}};
-            $warn = "Can't currently decode encoded $type metadata" if $$item{ContentEncoding};
-            $warn = "Can't currently decode protected $type metadata" if $$item{ProtectionIndex};
-            $warn = "Can't currently extract $type with construction method $$item{ConstructionMethod}" if $$item{ConstructionMethod};
-            $warn = "$type metadata is not this file" if $$item{DataReferenceIndex};
-            $warn and $et->Warn($warn), next;
-            my $base = $$item{BaseOffset} || 0;
-            my $val = '';
-            foreach $extent (@{$$item{Extents}}) {
-                $val .= $buff if defined $buff;
-                my $pos = $$extent[1] + $base;
-                if ($$extent[2]) {
-                    $raf->Seek($pos, 0) or last;
-                    $raf->Read($buff, $$extent[2]) or last;
-                } else {
-                    $buff = '';
-                }
-                push @edit, [ $pos, $pos + $$extent[2] ];   # replace or delete this if changed
-            }
-            next unless defined $buff;
-            $buff = $val . $buff if length $val;
-            my ($hdr, $subTable, $proc);
-            if ($name eq 'EXIF') {
-                if (length($buff) < 4 or length($buff) < 4 + unpack('N',$buff)) {
-                    $et->Warn('Invalid Exif header');
-                    next;
-                }
-                $hdr = substr($buff, 0, 4 + unpack('N',$buff));
-                $subTable = GetTagTable('Image::ExifTool::Exif::Main');
-                $proc = \&Image::ExifTool::WriteTIFF;
+    my $primary = $$et{PrimaryItem};
+    my $curPos = $raf->Tell();
+    my $id;
+    foreach $id (sort { $a <=> $b } keys %$items) {
+        $primary = $id unless defined $primary; # assume primary is lowest-number item if pitm missing
+        my $item = $$items{$id};
+        # only edit primary EXIF/XMP metadata
+        next unless $$item{RefersTo} and $$item{RefersTo}{$primary};
+        my $type = $$item{ContentType} || $$item{Type} || next;
+        # get ExifTool name for this item
+        $name = { Exif => 'EXIF', 'application/rdf+xml' => 'XMP' }->{$type};
+        next unless $name;  # only care about EXIF and XMP
+        next unless $$et{EDIT_DIRS}{$name};
+        $did{$name} = 1;    # set flag to prevent creating this metadata
+        my ($warn, $extent, $buff, @edit);
+        $warn = 'Missing iloc box' unless $$boxPos{iloc};
+        $warn = "No Extents for $type item" unless $$item{Extents} and @{$$item{Extents}};
+        $warn = "Can't currently decode encoded $type metadata" if $$item{ContentEncoding};
+        $warn = "Can't currently decode protected $type metadata" if $$item{ProtectionIndex};
+        $warn = "Can't currently extract $type with construction method $$item{ConstructionMethod}" if $$item{ConstructionMethod};
+        $warn = "$type metadata is not this file" if $$item{DataReferenceIndex};
+        $warn and $et->Warn($warn), next;
+        my $base = $$item{BaseOffset} || 0;
+        my $val = '';
+        foreach $extent (@{$$item{Extents}}) {
+            $val .= $buff if defined $buff;
+            my $pos = $$extent[1] + $base;
+            if ($$extent[2]) {
+                $raf->Seek($pos, 0) or last;
+                $raf->Read($buff, $$extent[2]) or last;
             } else {
-                $hdr = '';
-                $subTable = GetTagTable('Image::ExifTool::XMP::Main');
+                $buff = '';
             }
-            my %dirInfo = (
-                DataPt   => \$buff,
-                DataLen  => length $buff,
-                DirStart => length $hdr,
-                DirLen   => length($buff) - length $hdr,
-            );
-            my $changed = $$et{CHANGED};
-            my $newVal = $et->WriteDirectory(\%dirInfo, $subTable, $proc);
-            if (defined $newVal and $changed ne $$et{CHANGED} and
-                # nothing changed if deleting an empty directory
-                ($dirInfo{DirLen} or length $newVal))
-            {
-                $newVal = $hdr . $newVal if length $hdr and length $newVal;
-                $edit[0][2] = \$newVal;     # replace the old chunk with the new data
-                $edit[0][3] = $id;          # mark this chunk with the item ID
-                push @mdatEdit, @edit;
-                # update item extent_length
-                my $n = length $newVal;
-                foreach $extent (@{$$item{Extents}}) {
-                    my ($nlen, $lenPt) = @$extent[3,4];
-                    if ($nlen == 8) {
-                        Set64u($n, $outfile, $$boxPos{iloc}[0] + 8 + $lenPt);
-                    } elsif ($n <= 0xffffffff) {
-                        Set32u($n, $outfile, $$boxPos{iloc}[0] + 8 + $lenPt);
-                    } else {
-                        $et->Error("Can't yet promote iloc length to 64 bits");
-                        return ();
-                    }
-                    $n = 0;
-                }
-                if (@{$$item{Extents}} != 1) {
-                    $et->Error("Can't yet handle $name in multiple parts. Please submit sample for testing");
-                }
-            }
-            $$et{CHANGED} = $changed;   # (will set this later if successful in editing mdat)
+            push @edit, [ $pos, $pos + $$extent[2] ];   # replace or delete this if changed
         }
-        $raf->Seek($curPos, 0);     # seek back to original position
+        next unless defined $buff;
+        $buff = $val . $buff if length $val;
+        my ($hdr, $subTable, $proc);
+        if ($name eq 'EXIF') {
+            if (not length $buff) {
+                # create EXIF from scratch
+                $hdr = "\0\0\0\x06Exif\0\0";
+            } elsif ($buff =~ /^(MM\0\x2a|II\x2a\0)/) {
+                $et->Warn('Missing Exif header');
+                $hdr = '';
+            } elsif (length($buff) >= 4 and length($buff) >= 4 + unpack('N',$buff)) {
+                $hdr = substr($buff, 0, 4 + unpack('N',$buff));
+            } else {
+                $et->Warn('Invalid Exif header');
+                next;
+            }
+            $subTable = GetTagTable('Image::ExifTool::Exif::Main');
+            $proc = \&Image::ExifTool::WriteTIFF;
+        } else {
+            $hdr = '';
+            $subTable = GetTagTable('Image::ExifTool::XMP::Main');
+        }
+        my %dirInfo = (
+            DataPt   => \$buff,
+            DataLen  => length $buff,
+            DirStart => length $hdr,
+            DirLen   => length($buff) - length $hdr,
+        );
+        my $changed = $$et{CHANGED};
+        my $newVal = $et->WriteDirectory(\%dirInfo, $subTable, $proc);
+        if (defined $newVal and $changed ne $$et{CHANGED} and
+            # nothing changed if deleting an empty directory
+            ($dirInfo{DirLen} or length $newVal))
+        {
+            $newVal = $hdr . $newVal if length $hdr and length $newVal;
+            $edit[0][2] = \$newVal;     # replace the old chunk with the new data
+            $edit[0][3] = $id;          # mark this chunk with the item ID
+            push @mdatEdit, @edit;
+            # update item extent_length
+            my $n = length $newVal;
+            foreach $extent (@{$$item{Extents}}) {
+                my ($nlen, $lenPt) = @$extent[3,4];
+                if ($nlen == 8) {
+                    Set64u($n, $outfile, $$boxPos{iloc}[0] + 8 + $lenPt);
+                } elsif ($n <= 0xffffffff) {
+                    Set32u($n, $outfile, $$boxPos{iloc}[0] + 8 + $lenPt);
+                } else {
+                    $et->Error("Can't yet promote iloc length to 64 bits");
+                    return ();
+                }
+                $n = 0;
+            }
+            if (@{$$item{Extents}} != 1) {
+                $et->Error("Can't yet handle $name in multiple parts. Please submit sample for testing");
+            }
+        }
+        $$et{CHANGED} = $changed;   # (will set this later if successful in editing mdat)
     }
+    $raf->Seek($curPos, 0);     # seek back to original position
+
     # add necessary metadata types if they didn't already exist
     my ($countNew, %add, %usedID);
     foreach $name ('EXIF','XMP') {
@@ -556,10 +568,18 @@ sub WriteItemInfo($$$)
             $et->Warn("Can't create $name. Missing expected $str");
             last;
         }
-        my $primary = $$et{PrimaryItem};
-        unless (defined $primary) {
-            $et->Warn("Can't create $name. No primary item reference");
-            last;
+        unless (defined $$et{PrimaryItem}) {
+            unless (defined $primary) {
+                $et->Warn("Can't create $name. No items to reference");
+                last;
+            }
+            # add new primary item reference box after hdrl box
+            if ($primary < 0x10000) {
+                $add{hdlr} = pack('Na4Nn', 14, 'pitm', 0, $primary);
+            } else {
+                $add{hdlr} = pack('Na4CCCCN', 16, 'pitm', 1, 0, 0, 0, $primary);
+            }
+            $et->Warn("Added missing PrimaryItemReference (for item $primary)", 1);
         }
         my $buff = '';
         my ($hdr, $subTable, $proc);
@@ -585,7 +605,7 @@ sub WriteItemInfo($$$)
                 $irefVer = Get8u($outfile, $$boxPos{iref}[0] + 8);
             } else {
                 # create iref box after end of iinf box (and save version in boxPos list)
-                $irefVer = ($primary > 0xffff ? 1 : 0);
+                $irefVer = ($primary < 0x10000 ? 0 : 1);
                 $$boxPos{iref} = [ $$boxPos{iinf}[0] + $$boxPos{iinf}[1], 0, $irefVer ];
             }
             $newVal = $hdr . $newVal if length $hdr;
@@ -672,7 +692,8 @@ sub WriteItemInfo($$$)
         }
     }
     if ($countNew) {
-        # insert new entries into iinf, iref and iloc boxes
+        # insert new entries into iinf, iref and iloc boxes,
+        # and add new pitm box after hdlr if necessary
         my $added = 0;
         my $tag;
         foreach $tag (sort { $$boxPos{$a}[0] <=> $$boxPos{$b}[0] } keys %$boxPos) {
@@ -683,7 +704,7 @@ sub WriteItemInfo($$$)
                 # create new iref box
                 $add{$tag} = Set32u(12 + length $add{$tag}) . $tag .
                              Set8u($$boxPos{$tag}[2]) . "\0\0\0" . $add{$tag};
-            } else {
+            } elsif ($tag ne 'hdlr') {
                 my $n = Get32u($outfile, $pos);
                 Set32u($n + length($add{$tag}), $outfile, $pos);    # increase box size
             }
@@ -711,10 +732,10 @@ sub WriteItemInfo($$$)
                 if ($added) {
                     $$_[1] += $added foreach @{$$dirInfo{ChunkOffset}};
                 }
-            } else {
+            } elsif ($tag ne 'hdlr') {
                 next;
             }
-            # add new entries to this box
+            # add new entries to this box (or add pitm after hdlr)
             substr($$outfile, $pos + $$boxPos{$tag}[1], 0) = $add{$tag};
             $added += length $add{$tag};    # positions are shifted by length of new entries
         }
@@ -1106,9 +1127,9 @@ sub WriteQuickTime($$$)
                                         my $newVal = $et->GetNewValue($nvHash);
                                         next unless defined $newVal;
                                         my $prVal = $newVal;
-                                        my $flags = FormatQTValue($et, \$newVal, $format);
+                                        my $flags = FormatQTValue($et, \$newVal, $format, $$tagInfo{Writable});
                                         next unless defined $newVal;
-                                        my ($ctry, $lang) = (0, $undLang);
+                                        my ($ctry, $lang) = (0, 0);
                                         if ($$ti{LangCode}) {
                                             unless ($$ti{LangCode} =~ /^([A-Z]{3})?[-_]?([A-Z]{2})?$/i) {
                                                 $et->Warn("Invalid language code for $$ti{Name}");
@@ -1164,7 +1185,11 @@ sub WriteQuickTime($$$)
                                 } else {
                                     if ($format) {
                                         # update flags for the format we are writing
-                                        $flags = $qtFormat{$format} if $qtFormat{$format};
+                                        if ($$tagInfo{Writable} and $qtFormat{$$tagInfo{Writable}}) {
+                                            $flags = $qtFormat{$$tagInfo{Writable}};
+                                        } elsif ($qtFormat{$format}) {
+                                            $flags = $qtFormat{$format};
+                                        }
                                     } else {
                                         $format = QuickTimeFormat($flags, $len);
                                     }
@@ -1183,12 +1208,13 @@ sub WriteQuickTime($$$)
                                     }
                                     my $prVal = $newVal;
                                     # format new value for writing (and get new flags)
-                                    $flags = FormatQTValue($et, \$newVal, $format);
+                                    $flags = FormatQTValue($et, \$newVal, $format, $$tagInfo{Writable});
                                     my $grp = $et->GetGroup($langInfo, 1);
                                     $et->VerboseValue("- $grp:$$langInfo{Name}", $val);
                                     $et->VerboseValue("+ $grp:$$langInfo{Name}", $prVal);
                                     $newData = substr($buff, 0, $pos-16) unless defined $newData;
-                                    $newData .= pack('Na4Nnn', length($newVal)+16, $type, $flags, $ctry, $lang);
+                                    my $wLang = $lang eq $undLang ? 0 : $lang;
+                                    $newData .= pack('Na4Nnn', length($newVal)+16, $type, $flags, $ctry, $wLang);
                                     $newData .= $newVal;
                                     ++$$et{CHANGED};
                                 } elsif (defined $newData) {
@@ -1252,10 +1278,11 @@ sub WriteQuickTime($$$)
                             # add back necessary header and encode as necessary
                             if (defined $lang) {
                                 $newData = $et->Encode($newData, $lang < 0x400 ? $charsetQuickTime : 'UTF8');
+                                my $wLang = $lang eq $undLang ? 0 : $lang;
                                 if ($$tagInfo{IText} and $$tagInfo{IText} == 6) {
-                                    $newData = pack('Nn', 0, $lang) . $newData . "\0";
+                                    $newData = pack('Nn', 0, $wLang) . $newData . "\0";
                                 } else {
-                                    $newData = pack('nn', length($newData), $lang) . $newData;
+                                    $newData = pack('nn', length($newData), $wLang) . $newData;
                                 }
                             } elsif (not $format or $format =~ /^string/ and
                                      not $$tagInfo{Binary} and not $$tagInfo{ValueConv})
@@ -1390,9 +1417,9 @@ sub WriteQuickTime($$$)
                 my $newVal = $et->GetNewValue($nvHash);
                 next unless defined $newVal;
                 my $prVal = $newVal;
-                my $flags = FormatQTValue($et, \$newVal, $$tagInfo{Format});
+                my $flags = FormatQTValue($et, \$newVal, $$tagInfo{Format}, $$tagInfo{Writable});
                 next unless defined $newVal;
-                my ($ctry, $lang) = (0,0);
+                my ($ctry, $lang) = (0, 0);
                 # handle alternate languages
                 if ($$tagInfo{LangCode}) {
                     $tag = substr($tag, 0, 4);  # strip language code from tag ID
@@ -1408,10 +1435,8 @@ sub WriteQuickTime($$$)
                 }
                 if ($$dirInfo{HasData}) {
                     # add 'data' header
-                    $lang or $lang = $undLang;
                     $newVal = pack('Na4Nnn',16+length($newVal),'data',$flags,$ctry,$lang).$newVal;
                 } elsif ($tag =~ /^\xa9/ or $$tagInfo{IText}) {
-                    $lang or $lang = $undLang;
                     if ($ctry) {
                         my $grp = $et->GetGroup($tagInfo,1);
                         $et->Warn("Can't use country code for $grp:$$tagInfo{Name}");
@@ -1853,7 +1878,7 @@ QuickTime-based file formats like MOV and MP4.
 
 =head1 AUTHOR
 
-Copyright 2003-2020, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2021, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

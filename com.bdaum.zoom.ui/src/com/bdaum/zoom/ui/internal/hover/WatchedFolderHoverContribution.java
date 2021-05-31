@@ -2,7 +2,6 @@ package com.bdaum.zoom.ui.internal.hover;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Date;
 
 import org.eclipse.osgi.util.NLS;
 
@@ -28,6 +27,13 @@ public class WatchedFolderHoverContribution extends AbstractHoverContribution im
 			Messages.WatchedFolderHoverContribution_target, Messages.WatchedFolderHoverContribution_create_sub,
 			Messages.WatchedFolderHoverContribution_rename, Messages.WatchedFolderHoverContribution_source,
 			Messages.WatchedFolderHoverContribution_content };
+	
+	private boolean hasLocation = false;
+	
+	@Override
+	public void init() {
+		hasLocation = false;
+	}
 
 	@Override
 	public boolean supportsTitle() {
@@ -90,7 +96,7 @@ public class WatchedFolderHoverContribution extends AbstractHoverContribution im
 			if (Constants.HV_LOCATION.equals(key))
 				return Constants.WIN32 ? "C:\\Users\\me\\Pictures\\downloads" : "/home/me/pictures/downloads"; //$NON-NLS-1$ //$NON-NLS-2$
 			if (Constants.HV_LASTOBSERVATION.equals(key))
-				return Format.MDY_TIME_LONG_FORMAT.get().format(new Date());
+				return Format.MDY_TIME_LONG_FORMAT.get().format(System.currentTimeMillis());
 			if (Constants.HV_RECURSIVE.equals(key))
 				return Messages.WatchedFolderHoverContribution_yes;
 			if (Constants.HV_FILTERS.equals(key))
@@ -114,19 +120,18 @@ public class WatchedFolderHoverContribution extends AbstractHoverContribution im
 		} else if (object instanceof WatchedFolder) {
 			WatchedFolder wf = (WatchedFolder) object;
 			if (Constants.HV_LOCATION.equals(key)) {
+				hasLocation = true;
 				URI uri = Core.getCore().getVolumeManager().findFile(wf.getUri(), wf.getVolume());
 				if (uri != null) {
 					File file = new File(uri);
 					String path = file.getPath();
-					if (!file.exists())
-						path += Messages.WatchedFolderHoverContribution_offline;
-					return path;
+					return file.exists() ? path : path + Messages.WatchedFolderHoverContribution_offline;
 				}
 				return Messages.WatchedFolderHoverContribution_invalid;
 			} else if (Constants.HV_LASTOBSERVATION.equals(key)) {
 				long lastObservation = wf.getLastObservation();
 				if (lastObservation > 0)
-					return Format.MDY_TIME_LONG_FORMAT.get().format(new Date(lastObservation));
+					return Format.MDY_TIME_LONG_FORMAT.get().format(lastObservation);
 			} else if (Constants.HV_RECURSIVE.equals(key))
 				return yesNo(wf.getRecursive());
 			else if (Constants.HV_FILTERS.equals(key)) {
@@ -241,7 +246,8 @@ public class WatchedFolderHoverContribution extends AbstractHoverContribution im
 							return NLS.bind(Messages.WatchedFolderHoverContribution_and, dd, ff);
 						}
 						return Messages.WatchedFolderHoverContribution_empty;
-					}
+					} else if (!hasLocation)
+						return Messages.WatchedFolderHoverContribution_offline;
 				}
 			}
 		}

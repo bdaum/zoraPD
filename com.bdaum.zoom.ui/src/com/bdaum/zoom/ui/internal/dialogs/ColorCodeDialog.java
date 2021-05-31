@@ -65,7 +65,7 @@ public class ColorCodeDialog extends ZDialog implements Listener {
 		case SWT.FocusOut:
 			code = SELECTABORT;
 			close();
-			break;
+			return;
 		default:
 			setReturnCode(OK);
 			Shell shell = getShell();
@@ -74,7 +74,6 @@ public class ColorCodeDialog extends ZDialog implements Listener {
 				if (!shell.isDisposed())
 					close();
 			});
-			break;
 		}
 
 	}

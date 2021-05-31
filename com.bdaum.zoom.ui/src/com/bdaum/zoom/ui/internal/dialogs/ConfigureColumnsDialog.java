@@ -34,14 +34,14 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
@@ -55,7 +55,7 @@ import com.bdaum.zoom.ui.internal.views.Messages;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
-public class ConfigureColumnsDialog extends ZTitleAreaDialog implements SelectionListener {
+public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Listener, ISelectionChangedListener {
 
 	List<QueryField> columnFields = new ArrayList<QueryField>();
 	private Button addButton;
@@ -154,11 +154,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Selectio
 		});
 		viewer.setInput(QueryField.ALL);
 		viewer.expandToLevel(2);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		return viewer;
 	}
 
@@ -178,7 +174,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Selectio
 	private Button createButton(Composite parent, int dir, String tooltip) {
 		Button button = new Button(parent, SWT.ARROW | dir);
 		button.setToolTipText(tooltip);
-		button.addSelectionListener(this);
+		button.addListener(SWT.Selection, this);
 		return button;
 	}
 
@@ -187,11 +183,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Selectio
 		viewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		return viewer;
 	}
 
@@ -204,11 +196,7 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Selectio
 		super.okPressed();
 	}
 
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
-	}
-
-	public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
 		if (e.widget == addButton) {
 			IStructuredSelection selection = (IStructuredSelection) metaViewer.getSelection();
 			for (@SuppressWarnings("rawtypes")
@@ -253,5 +241,10 @@ public class ConfigureColumnsDialog extends ZTitleAreaDialog implements Selectio
 		}
 		updateButtons();
 	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
 
 }

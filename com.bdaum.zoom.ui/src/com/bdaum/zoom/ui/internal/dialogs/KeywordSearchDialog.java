@@ -45,12 +45,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -76,7 +70,7 @@ import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
-public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListener, KeyListener {
+public class KeywordSearchDialog extends ZTitleAreaDialog implements Listener {
 	private static final String SETTINGSID = "com.bdaum.zoom.keywordSearchDialog"; //$NON-NLS-1$
 	private static final String HISTORY = "history"; //$NON-NLS-1$
 
@@ -200,12 +194,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		findWithinGroup = new FindWithinGroup(composite);
 		if (Core.getCore().isNetworked()) {
 			findInNetworkGroup = new FindInNetworkGroup(composite);
-			findInNetworkGroup.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					setKeywords();
-				}
-			});
+			findInNetworkGroup.addListener(SWT.Selection, this);
 		}
 		new Label(composite, SWT.NONE).setText(Messages.KeywordSearchDialog_keywords);
 		combo = new Combo(composite, SWT.NONE);
@@ -215,13 +204,10 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		combo.setItems(items);
 		if (combo.getItemCount() > 0)
 			combo.setText(combo.getItem(0));
-		combo.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
-		combo.addVerifyListener(this);
-		combo.addKeyListener(this);
+		combo.addListener(SWT.Modify, this);
+		combo.addListener(SWT.Verify, this);
+		combo.addListener(SWT.KeyDown, this);
+		combo.addListener(SWT.KeyUp, this);
 		final GridData gd_combo = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		gd_combo.widthHint = 350;
 		combo.setLayoutData(gd_combo);
@@ -284,7 +270,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		return result;
 	}
 
-	public void verifyText(VerifyEvent e) {
+	public void verifyText(Event e) {
 		if (e.character == SWT.BS || e.character == SWT.DEL)
 			return;
 		int start = e.start;
@@ -302,11 +288,11 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 					int kwend = getWordEnd(start, text);
 					StringBuilder sb = new StringBuilder(text);
 					sb.replace(kwstart, kwend, keyword);
-					combo.removeVerifyListener(this);
+					combo.removeListener(SWT.Verify, this);
 					combo.setText(sb.toString());
 					pnt.x = pnt.y = start;
 					combo.setSelection(pnt);
-					combo.addVerifyListener(this);
+					combo.removeListener(SWT.Verify, this);
 					e.doit = false;
 					return;
 				}
@@ -325,11 +311,11 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 					text = lastProposal + text.substring(lastProposal.length());
 			}
 			text += insert;
-			combo.removeVerifyListener(this);
+			combo.removeListener(SWT.Verify, this);
 			combo.setText(text);
 			pnt.x = pnt.y = text.length();
 			combo.setSelection(pnt);
-			combo.addVerifyListener(this);
+			combo.addListener(SWT.Verify, this);
 			lastProposal = null;
 			e.doit = false;
 		}
@@ -361,14 +347,14 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 			}
 			if (keyword != null) {
 				e.doit = false;
-				combo.removeVerifyListener(this);
+				combo.removeListener(SWT.Verify, this);
 				lastProposal = text.substring(0, kwstart) + keyword;
 				keyword = orig + keyword.substring(orig.length());
 				combo.setText(text.substring(0, kwstart) + keyword);
 				int pos = start + insert.length();
 				pnt.x = pnt.y = pos;
 				combo.setSelection(pnt);
-				combo.addVerifyListener(this);
+				combo.addListener(SWT.Verify, this);
 			} else {
 				lastProposal = null;
 				Ui.getUi().playSound("warning", null); //$NON-NLS-1$
@@ -376,11 +362,11 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		} else {
 			if (lastProposal != null && text.toLowerCase().startsWith(lastProposal.toLowerCase()))
 				text = lastProposal + text.substring(lastProposal.length());
-			combo.removeVerifyListener(this);
+			combo.removeListener(SWT.Verify, this);
 			combo.setText(text);
 			pnt.x = pnt.y = text.length();
 			combo.setSelection(pnt);
-			combo.addVerifyListener(this);
+			combo.addListener(SWT.Verify, this);
 			e.doit = false;
 		}
 	}
@@ -427,7 +413,7 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 		return text.length();
 	}
 
-	public void keyPressed(KeyEvent e) {
+	public void keyPressed(Event e) {
 		int keyCode = e.keyCode;
 		if (keyCode == SWT.ARROW_UP || keyCode == SWT.ARROW_DOWN || keyCode == SWT.PAGE_DOWN
 				|| keyCode == SWT.PAGE_UP) {
@@ -445,28 +431,28 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 				else if (keyCode == SWT.ARROW_DOWN && index >= 0 && index < keywords.length - 1)
 					text = keywords[index + 1];
 				if (text != null) {
-					textField.removeVerifyListener(this);
+					textField.removeListener(SWT.Verify, this);
 					textField.setText(text);
 					pnt.x = pnt.y = 0;
 					textField.setSelection(pnt);
-					textField.addVerifyListener(this);
+					textField.removeListener(SWT.Verify, this);
 				}
 				e.doit = false;
 			}
 		}
 	}
 
-	public void keyReleased(KeyEvent e) {
+	public void keyReleased(Event e) {
 		Point p = combo.getSelection();
 		if (p.x == p.y) {
 			if (e.keyCode == SWT.ARROW_RIGHT || e.keyCode == SWT.END) {
 				if (lastProposal != null && lastProposal.length() >= p.x) {
 					String text = combo.getText();
 					if (text.toLowerCase().startsWith(lastProposal.toLowerCase())) {
-						combo.removeVerifyListener(this);
+						combo.removeListener(SWT.Verify, this);
 						combo.setText(text = lastProposal + text.substring(lastProposal.length()));
 						p.x = p.y = text.length();
-						combo.addVerifyListener(this);
+						combo.removeListener(SWT.Verify, this);
 					} else {
 						p.x = p.y = lastProposal.length();
 						lastProposal = null;
@@ -475,6 +461,27 @@ public class KeywordSearchDialog extends ZTitleAreaDialog implements VerifyListe
 				}
 			}
 		}
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			setKeywords();
+			return;
+		case SWT.Modify:
+			updateButtons();
+			return;
+		case SWT.Verify:
+			verifyText(e);
+			return;
+		case SWT.KeyDown:
+			keyPressed(e);
+			return;
+		case SWT.KeyUp:
+			keyReleased(e);
+		}
+		
 	}
 
 }

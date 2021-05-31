@@ -164,7 +164,7 @@ public class CGroup extends Composite implements Listener {
 		r.height += margins + ymargin;
 		return r;
 	}
-
+	
 	/*
 	 * (non-Javadoc)
 	 *

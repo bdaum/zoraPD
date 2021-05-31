@@ -99,18 +99,19 @@ public class BookmarkHoverContribution extends AbstractHoverContribution impleme
 		if (object instanceof HoverTestObject) {
 			if (LABEL.equals(key))
 				return Messages.BookmarkHoverContribution_bookmark1;
+			if (CATALOG.equals(key))
+				return Core.getCore().getDbManager().getFileName();
+			if (COLLECTION.equals(key))
+				return Messages.BookmarkHoverContribution_sample_coll;
+			if (CREATIONDATE.equals(key))
+				return Format.EMDY_TIME_LONG_FORMAT.get().format(System.currentTimeMillis());
+			if (TARGET.equals(key))
+				return NLS.bind("{0} {1}", "img2019-234", Messages.BookmarkHoverContribution_offline); //$NON-NLS-1$ //$NON-NLS-2$
 			if (PEER.equals(key)) {
 				IPeerService peerService = Core.getCore().getPeerService();
 				if (peerService != null)
 					return Messages.BookmarkHoverContribution_peer1;
-			} else if (CATALOG.equals(key))
-				return Core.getCore().getDbManager().getFileName();
-			else if (COLLECTION.equals(key))
-				return Messages.BookmarkHoverContribution_sample_coll;
-			else if (CREATIONDATE.equals(key))
-				return Format.EMDY_TIME_LONG_FORMAT.get().format(new Date());
-			else if (TARGET.equals(key))
-				return NLS.bind("{0} {1}", "img2019-234", Messages.BookmarkHoverContribution_offline); //$NON-NLS-1$ //$NON-NLS-2$
+			}  
 		}
 		if (object instanceof Bookmark) {
 			Bookmark bookmark = (Bookmark) object;

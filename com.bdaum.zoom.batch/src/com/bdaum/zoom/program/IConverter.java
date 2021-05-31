@@ -59,4 +59,9 @@ public interface IConverter {
 	 */
 	File getInputDirectory();
 
+	/**
+	 * @return the java library path for dynamically loading components
+	 */
+	String getLibPath();
+
 }

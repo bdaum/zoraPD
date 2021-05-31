@@ -22,23 +22,20 @@ package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -54,7 +51,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
-public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListener, SelectionListener {
+public class SlideShowSaveDialog extends ZTitleAreaDialog implements Listener {
 
 	private Map<String, GroupImpl> groupMap = new HashMap<String, GroupImpl>(50);
 	private Combo groupField;
@@ -87,8 +84,8 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.verticalIndent = 10;
 		nameField.setLayoutData(layoutData);
-		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Format.DFDT.get().format(new Date()));
-		nameField.addModifyListener(this);
+		nameField.setText(Messages.SlideShowSaveDialog_slideshow + Format.DFDT.get().format(System.currentTimeMillis()));
+		nameField.addListener(SWT.Modify, this);
 		new Label(composite, SWT.NONE).setText(Messages.SlideShowSaveDialog_group);
 		groupField = new Combo(composite, SWT.DROP_DOWN);
 		groupField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -125,8 +122,8 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 			groupField.select(slideshowGroup);
 		if (array.length > 0)
 			groupField.setText(array[slideshowGroup >= 0 ? slideshowGroup : 0]);
-		groupField.addModifyListener(this);
-		groupField.addSelectionListener(this);
+		groupField.addListener(SWT.Modify, this);
+		groupField.addListener(SWT.Selection, this);
 		openButton = WidgetFactory.createCheckButton(composite, Messages.SlideShowSaveDialog_open_editor,
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
 		nameField.setFocus();
@@ -154,14 +151,6 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 
 	public boolean getOpen() {
 		return open;
-	}
-
-	public void modifyText(ModifyEvent e) {
-		updateButtons();
-	}
-
-	public void widgetSelected(SelectionEvent e) {
-		updateButtons();
 	}
 
 	private void updateButtons() {
@@ -200,8 +189,9 @@ public class SlideShowSaveDialog extends ZTitleAreaDialog implements ModifyListe
 		return true;
 	}
 
-	public void widgetDefaultSelected(SelectionEvent e) {
-		// do nothing
+	@Override
+	public void handleEvent(Event e) {
+		updateButtons();
 	}
 
 }

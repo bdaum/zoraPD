@@ -21,16 +21,14 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.zoom.cat.model.group.Criterion;
@@ -69,9 +67,9 @@ import com.bdaum.zoom.ui.widgets.DateInput;
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2012 Berthold Daum  
+ * (c) 2012-2021 Berthold Daum  
  */
-public class ColorCodeGroup {
+public class ColorCodeGroup implements ISelectionChangedListener, Listener {
 
 	private static final String[] NOITEMS = new String[0];
 
@@ -176,34 +174,10 @@ public class ColorCodeGroup {
 		undefinedGroup = createStackGroup(valueComp, 1);
 		Button clearButton = new Button(autoGroup, SWT.PUSH);
 		clearButton.setImage(Icons.delete.getImage());
-		clearButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				crit = null;
-				switchColor();
-			}
-		});
-		critGroupCombo.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				fillFieldCombo();
-				resetValues();
-			}
-		});
-		critFieldCombo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fillRelationCombo();
-				resetValues();
-				validate();
-			}
-		});
-		critRelationCombo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				updateValueFields(crit);
-				validate();
-			}
-		});
+		clearButton.addListener(SWT.Selection, this);
+		critGroupCombo.addSelectionChangedListener(this);
+		critFieldCombo.addListener(SWT.Selection, this);
+		critRelationCombo.addListener(SWT.Selection, this);
 		fillFieldCombo();
 	}
 
@@ -397,12 +371,6 @@ public class ColorCodeGroup {
 		return array;
 	}
 
-	private ModifyListener modifyListener = new ModifyListener() {
-		public void modifyText(ModifyEvent e) {
-			validate();
-		}
-	};
-
 	private ProposalListener proposalListener;
 
 	private void switchColor() {
@@ -439,7 +407,7 @@ public class ColorCodeGroup {
 	private void updateValueGroup(boolean enumeration, String[] valueProposals, boolean range, FieldDescriptor fd,
 			int rel) {
 		for (Text field : fieldsToValidate)
-			field.removeModifyListener(modifyListener);
+			field.removeListener(SWT.Modify, this);
 		fieldsToValidate.clear();
 		if (rel == QueryField.UNDEFINED)
 			valueLayout.topControl = undefinedGroup;
@@ -492,7 +460,7 @@ public class ColorCodeGroup {
 	}
 
 	private void monitorField(Text field) {
-		field.addModifyListener(modifyListener);
+		field.addListener(SWT.Modify, this);
 		fieldsToValidate.add(field);
 	}
 
@@ -603,6 +571,29 @@ public class ColorCodeGroup {
 			// should never happen
 		}
 		return null;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		fillFieldCombo();
+		resetValues();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Modify)
+			validate();
+		else if (e.widget == critRelationCombo) {
+			updateValueFields(crit);
+			validate();
+		} else if (e.widget == critFieldCombo) {
+			fillRelationCombo();
+			resetValues();
+			validate();
+		} else {
+			crit = null;
+			switchColor();
+		}
 	}
 
 }

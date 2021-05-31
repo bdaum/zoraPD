@@ -22,10 +22,10 @@ package com.bdaum.zoom.ui.internal.dialogs;
 import org.eclipse.jface.dialogs.DialogSettings;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
@@ -35,7 +35,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 /**
  * Base class for resizable Dialogs with persistent window bounds.
  */
-public abstract class ZResizableDialog extends ZTrayDialog {
+public abstract class ZResizableDialog extends ZTrayDialog implements Listener {
 
 	// dialog store id constants
 	private final static String DIALOG_BOUNDS_KEY = "ResizableDialogBounds."; //$NON-NLS-1$
@@ -88,24 +88,15 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 	protected Point getInitialSize() {
 		final Shell s = getShell();
 		if (s != null) {
-			s.addControlListener(new ControlListener() {
-				public void controlMoved(ControlEvent arg0) {
-					updateBounds(s);
-				}
-
-				public void controlResized(ControlEvent arg0) {
-					updateBounds(s);
-				}
-			});
+			s.addListener(SWT.Resize, this);
+			s.addListener(SWT.Move, this);
 		}
 		return doGetInitialSize();
 	}
-	
 
 	protected void updateBounds(final Shell s) {
 		fNewBounds = s.getBounds();
 	}
-
 
 	protected Point doGetInitialSize() {
 		int width = 0;
@@ -139,7 +130,6 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 		}
 		return new Point(width, height);
 	}
-
 
 	protected Point getDefaultSize() {
 		return null;
@@ -192,5 +182,10 @@ public abstract class ZResizableDialog extends ZTrayDialog {
 		dialogBounds.put(Y, bounds.y);
 		dialogBounds.put(WIDTH, bounds.width);
 		dialogBounds.put(HEIGHT, bounds.height);
+	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateBounds(getShell());
 	}
 }

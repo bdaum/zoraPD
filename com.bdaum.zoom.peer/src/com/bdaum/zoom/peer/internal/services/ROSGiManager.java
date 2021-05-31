@@ -21,12 +21,11 @@ package com.bdaum.zoom.peer.internal.services;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -103,8 +102,7 @@ public class ROSGiManager {
 	private final BundleContext context;
 	private ServiceRegistration<IPeerProvider> peerProviderRegistration;
 	private int listeningPort;
-	private Map<String, RemoteServiceReference> onlineMap = Collections
-			.synchronizedMap(new HashMap<String, RemoteServiceReference>());
+	private Map<String, RemoteServiceReference> onlineMap = new ConcurrentHashMap<String, RemoteServiceReference>();
 	private RemoteOSGiService remote;
 	private ListenerList<IPeerListener> peerListeners = new ListenerList<IPeerListener>();
 	private final String host;

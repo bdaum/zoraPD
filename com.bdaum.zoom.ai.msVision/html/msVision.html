@@ -1,89 +1,93 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html lang="en-us"><head>
-
-
-
-
-
-
-
-  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>Microsoft Computer Vision</title>
-
-
-
-
-
-  
-
-  
-  
-  <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css"></head><body>
-<h2>Microsoft Computer Vision<br>
- </h2>At the time of writing the <span style="font-style: italic;">Microsoft Computer Vision</span>
-was still in an early state. Nevertheless it was useful. In addition in
-providing categories and keywords, it can also check for safe content,
-detect faces, and provide image description one-liners.<br>
-<span style="font-style: italic;">Microsoft</span> offers several
-pricing plans, starting with a free plan. At the time of
-writing the free plan allowed for 5000 image requests per month.
-Microsoft also limits the number of requests to 20 per minute.
-Therefore, ZoRa PhotoDirector waits three seconds until issueing the
-next request.<br>
-<br>
-Before you can use the service you must open an account with <span style="font-style: italic;">Microsoft Cognitive Services</span> To do so, visit their website at <a href="https://www.microsoft.com/cognitive-services">https://www.microsoft.com/cognitive-services</a>
-or click the link in the <span style="font-style: italic;">Microsoft Vision</span> preference page. You must then enter
-your credentials (<span style="font-weight: bold;">Key1</span> or <span style="font-weight: bold;">Key2</span>) into the <span style="font-style: italic;">Microsoft Vision</span> preference page.<br>
-<span style="font-style: italic;"></span><br>
-<span style="font-style: italic;">Microsoft Vision</span> supports at
-the time of writing only English and Chinese. We suggest to use English
-and to use the translation options below if you require a different
-output language. <br>
-<br>
-<h4>Options</h4>
-
-<ul>
-  <li><span style="font-weight: bold;">Maximum number of proposals.</span> 
-For each image <span style="font-style: italic;">Microsoft Computer Vision</span>
-proposes a small number of categories and a larger number of keywords. You
-may restrict both by setting a maximum number of proposals.</li>
-  <li><span style="font-weight: bold;">Minimum confidence level.</span>
-All proposals are given with a confidence level. You may enter a value
-between 0 and 100 (in percent) to supress all proposals with a lower
-confidence level. Note that this setting applies only to keywords but not to categories.</li>
-  <li><span style="font-weight: bold;">Pre-mark keywords when confidence is above.</span>
-Specify a confidence level for which the system should automatically
-mark proposals as keywords. Specify a value of 100 if you do not wish
-automatical marking.</li>
-  <li><span style="font-weight: bold;">Pre-mark only known keywords.</span> This option will restricts automatical marking to keywords that are already defined in the catalog.<br>
-  </li>
-
-  <li><span style="font-weight: bold;">Check "safe for work"</span>.
-Mark this option to check if an image contains sexual or racist
-contents. The results will be used to set the images privacy settings.</li>
-  <li><span style="font-weight: bold;">Detect faces.</span> Mark
-this option if you want the service to detect faces in the image. If
-faces are found bounding boxes in green color will be drawn in the
-image. You have then the option to accept those face regions or to
-dicard them.<br>
-  </li>
-
-  <li><span style="font-weight: bold;">Detect celebrities.</span> Mark
-this option if you want the service to detect celebrities in the image.
-At the time of writing the celebrity names appear only in the generated
-image description (below).</li>
-  <li><span style="font-weight: bold;">Generate description.</span> An
-image description one-liner is generated. Please note that we skip the
-generation of image description if an image has already a description.<br>
-  </li>
-
-  <li><span style="font-weight: bold;">Translate categories.</span> Mark this option if you want the outputted categories in another language than English. The <a href="../../com.bdaum.zoom.ai/html/ai.html"><span style="font-style: italic;">Microsoft Translator Service</span></a> will be used to translate the returned texts.</li>
-  <li><span style="font-weight: bold;">Translate keywords.</span> Mark this option if you want the outputted keywords in another language than English.&nbsp;</li>
-  <li><span style="font-weight: bold;">Translate description.</span> Mark this option if you want the outputted description in another language than English.&nbsp;</li>
-
-</ul>
-<br>
-<acronym></acronym>
-<p> </p>
-
-
-</body></html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Microsoft Computer Vision</title>
+    <link rel="stylesheet" type="text/css" href="../../com.bdaum.zoom.rcp/book.css">
+  </head>
+  <body>
+    <h2>Microsoft Computer Vision<br>
+    </h2>
+    In addition in
+    providing categories and keywords, <span style="font-style: italic;">Microsoft
+      Azure Computer Vision </span>can also check for safe content,
+    detect faces, celebrities, landmarks, and provide image description
+    one-liners.<br>
+    <span style="font-style: italic;">Microsoft</span> offers several
+    pricing plans, starting with a free plan. At the time of
+    writing the free plan allowed for 5000 image requests per month.
+    Microsoft also limits the number of requests to 20 per minute.
+    Therefore, ZoRa PhotoDirector waits three seconds before sending the
+    next request.<br>
+    <br>
+    Before you can use the service you must open an account with <span style="font-style: italic;">Microsoft
+      Cognitive Services</span> To do so, visit their website at <a href="https://azure.microsoft.com/de-de/services/cognitive-services/">https://azure.microsoft.com/de-de/services/cognitive-services/</a>
+    or click the link in the <span style="font-style: italic;">Microsoft Vision</span>
+    preference page. You must then enter
+    your credentials (<span style="font-weight: bold;">Key1</span> or <span style="font-weight: bold;">Key2</span>
+    and the <b>Endpoint</b>) into the <span style="font-style: italic;">Microsoft
+      Vision</span> preference page.<br>
+    <span style="font-style: italic;"></span><br>
+    <span style="font-style: italic;">Microsoft Vision</span> supports at
+    the time of writing only English, Spanish, Chinese, and a few other
+    languages. We suggest to use English
+    and to use the translation options below if you require a different
+    output language. <br>
+    <br>
+    <h4>Options</h4>
+    <ul>
+      <li><span style="font-weight: bold;">Maximum number of proposals.</span>
+        For each image <span style="font-style: italic;">Microsoft Computer
+          Vision</span>
+        proposes a small number of categories and a larger number of keywords.
+        You
+        may restrict both by setting a maximum number of proposals.</li>
+      <li><span style="font-weight: bold;">Minimum confidence level.</span>
+        All proposals are given with a confidence level. You may enter a value
+        between 0 and 100 (in percent) to suppress all proposals with a lower
+        confidence level. Note that this setting applies only to keywords but
+        not to categories.</li>
+      <li><span style="font-weight: bold;">Pre-mark keywords when confidence is
+          above.</span>
+        Specify a confidence level for which the system should automatically
+        mark proposals as keywords. Specify a value of 100 if you do not wish
+        automatic marking.</li>
+      <li><span style="font-weight: bold;">Pre-mark only known keywords.</span>
+        This option will restricts automatic marking to keywords that are
+        already defined in the catalog.<br>
+      </li>
+      <li><span style="font-weight: bold;">Check "safe for work"</span>.
+        Mark this option to check if an image contains sexual or racist
+        contents. The results will be used to set the images privacy settings.</li>
+      <li><span style="font-weight: bold;">Detect faces.</span> Mark
+        this option if you want the service to detect faces in the image. If
+        faces are found bounding boxes in green color will be drawn in the
+        image. You have then the option to accept those face regions or to
+        dicard them.<br>
+      </li>
+      <li><span style="font-weight: bold;">Detect celebrities and landmarks.</span>
+        Mark
+        this option if you want the service to detect celebrities or landmarks
+        in the image. These appear only in the generated
+        image description (below).</li>
+      <li><span style="font-weight: bold;">Generate description.</span> An
+        image description one-liner is generated. Please note that we skip the
+        generation of image description if an image has already a description.<br>
+      </li>
+      <li><span style="font-weight: bold;">Translate categories.</span> Mark
+        this option if you want the outputted categories in another language
+        than English. The <a href="../../com.bdaum.zoom.ai/html/ai.html"><span
+            style="font-style: italic;">Microsoft Translator Service</span></a>
+        will be used to translate the returned texts.</li>
+      <li><span style="font-weight: bold;">Translate keywords.</span> Mark this
+        option if you want the outputted keywords in another language than
+        English.&nbsp;</li>
+      <li><span style="font-weight: bold;">Translate description.</span> Mark
+        this option if you want the outputted description in another language
+        than English.&nbsp;</li>
+    </ul>
+    <br>
+    <acronym></acronym>
+    <p> </p>
+  </body>
+</html>

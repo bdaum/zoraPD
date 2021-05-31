@@ -37,17 +37,15 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.Format;
@@ -64,7 +62,7 @@ import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
 @SuppressWarnings("restriction")
-public class AutoRuleComponent {
+public class AutoRuleComponent implements ISelectionChangedListener, IDoubleClickListener, Listener {
 
 	private List<AutoRule> autoRules = new ArrayList<AutoRule>();
 	private TableViewer ruleViewer;
@@ -173,7 +171,7 @@ public class AutoRuleComponent {
 						if (qfield.getEnumeration() != null)
 							return rule.getEnumerationSpec();
 						if (qfield.getType() == QueryField.T_BOOLEAN)
-							return Format.booleanFormatter.toString(Boolean.parseBoolean(rule.getBooleanSpec()));
+							return Format.booleanFormatter.format(Boolean.parseBoolean(rule.getBooleanSpec()));
 						//$FALL-THROUGH$
 					default:
 						return rule.getIntervalSpec();
@@ -189,38 +187,12 @@ public class AutoRuleComponent {
 		layoutData.heightHint = (style & SWT.SHORT) != 0 ? 150 : 300;
 		ruleViewer.getTable().setLayoutData(layoutData);
 		ruleViewer.setContentProvider(ArrayContentProvider.getInstance());
-		new SortColumnManager(ruleViewer, new int[] {SWT.UP, SWT.UP, SWT.UP, SWT.NONE, SWT.NONE}, 0);
+		new SortColumnManager(ruleViewer, new int[] { SWT.UP, SWT.UP, SWT.UP, SWT.NONE, SWT.NONE }, 0);
 		ruleViewer.setComparator(ZViewerComparator.INSTANCE);
-		ruleViewer.getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
-		ruleViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-				if (cntrlDwn) {
-					if (editAutoButton.isEnabled())
-						editRule();
-					cntrlDwn = false;
-				}
-			}
-		});
-		ruleViewer.addDoubleClickListener(new IDoubleClickListener() {
-			@Override
-			public void doubleClick(DoubleClickEvent event) {
-				if (!cntrlDwn && editAutoButton.isEnabled())
-					editRule();
-			}
-		});
+		ruleViewer.getControl().addListener(SWT.KeyDown, this);
+		ruleViewer.getControl().addListener(SWT.KeyUp, this);
+		ruleViewer.addSelectionChangedListener(this);
+		ruleViewer.addDoubleClickListener(this);
 		ruleViewer.setInput(autoRules);
 		Composite autoButtonBar = new Composite(autoGroup, SWT.NONE);
 		autoButtonBar.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
@@ -228,67 +200,22 @@ public class AutoRuleComponent {
 		addAutoButton = new Button(autoButtonBar, SWT.PUSH);
 		addAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		addAutoButton.setText(Messages.AutoRuleComponent_add);
-		addAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				AutoRuleDialog dialog = new AutoRuleDialog(parent.getShell(), null, autoRules);
-				if (dialog.open() == AutoRuleDialog.OK) {
-					AutoRule rule = dialog.getRule();
-					autoRules.add(rule);
-					ruleViewer.add(rule);
-					ruleViewer.setSelection(new StructuredSelection(rule));
-					fillAccelViewer();
-					updateButtons();
-				}
-			}
-		});
+		addAutoButton.addListener(SWT.Selection, this);
 		editAutoButton = new Button(autoButtonBar, SWT.PUSH);
 		editAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		editAutoButton.setText(Messages.AutoRuleComponent_edit);
-		editAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				editRule();
-			}
-		});
+		editAutoButton.addListener(SWT.Selection, this);
 		removeAutoButton = new Button(autoButtonBar, SWT.PUSH);
 		removeAutoButton.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		removeAutoButton.setText(Messages.AutoRuleComponent_remove);
-		removeAutoButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				@SuppressWarnings("unchecked")
-				Iterator<AutoRule> it = ruleViewer.getStructuredSelection().iterator();
-				while (it.hasNext()) {
-					AutoRule rule = it.next();
-					int index = autoRules.indexOf(rule);
-					autoRules.remove(rule);
-					if (index >= autoRules.size())
-						--index;
-					ruleViewer.remove(rule);
-					if (index >= 0)
-						ruleViewer.setSelection(new StructuredSelection(autoRules.get(index)));
-				}
-				fillAccelViewer();
-				updateButtons();
-			}
-		});
+		removeAutoButton.addListener(SWT.Selection, this);
 		new Label(autoButtonBar, SWT.SEPARATOR | SWT.HORIZONTAL)
 				.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		applyButton = new Button(autoButtonBar, SWT.PUSH);
 		applyButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		applyButton.setText(Messages.AutoRuleComponent_apply);
 		applyButton.setToolTipText(Messages.AutoRuleComponent_apply_tooltip);
-		applyButton.addSelectionListener(new SelectionAdapter() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection sel = ruleViewer.getStructuredSelection();
-				if (!sel.isEmpty())
-					OperationJob.executeSlaveOperation(
-							new AutoRuleOperation(new ArrayList<AutoRule>(sel.toList()), null, null), info, false);
-			}
-		});
+		applyButton.addListener(SWT.Selection, this);
 		CGroup accelGroup = UiUtilities.createGroup(composite, 1, Messages.AutoRuleComponent_accel_candidates);
 		new Label(accelGroup, SWT.WRAP).setText(Messages.AutoRuleComponent_accel_msg);
 		accelViewer = CheckboxTableViewer.newCheckList(accelGroup, SWT.V_SCROLL | SWT.BORDER);
@@ -381,6 +308,71 @@ public class AutoRuleComponent {
 			UiActivator.getDefault().getPreferenceStore().putValue(PreferenceConstants.METADATATUNING,
 					Core.toStringList(accelerated, 'n'));
 		}
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+		if (cntrlDwn) {
+			if (editAutoButton.isEnabled())
+				editRule();
+			cntrlDwn = false;
+		}
+	}
+
+	@Override
+	public void doubleClick(DoubleClickEvent event) {
+		if (!cntrlDwn && editAutoButton.isEnabled())
+			editRule();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyDown:
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = true;
+			return;
+		case SWT.KeyUp:
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = false;
+			return;
+		case SWT.Selection:
+			if (e.widget == addAutoButton) {
+				AutoRuleDialog dialog = new AutoRuleDialog(composite.getShell(), null, autoRules);
+				if (dialog.open() == AutoRuleDialog.OK) {
+					AutoRule rule = dialog.getRule();
+					autoRules.add(rule);
+					ruleViewer.add(rule);
+					ruleViewer.setSelection(new StructuredSelection(rule));
+					fillAccelViewer();
+					updateButtons();
+				}
+			} else if (e.widget == editAutoButton) {
+				editRule();
+			} else if (e.widget == removeAutoButton) {
+				Iterator<AutoRule> it = ruleViewer.getStructuredSelection().iterator();
+				while (it.hasNext()) {
+					AutoRule rule = it.next();
+					int index = autoRules.indexOf(rule);
+					autoRules.remove(rule);
+					if (index >= autoRules.size())
+						--index;
+					ruleViewer.remove(rule);
+					if (index >= 0)
+						ruleViewer.setSelection(new StructuredSelection(autoRules.get(index)));
+				}
+				fillAccelViewer();
+				updateButtons();
+			} else if (e.widget == applyButton) {
+				IStructuredSelection sel = ruleViewer.getStructuredSelection();
+				if (!sel.isEmpty())
+					OperationJob.executeSlaveOperation(
+							new AutoRuleOperation(new ArrayList<AutoRule>(sel.toList()), null, null), info, false);
+			}
+		}
+
 	}
 
 }

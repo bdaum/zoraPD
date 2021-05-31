@@ -26,7 +26,6 @@ import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.accessibility.AccessibleAdapter;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
@@ -377,16 +376,14 @@ public class PaintExample implements IAdaptable {
 					case 'z':
 						// Ctrl+Z
 						undo();
-						break;
+						return;
 					case 'y':
 						// Ctrl+Y
 						redo();
-						break;
 					}
 				}
 			}
 		});
-
 	}
 
 	protected void redo() {
@@ -791,8 +788,9 @@ public class PaintExample implements IAdaptable {
 			listeners.add(modifyListener);
 	}
 
-	public void removeMofifyListener(int type, ModifyListener modifyListener) {
-		listeners.remove(modifyListener);
+	public void removeListener(int type, Listener modifyListener) {
+		if (type == SWT.Modify)
+			listeners.remove(modifyListener);
 	}
 
 	public void fireModify() {

@@ -108,11 +108,11 @@ public class CatalogPresentationHoverContribution extends AbstractHoverContribut
 		if (object instanceof HoverTestObject) {
 			if (TYPE.equals(key))
 				return Messages.CatalogPresentationHoverContribution_slideshow;
-			else if (NAME.equals(key))
+			if (NAME.equals(key))
 				return Messages.CatalogPresentationHoverContribution_trip_to;
-			else if (DESCRIPTION.equals(key))
+			if (DESCRIPTION.equals(key))
 				return Messages.CatalogPresentationHoverContribution_one_of_the_best;
-			else if (STATISTICS.equals(key))
+			if (STATISTICS.equals(key))
 				return Messages.CatalogPresentationHoverContribution_nnn_slides;
 		} else if (TYPE.equals(key)) {
 			if (object instanceof SlideShow)

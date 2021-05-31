@@ -19,14 +19,48 @@
  */
 package com.bdaum.zoom.peer.internal.preferences;
 
-public class PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-	private PreferenceConstants() {
-	}
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+import com.bdaum.zoom.peer.internal.PeerActivator;
+
+public class PreferenceConstants implements IPreferenceConstants {
 
 	public static final String SHAREDCATALOGS = "sharedCatalogs"; //$NON-NLS-1$
-	public static final String PORT  = "port"; //$NON-NLS-1$
+	public static final String PORT = "port"; //$NON-NLS-1$
 	public static final String PEERS = "peers"; //$NON-NLS-1$
 	public static final String RECEIVERS = "receivers"; //$NON-NLS-1$
 	public static final String BLOCKEDNODES = "blockedNodes"; //$NON-NLS-1$
+
+	public static final String NETWORK = Messages.PreferenceConstants_network;
+	public static final String CATALOGS = Messages.PreferenceConstants_cat;
+	public static final String PEER = Messages.PreferenceConstants_peer;
+
+	@Override
+	public List<Object> getRootElements() {
+		return Arrays.asList(NETWORK);
+	}
+
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == NETWORK)
+			return Arrays.asList(CATALOGS, PEER);
+		if (group == CATALOGS)
+			return Arrays.asList(SHAREDCATALOGS);
+		if (group == PEER)
+			return Arrays.asList(RECEIVERS, BLOCKEDNODES);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(PeerActivator.PLUGIN_ID);
+	}
+
+
 }

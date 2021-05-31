@@ -46,6 +46,7 @@ import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.net.communities.CommunityAccount;
 import com.bdaum.zoom.net.ui.internal.NetActivator;
 
+
 /**
  * @author steve
  * @author bdaum connected to Eclipse Proxy Service

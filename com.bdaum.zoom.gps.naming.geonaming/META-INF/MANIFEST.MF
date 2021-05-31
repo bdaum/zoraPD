@@ -2,9 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: com.bdaum.zoom.gps.naming.geonaming;singleton:=true
-Bundle-Version: 3.6.2
+Bundle-Version: 3.7.0
 Bundle-Activator: com.bdaum.zoom.gps.naming.geonaming.internal.GeonamingActivator
 Bundle-Vendor: %Bundle-Vendor
-Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.6.2"
+Require-Bundle: com.bdaum.zoom.gps;bundle-version="3.7.0",
+ com.bdaum.zoom.net.ui;bundle-version="3.7.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

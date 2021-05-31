@@ -19,217 +19,135 @@
  */
 package com.bdaum.zoom.ai.internal.translator;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.Set;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import org.eclipse.osgi.util.NLS;
 
 import com.bdaum.zoom.ai.internal.AiActivator;
-import com.bdaum.zoom.ai.internal.preference.PreferenceConstants;
-import com.bdaum.zoom.common.CommonUtilities;
-import com.bdaum.zoom.core.Core;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class TranslatorClient {
 
-	private static final String STRING = "string"; //$NON-NLS-1$
+	private static final String TRANSURI = "{0}/translate?api-version=3.0&to={1}"; //$NON-NLS-1$
 
-	private static final class LocaleHandler extends DefaultHandler {
-		private StringBuilder text = new StringBuilder();
-		private List<Locale> resultList;
+	private static final String APPLICATION_JSON = "application/json"; //$NON-NLS-1$
 
-		public LocaleHandler(List<Locale> resultList) {
-			this.resultList = resultList;
-		}
+	private static final String CONTENT_TYPE = "Content-type"; //$NON-NLS-1$
 
-		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
-			text.setLength(0);
-		}
-
-		@Override
-		public void characters(char[] ch, int start, int length) {
-			text.append(ch, start, length);
-		}
-
-		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
-			if (STRING.equals(qName)) {
-				String lan = text.toString();
-				if (!lan.startsWith("tlh")) { //$NON-NLS-1$
-					Locale locale = Locale.forLanguageTag(lan);
-					String displayLanguage = locale.getDisplayLanguage();
-					if (!displayLanguage.equals(lan))
-						resultList.add(locale);
-				}
-			}
-		}
-	}
-
-	private static final class StringHandler extends DefaultHandler {
-		private StringBuilder result;
-
-		public StringHandler(StringBuilder sb) {
-			this.result = sb;
-		}
-
-		@Override
-		public void characters(char[] ch, int start, int length) {
-			result.append(ch, start, length);
-		}
-
-	}
-
-	private static final long EIGHTMINUTES = 8 * 60 * 1000L;
-
-	String BASEURI = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken"; //$NON-NLS-1$
+	private static final String LANGURI = "{0}/languages?api-version=3.0"; //$NON-NLS-1$
 
 	private String translatorKey;
 
-	private String accessToken;
-
-	private long accessTokenBirth = -1L;
-
 	private Locale[] languages = new Locale[] { Locale.ENGLISH };
 
-	public void setKey(String key) {
-		translatorKey = key;
-	}
+	private String endpoint;
 
-	public String getAccessToken() {
-		long currentTime = System.currentTimeMillis();
-		if (accessToken == null || currentTime - accessTokenBirth > EIGHTMINUTES) {
-			accessTokenBirth = currentTime;
-			try {
-				URL u = new URL(BASEURI);
-				URLConnection c = u.openConnection();
-				c.setRequestProperty("CONTENT-TYPE", "application/json"); //$NON-NLS-1$//$NON-NLS-2$
-				c.setRequestProperty("Accept", "application/jwt"); //$NON-NLS-1$//$NON-NLS-2$
-				c.setRequestProperty("Ocp-Apim-Subscription-Key", translatorKey); //$NON-NLS-1$
-				c.setDoOutput(true);
-				if (c instanceof HttpURLConnection)
-					((HttpURLConnection) c).setRequestMethod("POST"); //$NON-NLS-1$
-				try (OutputStreamWriter out = new OutputStreamWriter(c.getOutputStream())) {
-					try (BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"))) { //$NON-NLS-1$
-						accessToken = readLines(in);
-					}
-				} 
-			} catch (UnknownHostException e) {
-				AiActivator.getDefault().logError(Messages.TranslatorClient_unknown_host, e);
-				accessToken = null;
-			} catch (MalformedURLException e) {
-				// should not happen
-			} catch (ProtocolException e) {
-				accessToken = null;
-				AiActivator.getDefault().logError(Messages.TranslatorClient_protocol_exception, e);
-			} catch (IOException e) {
-				accessToken = null;
-				AiActivator.getDefault().logError(Messages.TranslatorClient_io_exception_access_token, e);
-			}
-		}
-		return accessToken;
-	}
+	private String language;
 
-	protected String readLines(BufferedReader in) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		String s = null;
-		while ((s = in.readLine()) != null) {
-			if (sb.length() > 0)
-				sb.append('\n');
-			sb.append(s);
-		}
-		return trim(sb.toString());
-	}
+	private OkHttpClient okhttpClient = new OkHttpClient();
 
 	public Locale[] getLanguages() {
-		String accessToken = getAccessToken();
-		if (languages.length == 1 && accessToken != null) {
-			try {
-				List<Locale> lanlist = new ArrayList<>();
-				try (InputStream in = new URL(
-						"https://api.microsofttranslator.com/v2/http.svc/GetLanguagesForTranslate?appid=Bearer%20" //$NON-NLS-1$
-								+ accessToken).openStream()) {
-					SAXParserFactory.newInstance().newSAXParser().parse(in, new LocaleHandler(lanlist));
+		try {
+			if (endpoint == null || endpoint.isEmpty())
+				throw new IllegalArgumentException(Messages.TranslatorClient_no_endpoint);
+			List<Locale> lanlist = new ArrayList<>();
+			Request request = new Request.Builder().url(NLS.bind(LANGURI, endpoint)).get()
+					.addHeader(CONTENT_TYPE, APPLICATION_JSON).build();
+			Response response = okhttpClient.newCall(request).execute();
+			JsonElement element = JsonParser.parseString(response.body().string());
+			if (element != null && element.isJsonObject()) {
+				JsonElement translation = element.getAsJsonObject().get("translation"); //$NON-NLS-1$
+				if (translation != null && translation.isJsonObject()) {
+					Set<Entry<String, JsonElement>> entrySet = translation.getAsJsonObject().entrySet();
+					if (entrySet != null)
+						for (Entry<String, JsonElement> entry : entrySet)
+							lanlist.add(new Locale(entry.getKey()));
 				}
-				if (!lanlist.isEmpty()) {
-					languages = lanlist.toArray(new Locale[lanlist.size()]);
-					Arrays.sort(languages, new Comparator<Locale>() {
-						@Override
-						public int compare(Locale l1, Locale l2) {
-							return l1.getDisplayLanguage().compareTo(l2.getDisplayLanguage());
-						}
-					});
-				}
-			} catch (UnknownHostException e) {
-				AiActivator.getDefault().logError(Messages.TranslatorClient_unknown_host, e);
-			} catch (MalformedURLException e) {
-				// should not happen
-			} catch (IOException e) {
-				AiActivator.getDefault().logError(Messages.TranslatorClient_io_exception_languages, e);
-			} catch (ParserConfigurationException | SAXException e) {
-				AiActivator.getDefault().logError(Messages.TranslatorClient_configuration_error, e);
 			}
+			if (!lanlist.isEmpty()) {
+				languages = lanlist.toArray(new Locale[lanlist.size()]);
+				Arrays.sort(languages, new Comparator<Locale>() {
+					@Override
+					public int compare(Locale l1, Locale l2) {
+						return l1.getDisplayLanguage().compareTo(l2.getDisplayLanguage());
+					}
+				});
+			}
+		} catch (IOException | IllegalArgumentException e) {
+			AiActivator.getDefault().logError(Messages.TranslatorClient_io_exception_languages, e);
 		}
 		return languages;
 	}
 
 	public String translate(String text) {
-		String accessToken = getAccessToken();
-		if (accessToken != null) {
-			String lan = AiActivator.getDefault().getPreferenceStore().getString(PreferenceConstants.LANGUAGE);
-			if (!Locale.ENGLISH.getLanguage().equals(lan)) {
-				String segment = Core.encodeUrlSegment(text);
-				segment = CommonUtilities.encodeBlanks(segment);
-				StringBuilder sb = new StringBuilder();
-				sb.append("https://api.microsofttranslator.com/v2/http.svc/Translate?appid=Bearer%20") //$NON-NLS-1$
-						.append(accessToken).append("&text=").append(segment).append("&from=en&to=").append(lan) //$NON-NLS-1$ //$NON-NLS-2$
-						.append("&contentType=text%2Fplain"); //$NON-NLS-1$
-				try (InputStream in = new URL(sb.toString()).openStream()) {
-					sb.setLength(0);
-					SAXParserFactory.newInstance().newSAXParser().parse(in, new StringHandler(sb));
-					return sb.toString();
-				} catch (UnknownHostException e) {
-					AiActivator.getDefault().logError(Messages.TranslatorClient_unknown_host, e);
-				} catch (MalformedURLException e) {
-					// should never happen
-				} catch (IOException e) {
-					AiActivator.getDefault().logError(Messages.TranslatorClient_io_exception_translating, e);
-				} catch (ParserConfigurationException | SAXException e) {
-					AiActivator.getDefault().logError(Messages.TranslatorClient_configuration_error, e);
+		try {
+			if (endpoint == null || endpoint.isEmpty())
+				throw new IllegalArgumentException(Messages.TranslatorClient_no_endpoint);
+			if (translatorKey == null || translatorKey.isEmpty())
+				throw new IllegalArgumentException(Messages.TranslatorClient_no_key);
+			if (language == null || language.isEmpty())
+				language = Locale.getDefault().getLanguage();
+			RequestBody body = RequestBody.create(MediaType.parse(APPLICATION_JSON),
+					new StringBuilder().append("[{\"Text\": \"").append(text).append("\"}]\n").toString()); //$NON-NLS-1$//$NON-NLS-2$
+			Request request = new Request.Builder().url(NLS.bind(TRANSURI, endpoint, language)).post(body)
+					.addHeader("Ocp-Apim-Subscription-Key", translatorKey).addHeader(CONTENT_TYPE, APPLICATION_JSON) //$NON-NLS-1$
+					.build();
+			Response response = okhttpClient.newCall(request).execute();
+			JsonElement element = JsonParser.parseString(response.body().string());
+			if (element != null && element.isJsonArray()) {
+				JsonArray jsonArray = element.getAsJsonArray();
+				if (jsonArray.size() > 0) {
+					JsonElement el = jsonArray.get(0);
+					if (element != null && el.isJsonObject()) {
+						JsonElement translations = el.getAsJsonObject().get("translations"); //$NON-NLS-1$
+						if (translations != null && translations.isJsonArray()) {
+							JsonArray array = translations.getAsJsonArray();
+							if (array.size() > 0) {
+								JsonElement jsonElement = array.get(0);
+								if (jsonElement != null && jsonElement.isJsonObject()) {
+									JsonElement textElement = jsonElement.getAsJsonObject().get("text"); //$NON-NLS-1$
+									if (textElement != null && textElement.isJsonPrimitive())
+										return textElement.getAsString();
+								}
+							}
+						}
+					}
 				}
 			}
+		} catch (IOException | IllegalArgumentException e) {
+			AiActivator.getDefault().logError(Messages.TranslatorClient_io_exception, e);
 		}
-		return text;
+		return null;
 	}
 
-	public String trim(String s) {
-		int len = s.length();
-		int st = 0;
-		char[] val = s.toCharArray();
-		while ((st < len) && (val[st] == '\ufeff' || Character.isWhitespace(val[st])))
-			st++;
-		while ((st < len) && Character.isWhitespace(val[st]))
-			len--;
-		return ((st > 0) || (len < s.length())) ? s.substring(st, len) : s;
+	public TranslatorClient withEndpoint(String endpoint) {
+		this.endpoint = endpoint;
+		return this;
+	}
+
+	public TranslatorClient withLanguage(String language) {
+		this.language = language;
+		return this;
+	}
+
+	public TranslatorClient withKey(String key) {
+		translatorKey = key;
+		return this;
 	}
 
 }

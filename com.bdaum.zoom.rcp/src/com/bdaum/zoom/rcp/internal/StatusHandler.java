@@ -82,7 +82,7 @@ public class StatusHandler extends AbstractStatusHandler {
 									IWorkbenchWindow activeWorkbenchWindow = workbench.getActiveWorkbenchWindow();
 									if (activeWorkbenchWindow != null) {
 										IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-										if (activePage != null) {
+										if (activePage != null)
 											try {
 												activePage.showView(AbstractPerspective.LOG_VIEW);
 												Shell shell = activeWorkbenchWindow.getShell();
@@ -92,7 +92,6 @@ public class StatusHandler extends AbstractStatusHandler {
 											} catch (PartInitException e) {
 												// ignore
 											}
-										}
 									}
 								}
 								dialog = null;

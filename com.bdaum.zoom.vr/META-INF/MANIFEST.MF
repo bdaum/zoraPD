@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: VR Plug-in
 Bundle-SymbolicName: com.bdaum.zoom.vr;singleton:=true
-Bundle-Version: 3.6.2
+Bundle-Version: 3.7.0
 Bundle-Activator: com.bdaum.zoom.vr.internal.VrActivator
 Bundle-Vendor: bdaum industrial communications
 Require-Bundle: org.eclipse.core.runtime,
- com.bdaum.zoom.operations;bundle-version="3.6.2",
- com.bdaum.zoom.j3d;bundle-version="3.6.2";resolution:=optional
+ com.bdaum.zoom.operations;bundle-version="3.7.0",
+ com.bdaum.zoom.j3d;bundle-version="3.7.0";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: com.bdaum.zoom.vr.internal

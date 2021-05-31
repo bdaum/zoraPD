@@ -20,7 +20,39 @@
 
 package com.bdaum.zoom.batch.internal;
 
-public interface PreferenceConstants {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-	String RAWCONVERTER = "com.bdaum.zoom.rawconverter"; //$NON-NLS-1$
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry;
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+
+public class PreferenceConstants implements IPreferenceConstants{
+
+	public final static String RAWCONVERTER = "com.bdaum.zoom.rawconverter"; //$NON-NLS-1$
+
+	public final static String RAW = Messages.PreferenceConstants_raw; 
+
+	@Override
+	public List<Object> getRootElements() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == PreferenceRegistry.PROCESSING)
+			return Arrays.asList(RAW);
+		if (group == RAW)
+			return Arrays.asList(RAWCONVERTER);
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(BatchActivator.PLUGIN_ID);
+	}
+
 }

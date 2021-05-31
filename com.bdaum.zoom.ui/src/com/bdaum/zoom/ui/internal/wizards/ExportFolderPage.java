@@ -134,8 +134,7 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 				getWizard().getContainer().updateButtons();
 			} else
 				saveOptions();
-			break;
-
+			return;
 		case SWT.Modify:
 			saveOptions();
 			if (e.data == exportModeGroup) {
@@ -143,7 +142,6 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 				updateControls();
 				checkImages();
 			}
-			break;
 		}
 		
 	}
@@ -291,7 +289,7 @@ public class ExportFolderPage extends ColoredWizardPage implements Listener {
 	private void updateControls() {
 		int mode = getMode();
 		if (metaButton != null)
-			metaButton.setEnabled(mode != Constants.FORMAT_ORIGINAL && mode != Constants.FORMAT_WEBP);
+			metaButton.setEnabled(mode != Constants.FORMAT_ORIGINAL);
 		if (watermarkGroup != null)
 			watermarkGroup.setEnabled(mode != Constants.FORMAT_ORIGINAL);
 	}

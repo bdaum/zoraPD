@@ -24,10 +24,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -52,7 +48,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class InternetPreferencePage extends AbstractPreferencePage {
+public class InternetPreferencePage extends AbstractPreferencePage implements Listener, ISelectionChangedListener {
 
 	private IProxyService proxyService;
 	private Text portField;
@@ -127,56 +123,14 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		buttonGroup.setLayout(new GridLayout(1, false));
 		Button newButton = createPushButton(buttonGroup, Messages.InternetPreferencePage_new,
 				Messages.InternetPreferencePage_new_tooltip);
-		newButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				EditFtpDialog dialog = new EditFtpDialog(getShell(), new FtpAccount(), false, null);
-				if (dialog.open() == Window.OK) {
-					FtpAccount result = dialog.getResult();
-					ftpAccounts.add(result);
-					ftpViewer.setInput(ftpAccounts);
-					ftpViewer.setSelection(new StructuredSelection(result));
-				}
-			}
-		});
+		newButton.addListener(SWT.Selection, this);
 		editButton = createPushButton(buttonGroup, Messages.InternetPreferencePage_edit,
 				Messages.InternetPreferencePage_edit_tooltip);
-		editButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = ftpViewer.getStructuredSelection();
-				Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof FtpAccount) {
-					EditFtpDialog dialog = new EditFtpDialog(getShell(), (FtpAccount) firstElement, false, null);
-					if (dialog.open() == Window.OK) {
-						ftpViewer.update(dialog.getResult(), null);
-					}
-				}
-			}
-		});
+		editButton.addListener(SWT.Selection, this);
 		removeButton = createPushButton(buttonGroup, Messages.InternetPreferencePage_remove,
 				Messages.InternetPreferencePage_remove_tooltip);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object firstElement = ftpViewer.getStructuredSelection().getFirstElement();
-				if (firstElement instanceof FtpAccount) {
-					int i = ftpAccounts.indexOf(firstElement);
-					FtpAccount sibling = (i < ftpAccounts.size() - 1) ? ftpAccounts.get(i + 1)
-							: (i > 0) ? ftpAccounts.get(i - 1) : null;
-					ftpAccounts.remove(i);
-					ftpViewer.setInput(ftpAccounts);
-					if (sibling != null)
-						ftpViewer.setSelection(new StructuredSelection(sibling));
-				}
-			}
-		});
-
-		ftpViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
+		ftpViewer.addSelectionChangedListener(this);
 		updateButtons();
 	}
 
@@ -199,14 +153,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		CGroup group = UiUtilities.createGroup(parent, 2, Messages.InternetPreferencePage_http_proxy);
 		proxyGroup = new RadioButtonGroup(group, null, SWT.NONE, Messages.InternetPreferencePage_System_proxy_config,
 				Messages.InternetPreferencePage_Direct_connection, Messages.InternetPreferencePage_Manual_config);
-		proxyGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateFields();
-				if (proxyField.getEnabled())
-					proxyField.setFocus();
-			}
-		});
+		proxyGroup.addListener(SWT.Selection, this);
 		new Label(group, SWT.NONE);
 		configGroup = createConfigGroup(group);
 	}
@@ -256,15 +203,7 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		new Label(grp, SWT.NONE).setText(Messages.InternetPreferencePage_Port);
 		portField = new Text(grp, SWT.BORDER);
 		portField.setLayoutData(new GridData(50, SWT.DEFAULT));
-		portField.addVerifyListener(new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				for (int i = 0; i < e.text.length(); i++)
-					if (!Character.isDigit(e.text.charAt(i))) {
-						e.doit = false;
-						break;
-					}
-			}
-		});
+		portField.addListener(SWT.Verify, this);
 		return grp;
 	}
 
@@ -311,6 +250,52 @@ public class InternetPreferencePage extends AbstractPreferencePage {
 		}
 		getPreferenceStore().setValue(PreferenceConstants.TIMEOUT, timeoutField.getSelection());
 		FtpAccount.saveAccounts(ftpAccounts);
+	}
+
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Verify) {
+			for (int i = 0; i < e.text.length(); i++)
+				if (!Character.isDigit(e.text.charAt(i))) {
+					e.doit = false;
+					break;
+				}
+		} else if (e.widget == proxyGroup) {
+			updateFields();
+			if (proxyField.getEnabled())
+				proxyField.setFocus();
+		} else if (e.widget == editButton) {
+			IStructuredSelection selection = ftpViewer.getStructuredSelection();
+			Object firstElement = selection.getFirstElement();
+			if (firstElement instanceof FtpAccount) {
+				EditFtpDialog dialog = new EditFtpDialog(getShell(), (FtpAccount) firstElement, false, null);
+				if (dialog.open() == Window.OK) {
+					ftpViewer.update(dialog.getResult(), null);
+				}
+			}
+		} else if (e.widget == removeButton) {
+			Object firstElement = ftpViewer.getStructuredSelection().getFirstElement();
+			if (firstElement instanceof FtpAccount) {
+				int i = ftpAccounts.indexOf(firstElement);
+				FtpAccount sibling = (i < ftpAccounts.size() - 1) ? ftpAccounts.get(i + 1)
+						: (i > 0) ? ftpAccounts.get(i - 1) : null;
+				ftpAccounts.remove(i);
+				ftpViewer.setInput(ftpAccounts);
+				if (sibling != null)
+					ftpViewer.setSelection(new StructuredSelection(sibling));
+			}
+		} else {
+			EditFtpDialog dialog = new EditFtpDialog(getShell(), new FtpAccount(), false, null);
+			if (dialog.open() == Window.OK) {
+				FtpAccount result = dialog.getResult();
+				ftpAccounts.add(result);
+				ftpViewer.setInput(ftpAccounts);
+				ftpViewer.setSelection(new StructuredSelection(result));
+			}
+		}
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 }

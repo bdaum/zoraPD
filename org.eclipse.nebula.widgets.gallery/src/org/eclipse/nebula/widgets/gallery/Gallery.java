@@ -640,7 +640,6 @@ public class Gallery extends Canvas {
 			case SWT.HOME:
 			case SWT.END:
 				GalleryItem newItem = groupRenderer.getNextItem(lastSingleClick, e.keyCode);
-
 				if (newItem != null) {
 					_deselectAll(false);
 					setSelected(newItem, true, true);
@@ -648,8 +647,7 @@ public class Gallery extends Canvas {
 					_showItem(newItem);
 					redraw();
 				}
-
-				break;
+				return;
 			case SWT.CR:
 				GalleryItem[] selection = getSelection();
 				GalleryItem item = null;
@@ -658,7 +656,6 @@ public class Gallery extends Canvas {
 				}
 
 				notifySelectionListeners(item, 0, true);
-				break;
 			}
 		});
 	}

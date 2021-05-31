@@ -49,7 +49,7 @@ public abstract class ClickPaintSession extends BasicPaintSession {
 				anchor.y = e.y;
 				beginSession();
 			}
-			break;
+			return;
 		case SWT.MouseUp:
 			if (e.button != 1)
 				resetSession(); // abort if right or middle mouse button pressed
@@ -58,10 +58,9 @@ public abstract class ClickPaintSession extends BasicPaintSession {
 				anchor.x = -1;
 				anchor.y = -1;
 			}
-			break;
+			return;
 		case SWT.MouseMove:
 			getPaintSurface().setStatusCoord(getPaintSurface().getCurrentPosition());
-			break;
 		}
 	}
 

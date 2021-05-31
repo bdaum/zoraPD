@@ -17,11 +17,11 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -73,8 +73,7 @@ public final class ImageCache implements ImageStore {
 				imageSource = imageProvider.obtainImageSource(id);
 			if (imageSource == null)
 				return getMissingImage();
-			return imageProvider.loadThumbnail(Display.getCurrent(),
-					imageSource);
+			return imageProvider.loadThumbnail(Display.getCurrent(), imageSource);
 		}
 
 		@Override
@@ -106,8 +105,8 @@ public final class ImageCache implements ImageStore {
 	private static final class EquivalenceSet {
 
 		/**
-		 * The equivalence set's hash code is the hash code of the first weak
-		 * reference added to the set.
+		 * The equivalence set's hash code is the hash code of the first weak reference
+		 * added to the set.
 		 */
 		private final int equivalenceHashCode;
 
@@ -133,13 +132,13 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Add a weak reference to the equivalence set. This method assumes that
-		 * the reference to add does belong in this set.
+		 * Add a weak reference to the equivalence set. This method assumes that the
+		 * reference to add does belong in this set.
 		 *
 		 * @param referenceToAdd
 		 *            The weak reference to add.
-		 * @return true if the weak reference was added to the set, and false if
-		 *         the reference already exists in the set.
+		 * @return true if the weak reference was added to the set, and false if the
+		 *         reference already exists in the set.
 		 */
 		public boolean addWeakReference(ImageCacheWeakReference referenceToAdd) {
 			// Only add the weak reference if it does not already exist
@@ -182,8 +181,7 @@ public final class ImageCache implements ImageStore {
 
 			// Retrieve an image descriptor in the set of weak references
 			// that has not been enqueued
-			reachableDescriptor = ((EquivalenceSet) object)
-					.getFirstReachableDescriptor();
+			reachableDescriptor = ((EquivalenceSet) object).getFirstReachableDescriptor();
 			if (reachableDescriptor == null)
 				return false;
 			// Manipulating descriptors themselves just in case the referent
@@ -193,8 +191,8 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Get a non-null image descriptor from the list of weak references to
-		 * image descriptors.
+		 * Get a non-null image descriptor from the list of weak references to image
+		 * descriptors.
 		 *
 		 * @return a non null image descriptor, or null if none could be found.
 		 */
@@ -233,8 +231,8 @@ public final class ImageCache implements ImageStore {
 
 		/**
 		 * Remove a hashable weak reference from the list. This method makes no
-		 * assumptions as to whether the reference to remove belongs in this
-		 * equivalence set or not.
+		 * assumptions as to whether the reference to remove belongs in this equivalence
+		 * set or not.
 		 *
 		 * @param referenceToRemove
 		 *            The weak reference to remove.
@@ -255,17 +253,15 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * A wrapper around the weak reference to image descriptors in order to be
-	 * able to store the referrent's hash code since it will be null when
-	 * enqueued.
+	 * A wrapper around the weak reference to image descriptors in order to be able
+	 * to store the referrent's hash code since it will be null when enqueued.
 	 *
 	 * @since 3.1
 	 */
-	private static final class ImageCacheWeakReference extends
-			SoftReference<Object> {
+	private static final class ImageCacheWeakReference extends SoftReference<Object> {
 		/**
-		 * Referent's hash code since it will not be available once the
-		 * reference has been enqueued.
+		 * Referent's hash code since it will not be available once the reference has
+		 * been enqueued.
 		 */
 		private final int referentHashCode;
 
@@ -277,8 +273,7 @@ public final class ImageCache implements ImageStore {
 		 * @param queue
 		 *            The reference queue.
 		 */
-		public ImageCacheWeakReference(Object referent,
-				ReferenceQueue<Object> queue) {
+		public ImageCacheWeakReference(Object referent, ReferenceQueue<Object> queue) {
 			super(referent, queue);
 			referentHashCode = referent.hashCode();
 		}
@@ -295,10 +290,9 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * An entry in the image map, which consists of the array of images (the
-	 * value), as well as the key. This allows to retrieve BOTH the key (the
-	 * equivalence set) and the value (the array of images) from the map
-	 * directly.
+	 * An entry in the image map, which consists of the array of images (the value),
+	 * as well as the key. This allows to retrieve BOTH the key (the equivalence
+	 * set) and the value (the array of images) from the map directly.
 	 *
 	 * @since 3.1
 	 */
@@ -314,8 +308,8 @@ public final class ImageCache implements ImageStore {
 		private final EquivalenceSet entrySet;
 
 		/**
-		 * Create an entry that consists of the equivalence set (key) as well as
-		 * the array of images.
+		 * Create an entry that consists of the equivalence set (key) as well as the
+		 * array of images.
 		 *
 		 * @param equivalenceSet
 		 *            The equivalence set.
@@ -328,8 +322,7 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Return the equivalence set in this entry. Should not be
-		 * <code>null</code>.
+		 * Return the equivalence set in this entry. Should not be <code>null</code>.
 		 *
 		 * @return the entry set.
 		 */
@@ -338,8 +331,7 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Return the array of images in this entry. Should not be
-		 * <code>null</code>.
+		 * Return the array of images in this entry. Should not be <code>null</code>.
 		 *
 		 * @return the array of images.
 		 */
@@ -354,12 +346,11 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * A thread for cleaning up the reference queues as the garbage collector
-	 * fills them. It takes an image map and a reference queue. When an item
-	 * appears in the reference queue, it uses it as a key to remove values from
-	 * the map. If the value is an array of images, then the defined images in
-	 * that array are is disposed. To shutdown the thread, call
-	 * <code>stopCleaning()</code>.
+	 * A thread for cleaning up the reference queues as the garbage collector fills
+	 * them. It takes an image map and a reference queue. When an item appears in
+	 * the reference queue, it uses it as a key to remove values from the map. If
+	 * the value is an array of images, then the defined images in that array are is
+	 * disposed. To shutdown the thread, call <code>stopCleaning()</code>.
 	 *
 	 * @since 3.1
 	 */
@@ -371,15 +362,14 @@ public final class ImageCache implements ImageStore {
 		private static int threads = 0;
 
 		/**
-		 * A marker indicating that the reference cleaner thread should exit.
-		 * This is enqueued when the thread is told to stop. Any referenced
-		 * enqueued after the thread is told to stop will not be cleaned up.
+		 * A marker indicating that the reference cleaner thread should exit. This is
+		 * enqueued when the thread is told to stop. Any referenced enqueued after the
+		 * thread is told to stop will not be cleaned up.
 		 */
 		private final ImageCacheWeakReference endMarker;
 
 		/**
-		 * A map of equivalence sets to ImageMapEntry (Image[3],
-		 * EquivalenceSet).
+		 * A map of equivalence sets to ImageMapEntry (Image[3], EquivalenceSet).
 		 */
 		private final Map<EquivalenceSet, ImageMapEntry> imageMap;
 
@@ -404,20 +394,18 @@ public final class ImageCache implements ImageStore {
 
 			this.referenceQueue = imageCache.imageReferenceQueue;
 			this.imageMap = imageCache.imageMap;
-			this.endMarker = new ImageCacheWeakReference(referenceQueue,
-					referenceQueue);
+			this.endMarker = new ImageCacheWeakReference(referenceQueue, referenceQueue);
 			this.staleImages = imageCache.staleImages;
 		}
 
 		/**
-		 * Remove the reference enqueued by iterating through the set of keys in
-		 * the map.
+		 * Remove the reference enqueued by iterating through the set of keys in the
+		 * map.
 		 *
 		 * @param currentReference
 		 *            The current reference.
 		 */
-		private void removeReferenceEnqueued(
-				final ImageCacheWeakReference currentReference) {
+		private void removeReferenceEnqueued(final ImageCacheWeakReference currentReference) {
 			Set<EquivalenceSet> keySet = imageMap.keySet();
 			Image image = null;
 
@@ -454,8 +442,8 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Wait for new garbage. When new garbage arrives, remove it, clear it,
-		 * and dispose of any corresponding images.
+		 * Wait for new garbage. When new garbage arrives, remove it, clear it, and
+		 * dispose of any corresponding images.
 		 */
 
 		@Override
@@ -488,8 +476,8 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Tells this thread to stop trying to clean up. This is usually run
-		 * when the cache is shutting down.
+		 * Tells this thread to stop trying to clean up. This is usually run when the
+		 * cache is shutting down.
 		 */
 		private final void stopCleaning() {
 			endMarker.enqueue();
@@ -497,12 +485,11 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * A container class to hold a list of array of images that have been
-	 * identified as requiring disposal. This class was added to ensure that if
-	 * the image cache's dispose method is called while the cleaner thread is in
-	 * the process of cleaning images, stopping the thread will not prevent
-	 * those images from being disposed. They will be disposed by the image
-	 * cache's dispose method.
+	 * A container class to hold a list of array of images that have been identified
+	 * as requiring disposal. This class was added to ensure that if the image
+	 * cache's dispose method is called while the cleaner thread is in the process
+	 * of cleaning images, stopping the thread will not prevent those images from
+	 * being disposed. They will be disposed by the image cache's dispose method.
 	 *
 	 */
 	private static class StaleImages {
@@ -520,8 +507,8 @@ public final class ImageCache implements ImageStore {
 		}
 
 		/**
-		 * Add the array of images to the list of images to dispose. This is
-		 * called only from the cleaner thread.
+		 * Add the array of images to the list of images to dispose. This is called only
+		 * from the cleaner thread.
 		 *
 		 * @param images
 		 *            The array of images.
@@ -538,8 +525,7 @@ public final class ImageCache implements ImageStore {
 			// Ensure only one thread at a time accesses the stale images list
 			synchronized (staleImages) {
 				for (Image imageToDispose : staleImages)
-					if ((imageToDispose != null)
-							&& (!imageToDispose.isDisposed()))
+					if ((imageToDispose != null) && (!imageToDispose.isDisposed()))
 						imageToDispose.dispose();
 				staleImages.clear();
 			}
@@ -551,32 +537,32 @@ public final class ImageCache implements ImageStore {
 	private static List<ImageCache> instances = new ArrayList<ImageCache>(1);
 
 	/**
-	 * The thread responsible for cleaning out images that are no longer needed.
-	 * The images in Image[3] will be cleaned if the corresponding equivalence
-	 * set contains no more weak references to image descriptor.
+	 * The thread responsible for cleaning out images that are no longer needed. The
+	 * images in Image[3] will be cleaned if the corresponding equivalence set
+	 * contains no more weak references to image descriptor.
 	 */
 	private final ReferenceCleanerThread imageCleaner;
 
 	/**
-	 * A map of equivalence sets to ImageMapEntry (Image[3], EquivalenceSet).
-	 * The equivalence set represents a list of weakly referenced image
-	 * descriptors that are equivalent ("equal"). The equivalence set will
-	 * contain no duplicate image descriptor references (check for identical
-	 * descriptors on addition using "==").
+	 * A map of equivalence sets to ImageMapEntry (Image[3], EquivalenceSet). The
+	 * equivalence set represents a list of weakly referenced image descriptors that
+	 * are equivalent ("equal"). The equivalence set will contain no duplicate image
+	 * descriptor references (check for identical descriptors on addition using
+	 * "==").
 	 */
 	private final Map<EquivalenceSet, ImageMapEntry> imageMap;
 
 	/**
 	 * A queue of references (<code>HashableWeakReference</code>) waiting to be
-	 * garbage collected. This value is never <code>null</code>. This is the
-	 * queue for <code>imageMap</code>.
+	 * garbage collected. This value is never <code>null</code>. This is the queue
+	 * for <code>imageMap</code>.
 	 */
 	private final ReferenceQueue<Object> imageReferenceQueue;
 
 	/**
 	 * The image to display when no image is available. This value is
-	 * <code>null</code> until it is first used, and will not get disposed until
-	 * the image cache itself is disposed.
+	 * <code>null</code> until it is first used, and will not get disposed until the
+	 * image cache itself is disposed.
 	 */
 	private Image missingImage = null;
 
@@ -595,13 +581,12 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread
-	 * to monitor the reference queue for image clean up.
+	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread to
+	 * monitor the reference queue for image clean up.
 	 */
 	public ImageCache(ImageProvider imageProvider) {
 		this.imageProvider = imageProvider;
-		imageMap = Collections
-				.synchronizedMap(new HashMap<EquivalenceSet, ImageMapEntry>());
+		imageMap = new ConcurrentHashMap<EquivalenceSet, ImageMapEntry>();
 		staleImages = new StaleImages();
 		imageReferenceQueue = new ReferenceQueue<Object>();
 		imageCleaner = new ReferenceCleanerThread(this);
@@ -611,9 +596,9 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread
-	 * to monitor the reference queue for image clean up. If the passed initial
-	 * load capacity is negative, the image map is created with the default
+	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread to
+	 * monitor the reference queue for image clean up. If the passed initial load
+	 * capacity is negative, the image map is created with the default
 	 * <code>HashMap</code> constructor.
 	 *
 	 * @param initialLoadCapacity
@@ -621,11 +606,8 @@ public final class ImageCache implements ImageStore {
 	 */
 	public ImageCache(ImageProvider imageProvider, final int initialLoadCapacity) {
 		this.imageProvider = imageProvider;
-		imageMap = (initialLoadCapacity < 0) ? Collections
-				.synchronizedMap(new HashMap<EquivalenceSet, ImageMapEntry>())
-				: Collections
-						.synchronizedMap(new HashMap<EquivalenceSet, ImageMapEntry>(
-								initialLoadCapacity));
+		imageMap = (initialLoadCapacity < 0) ? new ConcurrentHashMap<EquivalenceSet, ImageMapEntry>()
+				: new ConcurrentHashMap<EquivalenceSet, ImageMapEntry>(initialLoadCapacity);
 		staleImages = new StaleImages();
 		imageReferenceQueue = new ReferenceQueue<Object>();
 		imageCleaner = new ReferenceCleanerThread(this);
@@ -635,24 +617,20 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread
-	 * to monitor the reference queue for image clean up. If the passed initial
-	 * load capacity is negative or if the load factor is nonpositive, the image
-	 * map is created with the default <code>HashMap</code> constructor.
+	 * Constructs a new instance of <code>ImageCache</code>, and starts a thread to
+	 * monitor the reference queue for image clean up. If the passed initial load
+	 * capacity is negative or if the load factor is nonpositive, the image map is
+	 * created with the default <code>HashMap</code> constructor.
 	 *
 	 * @param initialLoadCapacity
 	 *            Initial load capacity for the image hash map.
 	 * @param loadFactor
 	 *            Load factor for the image hash map.
 	 */
-	public ImageCache(ImageProvider imageProvider,
-			final int initialLoadCapacity, final float loadFactor) {
+	public ImageCache(ImageProvider imageProvider, final int initialLoadCapacity, final float loadFactor) {
 		this.imageProvider = imageProvider;
-		imageMap = (initialLoadCapacity < 0 || loadFactor <= 0) ? Collections
-				.synchronizedMap(new HashMap<EquivalenceSet, ImageMapEntry>())
-				: Collections
-						.synchronizedMap(new HashMap<EquivalenceSet, ImageMapEntry>(
-								initialLoadCapacity, loadFactor));
+		imageMap = (initialLoadCapacity < 0 || loadFactor <= 0) ? new ConcurrentHashMap<>()
+				: new ConcurrentHashMap<>(initialLoadCapacity, loadFactor);
 		staleImages = new StaleImages();
 		imageReferenceQueue = new ReferenceQueue<Object>();
 		imageCleaner = new ReferenceCleanerThread(this);
@@ -668,11 +646,11 @@ public final class ImageCache implements ImageStore {
 	 *            The image descriptor.
 	 * @param temporaryKey
 	 *            The temporary key.
-	 * @return the requested image, or the missing image if an error occurs in
-	 *         the creation of the image.
+	 * @return the requested image, or the missing image if an error occurs in the
+	 *         creation of the image.
 	 */
-	private Image addNewEquivalenceSet(final ImageDescriptor imageDescriptor,
-			EquivalenceSet equivalenceKey, Object imageSource) {
+	private Image addNewEquivalenceSet(final ImageDescriptor imageDescriptor, EquivalenceSet equivalenceKey,
+			Object imageSource) {
 
 		// Create the images
 		final Image image = imageDescriptor.createImage(imageSource);
@@ -688,10 +666,10 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Cleans up all images in the cache. This disposes of all of the images,
-	 * and drops references to them. This should only be called when the images
-	 * and the image cache are no longer needed (i.e.: shutdown). Note that the
-	 * image disposal is handled by the cleaner thread.
+	 * Cleans up all images in the cache. This disposes of all of the images, and
+	 * drops references to them. This should only be called when the images and the
+	 * image cache are no longer needed (i.e.: shutdown). Note that the image
+	 * disposal is handled by the cleaner thread.
 	 */
 	public final void dispose() {
 		// Clean up the missing image.
@@ -710,10 +688,9 @@ public final class ImageCache implements ImageStore {
 
 		// Clear all the references in the equivalence sets and
 		// dispose the corresponding images
-		for (Iterator<Map.Entry<EquivalenceSet, ImageMapEntry>> imageItr = imageMap
-				.entrySet().iterator(); imageItr.hasNext();) {
-			final Map.Entry<EquivalenceSet, ImageMapEntry> entry = imageItr
-					.next();
+		for (Iterator<Map.Entry<EquivalenceSet, ImageMapEntry>> imageItr = imageMap.entrySet().iterator(); imageItr
+				.hasNext();) {
+			final Map.Entry<EquivalenceSet, ImageMapEntry> entry = imageItr.next();
 			// Dispose the images if they have been created and have
 			// not been disposed yet
 			final Image image = entry.getValue().getImage();
@@ -739,9 +716,8 @@ public final class ImageCache implements ImageStore {
 	 */
 
 	public Image getImage(Object imageSource) {
-		return (imageSource == null) ? getMissingImage() : getImage(
-				new ImageDescriptor(imageProvider.obtainSourceId(imageSource)),
-				imageSource);
+		return (imageSource == null) ? getMissingImage()
+				: getImage(new ImageDescriptor(imageProvider.obtainSourceId(imageSource)), imageSource);
 	}
 
 	public final Image getImage(String imageSourceId) {
@@ -749,31 +725,28 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Returns the requested image for the given image descriptor and image
-	 * type. This caches the result so that future attempts to get the image for
-	 * an equivalent or identical image descriptor will only access the cache.
-	 * When all references to equivalent image descriptors are dropped, the
-	 * images (regular, gray and disabled) will be cleaned up if they have been
-	 * created. This clean up makes no guarantees about how long or when it will
-	 * take place.
+	 * Returns the requested image for the given image descriptor and image type.
+	 * This caches the result so that future attempts to get the image for an
+	 * equivalent or identical image descriptor will only access the cache. When all
+	 * references to equivalent image descriptors are dropped, the images (regular,
+	 * gray and disabled) will be cleaned up if they have been created. This clean
+	 * up makes no guarantees about how long or when it will take place.
 	 *
 	 * @param descriptor
 	 *            The image descriptor with which the requested image should be
 	 *            created; may be <code>null</code>.
-	 * @return The image for the requested image type, either newly created or
-	 *         from the cache. This value is <code>null</code> if the image
-	 *         descriptor passed in is <code>null</code>, or if the image type
-	 *         is invalid. Note that a missing image will be returned if a
-	 *         problem occurs in the creation of the image.
+	 * @return The image for the requested image type, either newly created or from
+	 *         the cache. This value is <code>null</code> if the image descriptor
+	 *         passed in is <code>null</code>, or if the image type is invalid. Note
+	 *         that a missing image will be returned if a problem occurs in the
+	 *         creation of the image.
 	 */
-	public final Image getImage(final ImageDescriptor imageDescriptor,
-			Object imageSource) {
+	public final Image getImage(final ImageDescriptor imageDescriptor, Object imageSource) {
 		// Invalid descriptor
 		if (imageDescriptor == null)
 			return null;
 		// Created a temporary key to query the image map
-		ImageCacheWeakReference referencedToAdd = new ImageCacheWeakReference(
-				imageDescriptor, imageReferenceQueue);
+		ImageCacheWeakReference referencedToAdd = new ImageCacheWeakReference(imageDescriptor, imageReferenceQueue);
 		EquivalenceSet temporaryKey = new EquivalenceSet(referencedToAdd);
 
 		// Ensure that the image map is locked until the retrieving of the image
@@ -782,19 +755,15 @@ public final class ImageCache implements ImageStore {
 			// Retrieve the corresponding entry in the map
 			ImageMapEntry mapEntry = imageMap.get(temporaryKey);
 			if (mapEntry != null) {
-				Image image = getImageFromEquivalenceSet(imageDescriptor,
-						mapEntry, referencedToAdd, imageSource);
-				return (image.isDisposed()) ? restoreImage(imageDescriptor,
-						mapEntry, imageSource) : image;
+				Image image = getImageFromEquivalenceSet(imageDescriptor, mapEntry, referencedToAdd, imageSource);
+				return (image.isDisposed()) ? restoreImage(imageDescriptor, mapEntry, imageSource) : image;
 			}
 			// The entry was not found, create it.
-			return addNewEquivalenceSet(imageDescriptor, temporaryKey,
-					imageSource);
+			return addNewEquivalenceSet(imageDescriptor, temporaryKey, imageSource);
 		}
 	}
 
-	private Image restoreImage(ImageDescriptor imageDescriptor,
-			ImageMapEntry mapEntry, Object imageSource) {
+	private Image restoreImage(ImageDescriptor imageDescriptor, ImageMapEntry mapEntry, Object imageSource) {
 		// Create the images
 		Image image = imageDescriptor.createImage(imageSource);
 
@@ -809,8 +778,8 @@ public final class ImageCache implements ImageStore {
 	}
 
 	/**
-	 * Retrieve the image from the cache, or create it if it has not been
-	 * created yet.
+	 * Retrieve the image from the cache, or create it if it has not been created
+	 * yet.
 	 *
 	 * @param imageDescriptor
 	 *            The image descriptor.
@@ -818,12 +787,11 @@ public final class ImageCache implements ImageStore {
 	 *            The map entry.
 	 * @param referenceToAdd
 	 *            The weak reference to add.
-	 * @return the requested image, or the missing image if an error occurs in
-	 *         the creation of the image.
+	 * @return the requested image, or the missing image if an error occurs in the
+	 *         creation of the image.
 	 */
-	private Image getImageFromEquivalenceSet(ImageDescriptor imageDescriptor,
-			ImageMapEntry mapEntry, ImageCacheWeakReference referenceToAdd,
-			Object imageSource) {
+	private Image getImageFromEquivalenceSet(ImageDescriptor imageDescriptor, ImageMapEntry mapEntry,
+			ImageCacheWeakReference referenceToAdd, Object imageSource) {
 
 		Image image = mapEntry.getImage();
 		final EquivalenceSet equivalenceKey = mapEntry.getEquivalenceSet();
@@ -851,8 +819,7 @@ public final class ImageCache implements ImageStore {
 	public final Image getMissingImage() {
 		// Ensure that the missing image is not being accessed by another thread
 		if (missingImage == null)
-			missingImage = imageProvider.loadThumbnail(Display.getCurrent(),
-					null);
+			missingImage = imageProvider.loadThumbnail(Display.getCurrent(), null);
 		return missingImage;
 	}
 
@@ -869,10 +836,8 @@ public final class ImageCache implements ImageStore {
 
 	public void invalidateImage(Object imageSource) {
 		// Created a temporary key to query the image map
-		EquivalenceSet temporaryKey = new EquivalenceSet(
-				new ImageCacheWeakReference(new ImageDescriptor(
-						imageProvider.obtainSourceId(imageSource)),
-						imageReferenceQueue));
+		EquivalenceSet temporaryKey = new EquivalenceSet(new ImageCacheWeakReference(
+				new ImageDescriptor(imageProvider.obtainSourceId(imageSource)), imageReferenceQueue));
 
 		// Ensure that the image map is locked until the retrieving
 		// of the image

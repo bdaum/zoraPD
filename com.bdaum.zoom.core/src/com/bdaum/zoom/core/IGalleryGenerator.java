@@ -51,4 +51,10 @@ public interface IGalleryGenerator {
 	 */
 	File getTargetFolder();
 
+	/**
+	 * @param thumbSize
+	 * @return
+	 */
+	int getThumbnailSize(int thumbSize);
+
 }

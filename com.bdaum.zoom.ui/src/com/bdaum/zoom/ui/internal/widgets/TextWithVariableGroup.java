@@ -22,8 +22,6 @@ package com.bdaum.zoom.ui.internal.widgets;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -45,7 +43,7 @@ import com.bdaum.zoom.ui.internal.dialogs.TemplateFieldSelectionDialog;
 
 public class TextWithVariableGroup implements Listener {
 
-	class SelectTemplateDialog extends ZDialog {
+	class SelectTemplateDialog extends ZDialog implements Listener {
 
 		private String title;
 		private String[] templates;
@@ -80,21 +78,8 @@ public class TextWithVariableGroup implements Listener {
 			Composite area = (Composite) super.createDialogArea(parent);
 			area.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			list = new List(area, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER | SWT.SINGLE);
-			list.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					int i = list.getSelectionIndex();
-					var = i < 0 ? null : templates[i];
-					showExample();
-					validate();
-				}
-
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e) {
-					if (var != null)
-						okPressed();
-				}
-			});
+			list.addListener(SWT.Selection, this);
+			list.addListener(SWT.DefaultSelection, this);
 			list.setLayoutData(new GridData(600, 200));
 			example = new Label(area, SWT.NONE);
 			example.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
@@ -109,6 +94,19 @@ public class TextWithVariableGroup implements Listener {
 
 		protected void validate() {
 			getButton(OK).setEnabled(var != null);
+		}
+
+		@Override
+		public void handleEvent(Event e) {
+			if (e.type == SWT.DefaultSelection) {
+				if (var != null)
+					okPressed();
+			} else {
+				int i = list.getSelectionIndex();
+				var = i < 0 ? null : templates[i];
+				showExample();
+				validate();
+			}
 		}
 
 	}
@@ -142,9 +140,9 @@ public class TextWithVariableGroup implements Listener {
 			else {
 				selectTemplateButton = new Button(composite, SWT.PUSH);
 				selectTemplateButton.setText(Messages.TextWithVariableGroup_select_template);
-				selectTemplateButton.addSelectionListener(new SelectionAdapter() {
+				selectTemplateButton.addListener(SWT.Selection, new Listener() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
+					public void handleEvent(Event e) {
 						SelectTemplateDialog dialog = new SelectTemplateDialog(composite.getShell(),
 								Messages.TextWithVariableGroup_select_template, templates);
 						Point loc = textField.toDisplay(20, 10);

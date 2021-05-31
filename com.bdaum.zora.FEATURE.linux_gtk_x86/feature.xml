@@ -2,7 +2,7 @@
 <feature
       id="com.bdaum.zora.FEATURE.linux_gtk_x86"
       label="Linux_gtk_x86 Feature"
-      version="3.6.2"
+      version="3.6.3"
       provider-name="bdaum industrial communications"
       os="linux"
       ws="gtk"

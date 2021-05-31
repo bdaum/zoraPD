@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2016 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -42,14 +42,12 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -97,7 +95,7 @@ import com.bdaum.zoom.ui.internal.hover.IGalleryHover;
 import com.bdaum.zoom.ui.internal.hover.IHoverInfo;
 
 @SuppressWarnings("restriction")
-public abstract class ImageView extends BasicView implements CatalogListener, IDragHost, IDropHost {
+public abstract class ImageView extends BasicView implements CatalogListener, IDragHost, IDropHost, IMenuListener {
 
 	public class GalleryHover implements IGalleryHover {
 
@@ -230,16 +228,16 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		if (contextMenuMgr == null) {
 			contextMenuMgr = new MenuManager("#PopupMenu", VIEWID); //$NON-NLS-1$
 			contextMenuMgr.setRemoveAllWhenShown(true);
-			contextMenuMgr.addMenuListener(new IMenuListener() {
-				public void menuAboutToShow(IMenuManager manager) {
-					ImageView.this.fillContextMenu(manager);
-					manager.updateAll(true);
-				}
-			});
+			contextMenuMgr.addMenuListener(this);
 			getControl().setMenu(contextMenuMgr.createContextMenu(getControl()));
 			getSite().registerContextMenu(contextMenuMgr, this);
 			getControl().addListener(SWT.MouseDown, this);
 		}
+	}
+
+	public void menuAboutToShow(IMenuManager manager) {
+		ImageView.this.fillContextMenu(manager);
+		manager.updateAll(true);
 	}
 
 	protected void unhookContextMenu() {
@@ -349,7 +347,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		showComponentsAction = addAction(ZoomActionFactory.SHOWCOMPONENTS.create(bars, this));
 		copyMetadataAction = addAction(ZoomActionFactory.COPYMETADATA.create(bars, this));
 		pasteMetadataAction = addAction(ZoomActionFactory.PASTEMETADATA.create(bars, this));
-		Clipboard clipboard = UiActivator.getDefault().getClipboard(getSite().getShell().getDisplay());
+		Clipboard clipboard = getClipboard();
 		final IWorkbenchWindow workbenchWindow = getSite().getWorkbenchWindow();
 		copyAction = addAction(new CopyAction(workbenchWindow, clipboard));
 		pasteAction = addAction(new PasteAction(workbenchWindow, clipboard, ActionFactory.PASTE.getId(),
@@ -489,8 +487,7 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	private boolean testClipboardForMetadata() {
-		Clipboard clipboard = UiActivator.getDefault().getClipboard(getSite().getShell().getDisplay());
-		Object contents = clipboard.getContents(TextTransfer.getInstance());
+		Object contents = getClipboardContents(TextTransfer.getInstance());
 		if (contents instanceof String) {
 			String text = (String) contents;
 			if (text.indexOf("xmpmeta") >= 0 //$NON-NLS-1$
@@ -501,9 +498,16 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	}
 
 	private boolean testClipboardForImages() {
-		Object contents = UiActivator.getDefault().getClipboard(getSite().getShell().getDisplay())
-				.getContents(FileTransfer.getInstance());
+		Object contents = getClipboardContents(FileTransfer.getInstance());
 		return (contents instanceof String[] && ((String[]) contents).length > 0);
+	}
+
+	private Object getClipboardContents(Transfer transfer) {
+		return getClipboard().getContents(transfer);
+	}
+
+	private Clipboard getClipboard() {
+		return UiActivator.getDefault().getClipboard(getSite().getShell().getDisplay());
 	}
 
 	public boolean hasGps() {
@@ -576,9 +580,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		case '5':
 			ZoomActionFactory.rate(getAssetSelection().getAssets(), this, e.character - '0');
 			return;
-		// case '*':
-		// ZoomActionFactory.rate(getAssetSelection().getAssets(), this,
-		// RatingDialog.BYSERVICE);
 		}
 	}
 
@@ -588,7 +589,8 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		manager.add(editWithAction);
 		addMediaContributions(manager, IZoomActionConstants.MB_EDIT);
 		manager.add(new Separator(IZoomActionConstants.MB_EDIT));
-		manager.add(searchSimilarAction);
+		if (Core.getCore().getDbFactory().getLireServiceVersion() >= 0)
+			manager.add(searchSimilarAction);
 		manager.add(timeSearchAction);
 		manager.add(proximitySearchAction);
 		manager.add(new Separator(IZoomActionConstants.MB_SEARCH));
@@ -633,7 +635,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 			manager.add(addBookmarkAction);
 			manager.add(addToAlbumAction);
 			manager.add(refreshAction);
-			manager.add(ratingAction);
 			manager.add(deleteAction);
 		}
 	}
@@ -654,11 +655,24 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 	protected void addExplanationListener(boolean elaborate) {
 		Control control = getControl();
 		if (control != null && !control.isDisposed()) {
-			control.addKeyListener(new KeyListener() {
-				public void keyPressed(KeyEvent e) {
-					if (!getSelection().isEmpty()
-							&& (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT))
-						computeMode(e.stateMask | e.keyCode);
+			Listener listener = new Listener() {
+				public void handleEvent(Event e) {
+					if (e.type == SWT.KeyDown) {
+						if (!getSelection().isEmpty()
+								&& (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT))
+							computeMode(e.stateMask | e.keyCode);
+					} else {
+						if (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT) {
+							int state = e.stateMask - e.keyCode;
+							if ((state & (SWT.SHIFT | SWT.CTRL | SWT.ALT)) == 0) {
+								if (elaborate)
+									setStatusMessage(Messages.getString("ImageView.external_viewer"), false); //$NON-NLS-1$
+								else
+									updateStatusLine();
+							} else
+								computeMode(state);
+						}
+					}
 				}
 
 				private void computeMode(int state) {
@@ -673,23 +687,12 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 						setStatusMessage(message, false);
 					}
 				}
-
-				public void keyReleased(KeyEvent e) {
-					if (e.keyCode == SWT.SHIFT || e.keyCode == SWT.CTRL || e.keyCode == SWT.ALT) {
-						int state = e.stateMask - e.keyCode;
-						if ((state & (SWT.SHIFT | SWT.CTRL | SWT.ALT)) == 0) {
-							if (elaborate)
-								setStatusMessage(Messages.getString("ImageView.external_viewer"), false); //$NON-NLS-1$
-							else
-								updateStatusLine();
-						} else
-							computeMode(state);
-					}
-				}
-			});
-			control.addMouseTrackListener(new MouseTrackAdapter() {
+			};
+			control.addListener(SWT.KeyDown, listener);
+			control.addListener(SWT.KeyUp, listener);
+			control.addListener(SWT.MouseExit, new Listener() {
 				@Override
-				public void mouseExit(MouseEvent e) {
+				public void handleEvent(Event e) {
 					setStatusMessage("", false); //$NON-NLS-1$
 				}
 			});
@@ -711,11 +714,6 @@ public abstract class ImageView extends BasicView implements CatalogListener, ID
 		addDragSupport();
 	}
 
-	/*
-	 * (nicht-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.ui.internal.views.IDropHost#getSelectedCollection()
-	 */
 	public SmartCollectionImpl getSelectedCollection() {
 		INavigationHistory navigationHistory = getNavigationHistory();
 		return navigationHistory == null ? null : navigationHistory.getSelectedCollection();

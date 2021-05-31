@@ -48,10 +48,9 @@ public class FindDuplicatesJob extends CustomJob {
 	private int method;
 	private final IWorkbenchWindow window;
 	private DuplicatesView duplicatesView;
-	private final boolean ignoreDerivates;
+	private final boolean ignoreDerivates, withExtension;
 	private final int kind;
 	private final IDbManager dbManager;
-	private final boolean withExtension;
 
 	public FindDuplicatesJob(IWorkbenchWindow window, int kind, int method,
 			boolean ignoreDerivates, boolean withExtension) {

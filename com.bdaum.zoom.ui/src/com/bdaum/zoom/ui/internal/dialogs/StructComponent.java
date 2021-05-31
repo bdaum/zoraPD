@@ -48,6 +48,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -95,6 +96,13 @@ public class StructComponent implements Listener {
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
+			final Control control = viewer.getControl();
+			Display display = control.getDisplay();
+			if (!control.isDisposed())
+				display.asyncExec(() -> {
+					if (!control.isDisposed())
+						control.setCursor(display.getSystemCursor(SWT.CURSOR_WAIT));
+				});
 			switch (type) {
 			case QueryField.T_LOCATION:
 				objects = new ArrayList<IIdentifiableObject>(dbManager.obtainObjects(LocationImpl.class));
@@ -106,9 +114,8 @@ public class StructComponent implements Listener {
 				objects = new ArrayList<IIdentifiableObject>(dbManager.obtainObjects(ArtworkOrObjectImpl.class));
 				break;
 			}
-			final Control control = viewer.getControl();
 			if (!control.isDisposed())
-				control.getDisplay().asyncExec(() -> {
+				display.asyncExec(() -> {
 					if (!control.isDisposed()) {
 						viewer.setInput(objects);
 						String expansions = settings.get(FLATEXPANSION + type);
@@ -122,6 +129,7 @@ public class StructComponent implements Listener {
 						if (value != null)
 							viewer.setSelection(new StructuredSelection(value), true);
 						control.setFocus();
+						control.setCursor(display.getSystemCursor(SWT.ARROW));
 					}
 				});
 			return Status.OK_STATUS;
@@ -226,11 +234,7 @@ public class StructComponent implements Listener {
 			new Label(comp, SWT.NONE);
 		final FilterField filterField = new FilterField(headerGroup);
 		filterField.setLayoutData(new GridData(300, SWT.DEFAULT));
-		filterField.addListener(SWT.Modify, new Listener() {
-			public void handleEvent(Event e) {
-				update();
-			}
-		});
+		filterField.addListener(SWT.Modify, this);
 		expandCollapseGroup = new ExpandCollapseGroup(headerGroup, SWT.NONE);
 		viewer = new TreeViewer(comp, SWT.BORDER | SWT.V_SCROLL | SWT.SINGLE);
 		expandCollapseGroup.setViewer(viewer);
@@ -298,19 +302,20 @@ public class StructComponent implements Listener {
 			append(sb, getUpdatedValue(loc, QueryField.LOCATION_WORLDREGION, loc.getWorldRegion(), structOverlayMap));
 			Double latitude = getUpdatedValue(loc, QueryField.LOCATION_LATITUDE, loc.getLatitude(), structOverlayMap);
 			if (latitude != null && !Double.isNaN(latitude))
-				append(sb, Format.latitudeFormatter.toString(latitude));
+				append(sb, Format.latitudeFormatter.format(latitude));
 			Double longitude = getUpdatedValue(loc, QueryField.LOCATION_LONGITUDE, loc.getLongitude(),
 					structOverlayMap);
 			if (longitude != null && !Double.isNaN(longitude))
-				append(sb, Format.longitudeFormatter.toString(longitude));
+				append(sb, Format.longitudeFormatter.format(longitude));
 			Double altitude = getUpdatedValue(loc, QueryField.LOCATION_ALTITUDE, loc.getAltitude(), structOverlayMap);
 			if (altitude != null && !Double.isNaN(altitude))
-				append(sb, Format.altitudeFormatter.toString(altitude));
+				append(sb, Format.altitudeFormatter.format(altitude));
 			append(sb, getUpdatedValue(loc, QueryField.LOCATION_PLUSCODE, loc.getPlusCode(), structOverlayMap));
 			if (sb.length() == 0)
 				sb.append(NO_DETAILS);
 			return sb.toString();
-		} else if (element instanceof Contact) {
+		}
+		if (element instanceof Contact) {
 			Contact contact = (Contact) element;
 			append(sb, getUpdatedValue(contact, QueryField.CONTACT_ADDRESS, contact.getAddress(), structOverlayMap));
 			append(sb, getUpdatedValue(contact, QueryField.CONTACT_CITY, contact.getCity(), structOverlayMap));
@@ -323,14 +328,15 @@ public class StructComponent implements Listener {
 			if (sb.length() == 0)
 				sb.append(NO_DETAILS);
 			return sb.toString();
-		} else if (element instanceof ArtworkOrObject) {
+		}
+		if (element instanceof ArtworkOrObject) {
 			ArtworkOrObject art = (ArtworkOrObject) element;
 			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_TITLE, art.getTitle(), structOverlayMap));
 			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_CREATOR, art.getCreator(), structOverlayMap));
 			Date dateCreated = getUpdatedValue(art, QueryField.ARTWORKOROBJECT_DATECREATED, art.getDateCreated(),
 					structOverlayMap);
 			if (dateCreated != null)
-				append(sb, Format.dayFormatter.toString(dateCreated));
+				append(sb, Format.dayFormatter.format(dateCreated));
 			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_SOURCE, art.getSource(), structOverlayMap));
 			append(sb, getUpdatedValue(art, QueryField.ARTWORKOROBJECT_INVENTORYNUMBER, art.getSourceInventoryNumber(),
 					structOverlayMap));
@@ -355,12 +361,15 @@ public class StructComponent implements Listener {
 	}
 
 	private static void append(StringBuilder sb, String[] s) {
-		if (s != null && s.length > 0)
+		if (s != null && s.length > 0) {
+			if (sb.length() > 0)
+				sb.append("; "); //$NON-NLS-1$
 			for (int i = 0; i < s.length; i++) {
-				if (sb.length() > 0)
-					sb.append((i == 0) ? "; " : ','); //$NON-NLS-1$
+				if (i > 0)
+					sb.append(", "); //$NON-NLS-1$
 				sb.append(s[i]);
 			}
+		}
 	}
 
 	private static void append(StringBuilder sb, String s) {
@@ -438,7 +447,10 @@ public class StructComponent implements Listener {
 	}
 
 	public void handleEvent(Event e) {
-		Job.getJobManager().cancel(this);
+		if (e.type == SWT.Dispose)
+			Job.getJobManager().cancel(this);
+		else
+			update();
 	}
 
 	public List<IIdentifiableObject> getObjects() {

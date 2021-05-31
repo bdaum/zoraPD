@@ -63,6 +63,7 @@ import com.bdaum.zoom.core.internal.CoreActivator;
 import com.bdaum.zoom.core.internal.QueryOptions;
 import com.bdaum.zoom.ui.IZoomActionConstants;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
+import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.ServerListener;
 import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.commands.AbstractCatCommandHandler;
@@ -70,9 +71,9 @@ import com.bdaum.zoom.ui.internal.commands.OpenCatalogCommand;
 import com.bdaum.zoom.ui.internal.views.IUndoHost;
 
 @SuppressWarnings("restriction")
-public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements ServerListener {
+public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements ServerListener, IOperationHistoryListener {
 
-	public class ClickableStatusLineContributionItem extends ContributionItem {
+	public class ClickableStatusLineContributionItem extends ContributionItem implements Listener {
 		private final static int DEFAULT_CHAR_WIDTH = 45;
 
 		private int charWidth;
@@ -139,13 +140,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 			StatusLineLayoutData data = new StatusLineLayoutData();
 			data.widthHint = (int) widthHint;
 			label.setLayoutData(data);
-			label.addListener(SWT.MouseDown, new Listener() {
-				@Override
-				public void handleEvent(Event e) {
-					if (handler != null && !getText().isEmpty())
-						handler.run();
-				}
-			});
+			label.addListener(SWT.MouseDown, this);
+		}
+		
+		@Override
+		public void handleEvent(Event e) {
+			if (handler != null && !getText().isEmpty())
+				handler.run();
 		}
 
 		public Point getDisplayLocation() {
@@ -289,6 +290,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 
 	@Override
 	protected void fillMenuBar(IMenuManager menuBar) {
+		IAction action;
 		MenuManager catMenu = new MenuManager(Messages.getString("ApplicationActionBarAdvisor.Catalog"), //$NON-NLS-1$
 				IZoomActionConstants.M_CATALOG);
 		menuBar.add(catMenu);
@@ -315,8 +317,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 		catMenu.add(getAction(ActionFactory.PRINT.getId()));
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_EXT2));
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_EXT3));
-		if (!Constants.OSX)
-			catMenu.add(getAction(ActionFactory.QUIT.getId()));
+		if (!Constants.OSX) {
+			catMenu.add(action = getAction(ActionFactory.QUIT.getId()));
+			action.setImageDescriptor(Icons.quit.getDescriptor());
+		}
 		catMenu.add(new Separator(IZoomActionConstants.CATALOG_END));
 		MenuManager fileMenu = new MenuManager(Messages.getString("ApplicationActionBarAdvisor.File"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_FILE);
@@ -368,14 +372,15 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 		perspective.add(getAction(ActionFactory.CLOSE_PERSPECTIVE.getId()));
 		perspective.add(getAction(ActionFactory.CLOSE_ALL_PERSPECTIVES.getId()));
 		windowMenu.add(new Separator(IZoomActionConstants.WINDOW_EXT1));
-		ActionContributionItem preferencesActionItem = new ActionContributionItem(
-				getAction(ActionFactory.PREFERENCES.getId()));
+		ActionContributionItem preferencesActionItem = new ActionContributionItem(action = getAction(ActionFactory.PREFERENCES.getId()));
 		windowMenu.add(preferencesActionItem);
+		action.setImageDescriptor(Icons.prefs.getDescriptor());
 
 		MenuManager helpMenu = new MenuManager(Messages.getString("ApplicationActionBarAdvisor.Help"), //$NON-NLS-1$
 				IWorkbenchActionConstants.M_HELP);
 		menuBar.add(helpMenu);
-		helpMenu.add(getAction(ActionFactory.INTRO.getId()));
+		helpMenu.add(action = getAction(ActionFactory.INTRO.getId()));
+		action.setImageDescriptor(Icons.bird.getDescriptor());
 		helpMenu.add(new Separator(IWorkbenchActionConstants.HELP_START));
 		helpMenu.add(getAction(ActionFactory.HELP_CONTENTS.getId()));
 		helpMenu.add(getAction(ActionFactory.HELP_SEARCH.getId()));
@@ -456,11 +461,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 			}
 		});
 		workbench.getOperationSupport().getOperationHistory()
-				.addOperationHistoryListener(new IOperationHistoryListener() {
-					public void historyNotification(OperationHistoryEvent event) {
-						updateStatusLineItems();
-					}
-				});
+				.addOperationHistoryListener(this);
+		updateStatusLineItems();
+	}
+	
+	public void historyNotification(OperationHistoryEvent event) {
 		updateStatusLineItems();
 	}
 
@@ -512,7 +517,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor implements Ser
 					actionBarConfigurer.getStatusLineManager().update(true);
 				}
 			});
-		
+
 	}
+	
+	
 
 }

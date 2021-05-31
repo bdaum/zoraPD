@@ -298,7 +298,7 @@ public class XMPField {
 				}
 			}
 			if (useFormatter && qfield.getFormatter() != null && value instanceof String)
-				value = qfield.getFormatter().fromString((String) value);
+				value = qfield.getFormatter().parse((String) value);
 		} else {
 			value = backup != null ? backup : prop.getValue();
 			if (backup == null && value != null && !value.toString().isEmpty()) {

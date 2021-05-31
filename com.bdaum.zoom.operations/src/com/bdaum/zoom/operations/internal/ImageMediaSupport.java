@@ -693,14 +693,19 @@ public class ImageMediaSupport extends AbstractMediaSupport {
 	private File rawConvert(File dngFile, Recipe recipe, IProgressMonitor monitor) throws ConversionException {
 		String rawConverterId = importState.getConfiguration().rawConverterId;
 		IRawConverter rawConverter = BatchActivator.getDefault().getRawConverter(rawConverterId, true, true);
-		if (rawConverter == null || !rawConverter.isValid()) {
+		if (rawConverter == null || rawConverter.isValid() != null) {
 			BatchActivator activator = BatchActivator.getDefault();
 			if (!activator.isRawQuestionAsked()) {
 				rawConverter = Core.getCore().getDbFactory().getErrorHandler().showRawDialog(importState.info);
 				BatchActivator.getDefault().setRawQuestionAsked(true);
 			}
-			if (rawConverter == null || !rawConverter.isValid()) {
+			if (rawConverter == null) {
 				importState.operation.addError(Messages.getString("ImageMediaSupport.no_raw_convert"), null); //$NON-NLS-1$
+				return null;
+			} 
+			String errorMsg = rawConverter.isValid();
+			if (errorMsg != null) {
+				importState.operation.addError(errorMsg, null);
 				return null;
 			}
 			importState.getConfiguration().rawConverterId = rawConverter.getId();

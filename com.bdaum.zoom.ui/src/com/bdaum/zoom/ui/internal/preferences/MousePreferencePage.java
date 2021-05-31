@@ -23,8 +23,11 @@ package com.bdaum.zoom.ui.internal.preferences;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Scale;
 
 import com.bdaum.zoom.ui.internal.HelpContextIds;
@@ -34,11 +37,12 @@ import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class MousePreferencePage extends AbstractPreferencePage {
+public class MousePreferencePage extends AbstractPreferencePage implements Listener {
 
 	private RadioButtonGroup zoomGroup;
 	private Scale wheelScale;
 	private Scale speedScale;
+	private Label zoomExplLabel;
 
 	@SuppressWarnings("unused")
 	@Override
@@ -57,15 +61,43 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		wheelScale.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		wheelScale.setMaximum(100);
 		wheelScale.setIncrement(0);
-		CGroup keyGroup = CGroup.create(comp, 1, Messages.getString("MousePreferencePage.control_keys"));//$NON-NLS-1$
+		CGroup keyGroup = new CGroup(comp, SWT.NONE);
+		keyGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		keyGroup.setLayout(new GridLayout());
+		keyGroup.setText(Messages.getString("MousePreferencePage.control_keys")); //$NON-NLS-1$
 		String[] zoomLabels = new String[] { Messages.getString("MousePreferencePage.alt"), //$NON-NLS-1$
 				Messages.getString("MousePreferencePage.shift"), //$NON-NLS-1$
 				Messages.getString("MousePreferencePage.right_mouse_button"), //$NON-NLS-1$
 				getShell().getDisplay().getTouchEnabled() ? Messages.getString("MousePreferencePage.zoom_by_touch") //$NON-NLS-1$
 						: Messages.getString("MousePreferencePage.no_zoom") }; //$NON-NLS-1$
-		zoomGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.zoom_key"), 2, zoomLabels); //$NON-NLS-1$
+		zoomGroup = new RadioButtonGroup(keyGroup, Messages.getString("MousePreferencePage.zoom_key"), 1, zoomLabels); //$NON-NLS-1$
 		zoomGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
+		zoomGroup.addListener(SWT.Selection, this);
+		new Label(keyGroup, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		
+		zoomExplLabel = new Label(keyGroup, SWT.WRAP);
+		zoomExplLabel.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		fillValues();
+		updateLabel();
+	}
+
+	private void updateLabel() {
+		switch (zoomGroup.getSelection()) {
+		case 0:
+			zoomExplLabel.setText(Messages.getString("MousePreferencePage.akt_expl")); //$NON-NLS-1$
+			return;
+		case 1:
+			zoomExplLabel.setText(Messages.getString("MousePreferencePage.shift_expl")); //$NON-NLS-1$
+			return;
+		case 2:
+			zoomExplLabel.setText(Messages.getString("MousePreferencePage.right_expl")); //$NON-NLS-1$
+			return;
+		case 3:
+			zoomExplLabel.setText(
+					getShell().getDisplay().getTouchEnabled() ? Messages.getString("MousePreferencePage.scrollwhell_expl") //$NON-NLS-1$
+							: Messages.getString("MousePreferencePage.finger_expl")); //$NON-NLS-1$
+		}
+
 	}
 
 	@Override
@@ -98,6 +130,11 @@ public class MousePreferencePage extends AbstractPreferencePage {
 		preferenceStore.setValue(PreferenceConstants.MOUSE_SPEED, speedScale.getSelection());
 		preferenceStore.setValue(PreferenceConstants.WHEELSOFTNESS, wheelScale.getSelection());
 		preferenceStore.setValue(PreferenceConstants.ZOOMKEY, zoomGroup.getSelection());
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateLabel();
 	}
 
 }

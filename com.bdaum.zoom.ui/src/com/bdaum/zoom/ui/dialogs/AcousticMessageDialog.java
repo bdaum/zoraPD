@@ -54,6 +54,7 @@ public class AcousticMessageDialog extends MessageDialog {
 	private int y = -1;
 	private TimerTask task;
 	private Control messageField;
+	private int mh = 0;
 
 	/**
 	 * Convenience method to open a simple confirm (OK/Cancel) dialog.
@@ -202,6 +203,7 @@ public class AcousticMessageDialog extends MessageDialog {
 		setShellStyle(Constants.OSX ? getShellStyle() | SWT.SHEET : SWT.APPLICATION_MODAL);
 		this.type = dialogImageType;
 		this.dialogTitle = dialogTitle;
+		mh = exceeds(dialogMessage, 3);
 	}
 
 	public void setY(int y) {
@@ -217,8 +219,9 @@ public class AcousticMessageDialog extends MessageDialog {
 		shell.setText(Constants.APPLICATION_NAME);
 		if (!Constants.OSX) {
 			Rectangle rootBounds = getRootShell(shell).getBounds();
+			shell.layout(true, true);
 			int oHeight = (messageField != null) ? messageField.getBounds().height : 0;
-			int mHeight = (messageField != null) ? messageField.computeSize(rootBounds.width, SWT.DEFAULT, true).y : 0;
+			int mHeight = (messageField != null) ? mh + messageField.computeSize(rootBounds.width, SWT.DEFAULT, true).y : 0;
 			shell.setBounds(rootBounds.x, y >= 0 ? y : bounds.y, rootBounds.width, bounds.height + mHeight - oHeight);
 		} else if (y >= 0)
 			shell.setLocation(bounds.x, y);
@@ -277,11 +280,11 @@ public class AcousticMessageDialog extends MessageDialog {
 			layout.marginWidth = 15;
 			composite.setLayout(layout);
 			GridData layoutData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
-			if (exceeds(message, 3)) {
+			if (mh > 0) {
 				messageField = new Text(composite,
 						SWT.BORDER | SWT.MULTI | SWT.READ_ONLY | SWT.LEAD | SWT.H_SCROLL | SWT.V_SCROLL);
 				((Text) messageField).setText(message);
-				layoutData.heightHint = 200;
+				layoutData.heightHint = mh;
 			} else {
 				messageField = new Label(composite, getMessageLabelStyle());
 				((Label) messageField).setAlignment(message.indexOf('\t') >= 0 ? SWT.LEFT : SWT.CENTER);
@@ -293,11 +296,14 @@ public class AcousticMessageDialog extends MessageDialog {
 		return parent;
 	}
 
-	private static boolean exceeds(String message, int lines) {
+	private int exceeds(String message, int lines) {
+		if (message == null)
+			return 0;
+		int h = 0;
 		for (int i = 0, n = 1; i < message.length(); i++)
 			if (message.charAt(i) == '\n' && ++n > lines)
-				return true;
-		return false;
+				h += 15;
+		return h > 0 ? Math.min(200,  h+45) : 0;
 	}
 
 	private void setValidator(IValidator validator) {

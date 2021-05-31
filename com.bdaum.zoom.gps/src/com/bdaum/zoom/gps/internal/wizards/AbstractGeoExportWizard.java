@@ -70,10 +70,12 @@ public abstract class AbstractGeoExportWizard extends AbstractAssetSelectionWiza
 
 	@Override
 	public boolean performFinish() {
-		exportPage.finish();
-		saveDialogSettings();
-		OperationJob.executeOperation(new ExportGeoOperation(assets, getTargetFile(), type), this);
-		return true;
+		if (exportPage.finish()) {
+			saveDialogSettings();
+			OperationJob.executeOperation(new ExportGeoOperation(assets, getTargetFile(), type), this);
+			return true;
+		}
+		return false;
 	}
 
 	public File getTargetFile() {
@@ -84,8 +86,8 @@ public abstract class AbstractGeoExportWizard extends AbstractAssetSelectionWiza
 			file.createNewFile();
 			return file;
 		} catch (IOException e) {
-			GpsActivator.getDefault()
-					.logError(NLS.bind(Messages.AbstractGeoExportWizard_cannot_create, type.toUpperCase(), targetFile), e);
+			GpsActivator.getDefault().logError(
+					NLS.bind(Messages.AbstractGeoExportWizard_cannot_create, type.toUpperCase(), targetFile), e);
 			return null;
 		}
 	}

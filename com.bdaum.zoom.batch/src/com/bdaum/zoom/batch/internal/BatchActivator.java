@@ -195,7 +195,7 @@ public class BatchActivator extends Plugin {
 				synchronized (currentRawConverters) {
 					if (filewatcher != null)
 						filewatcher.ignore(out, opId);
-					data = executeCommand(parms, converter.getInputDirectory(), converterId, IStatus.INFO, IStatus.INFO,
+					data = executeCommand(parms, converter.getInputDirectory(), converter.getLibPath(), converterId, IStatus.INFO, IStatus.INFO,
 							180000L, null, monitor);
 				}
 				if (monitor != null && monitor.isCanceled())
@@ -237,10 +237,10 @@ public class BatchActivator extends Plugin {
 
 	}
 
-	public static String executeCommand(String[] parms, File dir, String label, int logLevel, int errorLevel,
+	public static String executeCommand(String[] parms, File dir, String libPath, String label, int logLevel, int errorLevel,
 			long timeout, String charsetName, IProgressMonitor monitor) throws ConversionException {
 		try {
-			return BatchUtilities.executeCommand(parms, dir, label, logLevel, errorLevel, 1, timeout, charsetName,
+			return BatchUtilities.executeCommand(parms, dir, libPath, label, logLevel, errorLevel, 1, timeout, charsetName,
 					monitor);
 		} catch (ExecutionException e1) {
 			throw new ConversionException(NLS.bind(Messages.BatchActivator_conversion_ended_with_error, label),
@@ -292,7 +292,7 @@ public class BatchActivator extends Plugin {
 	public void runScript(String[] parms, boolean wait) throws IOException, ExecutionException {
 		parms[0] = locate(parms[0]);
 		if (wait)
-			BatchUtilities.executeCommand(parms, null, Messages.BatchActivator_run_script, IStatus.OK, IStatus.ERROR, 2,
+			BatchUtilities.executeCommand(parms, null, null, Messages.BatchActivator_run_script, IStatus.OK, IStatus.ERROR, 2,
 					1000L, "UTF-8", null); //$NON-NLS-1$
 		else
 			Runtime.getRuntime().exec(parms, null, null);

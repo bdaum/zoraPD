@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -44,10 +43,10 @@ public class ExportGeoOperation extends DbOperation {
 
 	@Override
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-		monitor.beginTask(NLS.bind(Messages.getString("ExportGeoOperation.export_file"), type.toUpperCase()), assets.size()); //$NON-NLS-1$
+		monitor.beginTask(NLS.bind(Messages.getString("ExportGeoOperation.export_file"), type.toUpperCase()), //$NON-NLS-1$
+				assets.size());
 		NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
 		nf.setGroupingUsed(false);
-		SimpleDateFormat sdf = Format.XML_DATE_TIME_XZONED_FORMAT.get(); 
 		nf.setMaximumFractionDigits(6);
 		try (Writer writer = new FileWriter(targetFile)) {
 			StringBuilder sb = new StringBuilder();
@@ -69,7 +68,8 @@ public class ExportGeoOperation extends DbOperation {
 						sb.append("<ele>").append(nf.format(ele)).append("</ele>"); //$NON-NLS-1$ //$NON-NLS-2$
 					Date date = asset.getDateTime();
 					if (date != null)
-						sb.append("<time>").append(sdf.format(date)).append("</time>"); //$NON-NLS-1$ //$NON-NLS-2$
+						sb.append("<time>").append(Format.XML_DATE_TIME_XZONED_FORMAT.get().format(date)) //$NON-NLS-1$
+								.append("</time>"); //$NON-NLS-1$
 					if (name != null && !name.isEmpty())
 						sb.append("<name>").append(BatchUtilities.encodeXML(name, 1)).append("</name>"); //$NON-NLS-1$ //$NON-NLS-2$
 					sb.append("</wpt>\n"); //$NON-NLS-1$

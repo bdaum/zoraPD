@@ -46,11 +46,11 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
-import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.VocabManager.VocabNode;
+import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
-public class ViewVocabDialog extends ZTitleAreaDialog {
+public class ViewVocabDialog extends ZTitleAreaDialog implements IDoubleClickListener, ISelectionChangedListener {
 
 	private VocabNode root;
 	private File file;
@@ -142,19 +142,8 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 			}
 		});
 		if (select) {
-			viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-				@Override
-				public void selectionChanged(SelectionChangedEvent event) {
-					updateButtons();
-				}
-			});
-			viewer.addDoubleClickListener(new IDoubleClickListener() {
-				@Override
-				public void doubleClick(DoubleClickEvent event) {
-					if (!viewer.getSelection().isEmpty())
-						okPressed();
-				}
-			});
+			viewer.addSelectionChangedListener(this);
+			viewer.addDoubleClickListener(this);
 		} else
 			UiUtilities.installDoubleClickExpansion(viewer);
 		return area;
@@ -183,6 +172,17 @@ public class ViewVocabDialog extends ZTitleAreaDialog {
 
 	public String[] getResult() {
 		return result;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void doubleClick(DoubleClickEvent event) {
+		if (!viewer.getSelection().isEmpty())
+			okPressed();
 	}
 
 }

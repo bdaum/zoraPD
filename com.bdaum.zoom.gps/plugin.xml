@@ -306,6 +306,9 @@
             icon="icons/gps.png"
             id="com.bdaum.zoom.gps.perspective"
             name="%perspective.name">
+         <description>
+            %perspective.description.geo
+         </description>
       </perspective>
    </extension>
    <extension
@@ -344,6 +347,12 @@
             id="com.bdaum.zoom.gps.wizard.export.gpx"
             name="%wizard.name.gpxfile">
       </wizard>
+   </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.gps.internal.preferences.PreferenceConstants">
+      </constants>
    </extension>
 
 </plugin>

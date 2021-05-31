@@ -56,7 +56,7 @@ use vars qw($VERSION $AUTOLOAD @formatSize @formatName %formatNumber %intFormat
 use Image::ExifTool qw(:DataAccess :Utils);
 use Image::ExifTool::MakerNotes;
 
-$VERSION = '4.29';
+$VERSION = '4.31';
 
 sub ProcessExif($$$);
 sub WriteExif($$$);
@@ -1377,6 +1377,12 @@ my %opcodeInfo = (
         Count => 6,
         Priority => 0,
     },
+  # 0x220 - int32u: 0 (IFD0, Xaiomi Redmi models)
+  # 0x221 - int32u: 0 (IFD0, Xaiomi Redmi models)
+  # 0x222 - int32u: 0 (IFD0, Xaiomi Redmi models)
+  # 0x223 - int32u: 0 (IFD0, Xaiomi Redmi models)
+  # 0x224 - int32u: 0,1 (IFD0, Xaiomi Redmi models)
+  # 0x225 - string: "" (IFD0, Xaiomi Redmi models)
     0x22f => 'StripRowCounts',
     0x2bc => {
         Name => 'ApplicationNotes', # (writable directory!)
@@ -1998,6 +2004,7 @@ my %opcodeInfo = (
     0x885d => 'FaxSubAddress', #9
     0x885e => 'FaxRecvTime', #9
     0x8871 => 'FedexEDR', #exifprobe (NC)
+  # 0x8889 - string: "portrait" (ExifIFD, Xiaomi POCO F1)
     0x888a => { #PH
         Name => 'LeafSubIFD',
         Format => 'int32u',     # Leaf incorrectly uses 'undef' format!
@@ -2008,6 +2015,10 @@ my %opcodeInfo = (
             Start => '$val',
         },
     },
+  # 0x8891 - int16u: 35 (ExifIFD, Xiaomi POCO F1)
+  # 0x8894 - int16u: 0 (ExifIFD, Xiaomi POCO F1)
+  # 0x8895 - int16u: 0 (ExifIFD, Xiaomi POCO F1)
+  # 0x889a - int16u: 0 (ExifIFD, Xiaomi POCO F1)
   # 0x89ab - seen "11 100 130 16 0 0 0 0" in IFD0 of TIFF image from IR scanner (forum8470)
     0x9000 => {
         Name => 'ExifVersion',
@@ -2368,6 +2379,8 @@ my %opcodeInfo = (
         Name => 'CameraElevationAngle',
         Writable => 'rational64s',
     },
+  # 0x9999 - string: camera settings (ExifIFD, Xiaomi POCO F1)
+  # 0x9aaa - int8u[2176]: ? (ExifIFD, Xiaomi POCO F1)
     0x9c9b => {
         Name => 'XPTitle',
         Format => 'undef',
@@ -4715,8 +4728,8 @@ my %subSecConv = (
     },
     LensID => {
         Groups => { 2 => 'Camera' },
-        Require => 'LensType',
         Desire => {
+            0 => 'LensType',
             1 => 'FocalLength',
             2 => 'MaxAperture',
             3 => 'MaxApertureValue',
@@ -4728,22 +4741,32 @@ my %subSecConv = (
             9 => 'LensType2',
             10 => 'LensType3',
             11 => 'LensFocalLength', # (for Pentax to check for converter)
+            12 => 'RFLensType',
         },
         Notes => q{
             attempt to identify the actual lens from all lenses with a given LensType.
             Applies only to LensType values with a lookup table.  May be configured
             by adding user-defined lenses
         },
-        # this LensID is only valid if the LensType has a PrintConv or is a model name
+        # this LensID is only valid if the LensType has a PrintConv,
+        # or LensType or LensModel are the model name
         RawConv => q{
             my $printConv = $$self{TAG_INFO}{LensType}{PrintConv};
-            return $val if ref $printConv eq 'HASH' or (ref $printConv eq 'ARRAY' and
-                ref $$printConv[0] eq 'HASH') or $val[0] =~ /(mm|\d\/F)/;
+            return $val if ref $printConv eq 'HASH' or
+                (ref $printConv eq 'ARRAY' and ref $$printConv[0] eq 'HASH') or
+                (defined $val[0] and $val[0] =~ /(mm|\d\/F)/) or
+                (defined $val[6] and $val[6] =~ /(mm|\d\/F)/);
             return undef;
         },
-        ValueConv => '$val',
+        ValueConv => '$val[0] || $val[6]',
         PrintConv => q{
             my $pcv;
+            # use LensModel ([6]) if LensType ([0]) is not populated
+            # (iPhone populates LensModel but not LensType)
+            if (not defined $val[0] and defined $val[6]) {
+                $val[0] = $val[6];
+                $prt[0] = $prt[6];
+            }
             # use LensType2 instead of LensType if available and valid (Sony E-mount lenses)
             # (0x8000 or greater; 0 for several older/3rd-party E-mount lenses)
             if (defined $val[9] and ($val[9] & 0x8000 or $val[9] == 0)) {
@@ -4755,6 +4778,12 @@ my %subSecConv = (
                    $prt[0] = $prt[10];
                 }
                 $pcv = $$self{TAG_INFO}{LensType2}{PrintConv};
+            }
+            # use Canon RFLensType if available
+            if ($val[12]) {
+                $val[0] = $val[12];
+                $prt[0] = $prt[12];
+                $pcv = $$self{TAG_INFO}{RFLensType}{PrintConv};
             }
             my $lens = Image::ExifTool::Exif::PrintLensID($self, $prt[0], $pcv, $prt[8], @val);
             # check for use of lens converter (Pentax K-3)
@@ -5816,7 +5845,7 @@ sub ProcessExif($$$)
     $$et{Compression} = $$et{SubfileType} = '';
 
     # loop through all entries in an EXIF directory (IFD)
-    my ($index, $valEnd, $offList, $offHash, $mapFmt);
+    my ($index, $valEnd, $offList, $offHash, $mapFmt, @valPos);
     $mapFmt = $$tagTablePtr{VARS}{MAP_FORMAT} if $$tagTablePtr{VARS};
 
     my ($warnCount, $lastID) = (0, -1);
@@ -5876,17 +5905,23 @@ sub ProcessExif($$$)
             }
             $valuePtr = Get32u($dataPt, $valuePtr);
             if ($validate and not $inMakerNotes) {
-                $et->Warn(sprintf('Odd offset for %s %s',$dir,TagName($tagID,$tagInfo)), 1) if $valuePtr & 0x01;
+                my $tagName = TagName($tagID, $tagInfo);
+                $et->Warn("Odd offset for $dir $tagName", 1) if $valuePtr & 0x01;
                 if ($valuePtr < 8 || ($valuePtr + $size > length($$dataPt) and
                                       $valuePtr + $size > $$et{VALUE}{FileSize}))
                 {
-                    $et->Warn(sprintf('Invalid offset for %s %s',$dir,TagName($tagID,$tagInfo)));
+                    $et->Warn("Invalid offset for $dir $tagName");
                     ++$warnCount;
                     next;
                 }
                 if ($valuePtr + $size > $dirStart + $dataPos and $valuePtr < $dirEnd + $dataPos + 4) {
-                    $et->Warn(sprintf('Value for %s %s overlaps IFD', $dir, TagName($tagID,$tagInfo)));
+                    $et->Warn("Value for $dir $tagName overlaps IFD");
                 }
+                foreach (@valPos) {
+                    next if $$_[0] >= $valuePtr + $size or $$_[0] + $$_[1] <= $valuePtr;
+                    $et->Warn("Value for $dir $tagName overlaps $$_[2]");
+                }
+                push @valPos, [ $valuePtr, $size, $tagName ];
             }
             # fix valuePtr if necessary
             if ($$dirInfo{FixOffsets}) {
@@ -6162,6 +6197,9 @@ sub ProcessExif($$$)
                         my $sign = $actPt < $offPt ? '-' : '';
                         $tip .= sprintf("Offset base: ${sign}0x%.4x\n", abs($actPt - $offPt));
                         $style = 'F' if $style eq 'H';  # purple for different offsets
+                    }
+                    if ($$et{EXIF_POS} and not $$et{BASE_FUDGE}) {
+                        $tip .= sprintf("File offset:   0x%.4x\n", $actPt + $$et{EXIF_POS})
                     }
                     $colName = "<span class=$style>$tagName</span>";
                     $colName .= ' <span class=V>(odd)</span>' if $offPt & 0x01;
@@ -6566,7 +6604,7 @@ EXIF and TIFF meta information.
 
 =head1 AUTHOR
 
-Copyright 2003-2020, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2021, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

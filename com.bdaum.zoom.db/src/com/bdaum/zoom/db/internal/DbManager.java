@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -161,15 +162,11 @@ import com.db4o.query.Constraint;
 import com.db4o.query.Query;
 
 @SuppressWarnings("restriction")
-public class DbManager implements IDbManager, IAdaptable {
+public class DbManager implements IDbManager, IAdaptable, IInputValidator {
 
 	private static final String IMPL = "Impl"; //$NON-NLS-1$
 
 	private static final String TYPEIMPL = "_typeImpl"; //$NON-NLS-1$
-
-	private static final ArrayList<AssetImpl> EMPTYASSETS = new ArrayList<AssetImpl>(0);
-
-	private static final ArrayList<Ghost_typeImpl> EMPTYGHOSTS = new ArrayList<Ghost_typeImpl>(0);
 
 	private static final int MAXIDS = 256;
 
@@ -183,10 +180,6 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private static final String LUCENE_WRITE_LOCK = "write.lock"; //$NON-NLS-1$
 
-	private static final List<LocationImpl> EMPTYLOCATIONS = new ArrayList<LocationImpl>(0);
-
-	private static final List<Trash> EMPTYTRASH = new ArrayList<Trash>(0);
-
 	private static final long ONEDAY = 24 * 60 * 60 * 1000L;
 
 	private Set<String> indexedFields;
@@ -197,7 +190,7 @@ public class DbManager implements IDbManager, IAdaptable {
 
 	private ObjectContainer trashCan;
 
-	private Set<String> dirtyCollections = Collections.synchronizedSet(new HashSet<String>());
+	private Set<String> dirtyCollections = ConcurrentHashMap.newKeySet();
 
 	protected Meta meta;
 
@@ -847,7 +840,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		return EMPTYASSETS;
+		return Collections.emptyList();
 	}
 
 	/*
@@ -881,16 +874,9 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		return EMPTYGHOSTS;
+		return Collections.emptyList();
 	}
 
-	/*
-	 * (nicht-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.db.IDbManager#obtainObjects(java.lang.Class,
-	 * java.lang.String, java.lang.Object, int, java.lang.String, java.lang.Object,
-	 * int, boolean)
-	 */
 	public <T extends IIdentifiableObject> List<T> obtainObjects(Class<T> clazz, String field1, Object v1, int rel1,
 			String field2, Object v2, int rel2, boolean or) {
 		return obtainObjects(clazz, or, field1, v1, rel1, field2, v2, rel2);
@@ -964,13 +950,6 @@ public class DbManager implements IDbManager, IAdaptable {
 		return new ArrayList<T>();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.IDbManager#findLocation(com.bdaum.zoom.cat.model.
-	 * location.LocationImpl)
-	 */
-
 	public List<LocationImpl> findLocation(final LocationImpl location) {
 		while (location != null && db != null)
 			try {
@@ -1013,7 +992,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (Db4oException e) {
 				reconnectToDb(e);
 			}
-		return EMPTYLOCATIONS;
+		return Collections.emptyList();
 
 	}
 
@@ -1041,12 +1020,6 @@ public class DbManager implements IDbManager, IAdaptable {
 		}
 		return new ArrayList<T>(0);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.IDbManager#storeAndCommit(java.lang.Object)
-	 */
 
 	public void storeAndCommit(Object obj) {
 		store(obj);
@@ -1117,7 +1090,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		return EMPTYTRASH;
+		return Collections.emptyList();
 	}
 
 	public List<Trash> obtainTrash(boolean byName) {
@@ -1137,7 +1110,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		return EMPTYTRASH;
+		return Collections.emptyList();
 	}
 
 	public List<Trash> obtainTrashForFile(URI uri) {
@@ -1161,7 +1134,7 @@ public class DbManager implements IDbManager, IAdaptable {
 			} catch (IllegalStateException | Db4oException e) {
 				reconnectTrashcanToDb(e);
 			}
-		return EMPTYTRASH;
+		return Collections.emptyList();
 	}
 
 	private void reconnectTrashcanToDb(RuntimeException e) {
@@ -1179,13 +1152,12 @@ public class DbManager implements IDbManager, IAdaptable {
 	}
 
 	private void promptForReconnect() {
-		IInputValidator validator = new IInputValidator() {
-			public String isValid(String newText) {
-				return file.exists() ? null : Messages.DbManager_file_missing;
-			}
-		};
 		factory.getErrorHandler().promptForReconnect(Messages.DbManager_lost_connection,
-				Messages.DbManager_reinsert_media, validator, this);
+				Messages.DbManager_reinsert_media, this, this);
+	}
+	
+	public String isValid(String newText) {
+		return file.exists() ? null : Messages.DbManager_file_missing;
 	}
 
 	public String getTrashcanName() {
@@ -1888,15 +1860,17 @@ public class DbManager implements IDbManager, IAdaptable {
 										EmbeddedConfiguration ef = createDatabaseConfiguration(fileNeedsUpgrade,
 												fileName, defragSpaceSize);
 										try {
+											SystemInfo systemInfo = getSystemInfo();
+											long totalSize = systemInfo.totalSize();
 											defragment(fileName, backupPath, ef);
 											ef = createDatabaseConfiguration(false, fileName, -1L);
 											db = Db4oEmbedded.openFile(ef, fileName);
-											SystemInfo systemInfo = getSystemInfo();
+											systemInfo = getSystemInfo();
 											long newFreespaceSize = systemInfo.freespaceSize();
 											long newTotalSize = systemInfo.totalSize();
 											db.close();
 											db = null;
-											if (newFreespaceSize > 3 * reserve) {
+											if (newFreespaceSize > 3 * reserve || newTotalSize > totalSize) {
 												monitor.subTask(Messages.DbManager_defrag_cat_2);
 												long newOccupiedspaceSize = newTotalSize - newFreespaceSize;
 												long newReserve = isReadOnly() ? newOccupiedspaceSize / 100
@@ -2033,9 +2007,7 @@ public class DbManager implements IDbManager, IAdaptable {
 					dialog.run(false, true, runnable);
 				} else
 					runnable.run(new NullProgressMonitor());
-			} catch (InvocationTargetException e) {
-				// ignore
-			} catch (InterruptedException e) {
+			} catch (InvocationTargetException | InterruptedException e) {
 				// ignore
 			}
 		}
@@ -2204,7 +2176,7 @@ public class DbManager implements IDbManager, IAdaptable {
 								return o2.compareTo(o1);
 							}
 						});
-						List<Object> toBeDeleted = new ArrayList<>();
+						List<Object> toBeDeleted = new ArrayList<>(importIds.size());
 						int i = 0;
 						for (String id : importIds) {
 							SmartCollectionImpl sm = obtainById(SmartCollectionImpl.class, id);
@@ -2232,14 +2204,6 @@ public class DbManager implements IDbManager, IAdaptable {
 			}
 		}
 	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.IDbManager#createCollectionProcessor(com.bdaum.zoom
-	 * .cat.model.group.SmartCollection, com.bdaum.zoom.core.IAssetFilter,
-	 * com.bdaum.zoom.cat.model.group.SortCriterion)
-	 */
 
 	public ICollectionProcessor createCollectionProcessor(SmartCollection sm, IAssetFilter[] filters,
 			SortCriterion customSort) {

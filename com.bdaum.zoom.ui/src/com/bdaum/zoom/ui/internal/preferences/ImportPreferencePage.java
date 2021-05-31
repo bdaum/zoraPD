@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2015 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -52,8 +52,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -98,7 +96,8 @@ import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class ImportPreferencePage extends AbstractPreferencePage implements Listener {
+public class ImportPreferencePage extends AbstractPreferencePage
+		implements Listener, ICheckStateListener, ICheckStateProvider, ISelectionChangedListener {
 
 	public static final String ID = "com.bdaum.zoom.ui.preferences.ImportPreferencePage"; //$NON-NLS-1$
 	public static final String DNG = "dng"; //$NON-NLS-1$
@@ -383,8 +382,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 		linearButton = WidgetFactory.createCheckButton(optionsGroup,
 				Messages.getString("ImportPreferencePage.linear_dng"), new GridData( //$NON-NLS-1$
 						SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		Label flabel = new Label(optionsGroup, SWT.NONE);
-		flabel.setText(Messages.getString("ImportPreferencePage.dng_subfolder")); //$NON-NLS-1$
+		new Label(optionsGroup, SWT.NONE).setText(Messages.getString("ImportPreferencePage.dng_subfolder")); //$NON-NLS-1$
 		dngfolderField = new Text(optionsGroup, SWT.SINGLE | SWT.LEAD | SWT.BORDER);
 		GridData layoutData = new GridData(250, SWT.DEFAULT);
 		layoutData.horizontalIndent = 20;
@@ -411,14 +409,13 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 					// should never happen
 				}
 			}
-			break;
+			return;
 		case SWT.Verify:
 			if (BatchUtilities.checkFilename(e.text) > 0)
 				e.doit = false;
-			break;
+			return;
 		case SWT.Modify:
 			validate();
-			break;
 		}
 
 	}
@@ -443,12 +440,7 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 			}
 		});
 		rcViewer.setInput(rawConverters);
-		rcViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateRawOptions();
-				validate();
-			}
-		});
+		rcViewer.addSelectionChangedListener(this);
 		basicsGroup = new CGroup(composite, SWT.NONE);
 		basicsGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		basicsLayout = new StackLayout();
@@ -529,10 +521,12 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 								// do nothing
 							}
 						optionProps.put(prop.id, field);
-					} else if ("boolean".equals(type)) //$NON-NLS-1$
-						optionProps.put(prop.id, WidgetFactory.createCheckButton(optionComp, prop.name,
-								new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1)));
-					else if ("label".equals(type)) //$NON-NLS-1$
+					} else if ("boolean".equals(type)) { //$NON-NLS-1$
+						CheckboxButton btn = WidgetFactory.createCheckButton(optionComp, prop.name,
+								new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 2, 1));
+						btn.setSelection(Boolean.parseBoolean(prop.dflt));
+						optionProps.put(prop.id, btn);
+					} else if ("label".equals(type)) //$NON-NLS-1$
 						new Label(optionComp, SWT.NONE).setText(prop.name);
 					else {
 						new Label(optionComp, SWT.NONE).setText(prop.name);
@@ -686,45 +680,13 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 		recipeViewer.getTable().setHeaderVisible(true);
 		recipeViewer.getTable().setLinesVisible(true);
 		recipeViewer.setContentProvider(ArrayContentProvider.getInstance());
-		recipeViewer.setCheckStateProvider(new ICheckStateProvider() {
-			public boolean isGrayed(Object element) {
-				return false;
-			}
-
-			public boolean isChecked(Object element) {
-				if (element instanceof IRecipeDetector)
-					return selectedRecipeDetectors.contains(((IRecipeDetector) element).getId());
-				return false;
-			}
-		});
+		recipeViewer.setCheckStateProvider(this);
 		recipeViewer.setComparator(ZViewerComparator.INSTANCE);
-		recipeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateRecipeButtons();
-			}
-		});
-		recipeViewer.addCheckStateListener(new ICheckStateListener() {
-			public void checkStateChanged(CheckStateChangedEvent event) {
-				Object element = event.getElement();
-				if (element instanceof IRecipeDetector) {
-					String id = ((IRecipeDetector) element).getId();
-					if (event.getChecked()) {
-						selectedRecipeDetectors.add(id);
-						processRecipesButton.setSelection(true);
-					} else {
-						selectedRecipeDetectors.remove(id);
-						if (selectedRecipeDetectors.isEmpty())
-							processRecipesButton.setSelection(false);
-					}
-					recipeViewer.setInput(allDetectors);
-					updateRecipeButtons();
-					updateRecipeOptionButtons();
-				}
-			}
-		});
-		new AllNoneGroup(recipeGroup, new SelectionAdapter() {
+		recipeViewer.addSelectionChangedListener(this);
+		recipeViewer.addCheckStateListener(this);
+		new AllNoneGroup(recipeGroup, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
+			public void handleEvent(Event e) {
 				recipeViewer.setAllChecked(e.widget.getData() == AllNoneGroup.ALL);
 				updateRecipeButtons();
 			}
@@ -904,17 +866,53 @@ public class ImportPreferencePage extends AbstractPreferencePage implements List
 			}
 		}
 		IRawConverter c = (IRawConverter) rcViewer.getStructuredSelection().getFirstElement();
-		if (c != null) {
-			String fn = basicsFileEditors.get(c.getId()).getText();
-			if (!fn.isEmpty()) {
-				if (!new File(fn).exists())
-					return NLS.bind(Messages.getString("ImportPreferencePage.external_dcraw_does_not_exist"), //$NON-NLS-1$
-							c.getName());
-			} else if ("required".equals(c.getExecutable())) //$NON-NLS-1$
-				return NLS.bind(Messages.getString("ImportPreferencePage.specify_path"), c.getName()); //$NON-NLS-1$
-		} else
+		if (c == null)
 			return Messages.getString("ImportPreferencePage.select_raw"); //$NON-NLS-1$
+		String fn = basicsFileEditors.get(c.getId()).getText();
+		if (!fn.isEmpty()) {
+			String errorMsg = c.testExecutable(new File(fn));
+			if (errorMsg != null)
+				return errorMsg;
+		} else if ("required".equals(c.getExecutable())) //$NON-NLS-1$
+			return NLS.bind(Messages.getString("ImportPreferencePage.specify_path"), c.getName()); //$NON-NLS-1$
 		return null;
 	}
 
+	@Override
+	public void checkStateChanged(CheckStateChangedEvent event) {
+		Object element = event.getElement();
+		if (element instanceof IRecipeDetector) {
+			String id = ((IRecipeDetector) element).getId();
+			if (event.getChecked()) {
+				selectedRecipeDetectors.add(id);
+				processRecipesButton.setSelection(true);
+			} else {
+				selectedRecipeDetectors.remove(id);
+				if (selectedRecipeDetectors.isEmpty())
+					processRecipesButton.setSelection(false);
+			}
+			recipeViewer.setInput(allDetectors);
+			updateRecipeButtons();
+			updateRecipeOptionButtons();
+		}
+	}
+
+	public boolean isGrayed(Object element) {
+		return false;
+	}
+
+	public boolean isChecked(Object element) {
+		if (element instanceof IRecipeDetector)
+			return selectedRecipeDetectors.contains(((IRecipeDetector) element).getId());
+		return false;
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (event.getSource() == recipeViewer)
+			updateRecipeButtons();
+		else if (event.getSource() == rcViewer) {
+			updateRawOptions();
+			validate();
+		}
+	}
 }

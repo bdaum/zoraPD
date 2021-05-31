@@ -51,9 +51,8 @@ public class CSSSWTApplyStylesListener {
 			Widget widget = event.widget;
 			if (!isWidgetAlreadyAdded(widget)) {
 				widget.setData(WIDGET_ALREADY_ADDED, WIDGET_ALREADY_ADDED);
-				if (engine != null) {
+				if (engine != null)
 					engine.applyStyles(widget, false);
-				}
 			}
 		}
 	}

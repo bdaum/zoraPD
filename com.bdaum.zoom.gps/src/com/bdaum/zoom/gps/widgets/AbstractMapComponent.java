@@ -53,10 +53,6 @@ import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.browser.StatusTextListener;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -98,7 +94,7 @@ import com.bdaum.zoom.ui.gps.WaypointArea;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractMapComponent implements IMapComponent, IPreferenceChangeListener {
+public abstract class AbstractMapComponent implements IMapComponent, IPreferenceChangeListener, Listener, LocationListener {
 
 	private static final String GMAP_ICONS = "gmap/icons/"; //$NON-NLS-1$
 	private static final String SHOWN = "shown="; //$NON-NLS-1$
@@ -281,107 +277,83 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 		comp.setLayout(new FillLayout());
 		browser = new Browser(comp, SWT.NONE);
 		browser.setJavascriptEnabled(true);
-		browser.addLocationListener(new LocationListener() {
-			public void changing(LocationEvent event) {
-				String location = event.location;
-				if (location.startsWith(root)) {
-					String ev = location.substring(root.length());
-					try {
-						ev = URLDecoder.decode(ev, "utf-8"); //$NON-NLS-1$
-					} catch (UnsupportedEncodingException e) {
-						// should not happen
+		browser.addLocationListener(this);
+		browser.addListener(SWT.MenuDetect, this);
+	}
+	
+	public void changing(LocationEvent event) {
+		String location = event.location;
+		if (location.startsWith(root)) {
+			String ev = location.substring(root.length());
+			try {
+				ev = URLDecoder.decode(ev, "utf-8"); //$NON-NLS-1$
+			} catch (UnsupportedEncodingException e) {
+				// should not happen
+			}
+			event.doit = false;
+			int p = ev.indexOf('?');
+			String data = ""; //$NON-NLS-1$
+			if (p >= 0) {
+				data = ev.substring(p + 1);
+				ev = ev.substring(0, p);
+			}
+			if (CLICK.equals(ev) || DRAG.equals(ev)) {
+				fireCoordinatesChanged(null, new PositionAndZoom(data));
+				updateHistory(data, true);
+			} else if (MOVED.equals(ev)) {
+				updateHistory(data, false);
+			} else if (SELECT.equals(ev)) {
+				selectedMarker = data;
+				updateControls();
+			} else if (MODIFY.equals(ev)) {
+				p = data.lastIndexOf('&');
+				if (p >= 0) {
+					String assetIds = data.substring(p + 1);
+					data = data.substring(0, p);
+					PositionAndZoom pz = new PositionAndZoom(data);
+					if (assetIds.startsWith(SHOWN)) {
+						pz.type = MapListener.SHOWNLOC;
+						assetIds = assetIds.substring(SHOWN.length());
 					}
-					event.doit = false;
-					int p = ev.indexOf('?');
-					String data = ""; //$NON-NLS-1$
-					if (p >= 0) {
-						data = ev.substring(p + 1);
-						ev = ev.substring(0, p);
-					}
-					if (CLICK.equals(ev) || DRAG.equals(ev)) {
-						fireCoordinatesChanged(null, new PositionAndZoom(data));
-						updateHistory(data, true);
-					} else if (MOVED.equals(ev)) {
-						updateHistory(data, false);
-					} else if (SELECT.equals(ev)) {
-						selectedMarker = data;
-						updateControls();
-					} else if (MODIFY.equals(ev)) {
-						p = data.lastIndexOf('&');
-						if (p >= 0) {
-							String assetIds = data.substring(p + 1);
-							data = data.substring(0, p);
-							PositionAndZoom pz = new PositionAndZoom(data);
-							if (assetIds.startsWith(SHOWN)) {
-								pz.type = MapListener.SHOWNLOC;
-								assetIds = assetIds.substring(SHOWN.length());
-							}
-							List<String> assetList = Core.fromStringList(assetIds, ", "); //$NON-NLS-1$
-							fireCoordinatesChanged(assetList.toArray(new String[assetList.size()]), pz);
-							updateHistory(data, true);
-						}
-					} else if (CAMCOUNT.equals(ev)) {
-						updateCamCount(data);
-					} else if (POS.equals(ev)) {
-						updateHistory(data, true);
-					} else if (MAPTYPE.equals(ev)) {
-						maptype = data;
-						fireMaptypeChanged(maptype);
-					} else if (MARKERINFO.equals(ev)) {
-						p = data.lastIndexOf('&');
-						String format = "html"; //$NON-NLS-1$
-						if (p >= 0) {
-							format = data.substring(p + 1);
-							data = data.substring(0, p);
-						}
-						showMarkerInfo(data, format);
-					} else if (DEBUG.equals(ev)) {
-						System.out.println(data);
-					} else {
-						System.err.println(NLS.bind("Unknown event {0}: {1}", ev, data)); //$NON-NLS-1$
-					}
+					List<String> assetList = Core.fromStringList(assetIds, ", "); //$NON-NLS-1$
+					fireCoordinatesChanged(assetList.toArray(new String[assetList.size()]), pz);
+					updateHistory(data, true);
 				}
+			} else if (CAMCOUNT.equals(ev)) {
+				updateCamCount(data);
+			} else if (POS.equals(ev)) {
+				updateHistory(data, true);
+			} else if (MAPTYPE.equals(ev)) {
+				maptype = data;
+				fireMaptypeChanged(maptype);
+			} else if (MARKERINFO.equals(ev)) {
+				p = data.lastIndexOf('&');
+				String format = "html"; //$NON-NLS-1$
+				if (p >= 0) {
+					format = data.substring(p + 1);
+					data = data.substring(0, p);
+				}
+				showMarkerInfo(data, format);
+			} else if (DEBUG.equals(ev)) {
+				System.out.println(data);
+			} else {
+				System.err.println(NLS.bind("Unknown event {0}: {1}", ev, data)); //$NON-NLS-1$
 			}
-
-			public void changed(LocationEvent event) {
-				// do nothing
-			}
-		});
-		browser.addListener(SWT.MenuDetect, new Listener() {
-			public void handleEvent(Event event) {
-				event.doit = false;
-			}
-		});
+		}
 	}
 
-	protected void updateCamCount(String data) {
-		camCount = parseInt(data, camCount);
-		updateControls();
+	public void changed(LocationEvent event) {
+		// do nothing
 	}
 
-	public void createHeader() {
-		header = new Composite(area, SWT.NONE);
-		header.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
-		header.setLayout(new GridLayout(7, false));
-		ToolBar pinbar = new ToolBar(header, SWT.HORIZONTAL);
-		pin1Button = new ToolItem(pinbar, SWT.PUSH);
-		pin1Button.setImage(Icons.pin.getImage());
-		pin1Button.setToolTipText(Messages.AbstractMapComponent_add_marker);
-		pin1Button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.Selection:
+			if (e.widget == pin1Button) {
 				execute(selectionMode == ONE || selectionMode == CLUSTER || selectionMode == MULTI
 						? NLS.bind("cameraPin({0}, {1});", mapData.computeAllTitels(), mapData.computesAllImages()) //$NON-NLS-1$
 						: "locationPin();"); //$NON-NLS-1$
-			}
-		});
-		pinbar2 = new ToolBar(header, SWT.HORIZONTAL);
-		pin2Button = new ToolItem(pinbar2, SWT.PUSH);
-		pin2Button.setImage(Icons.dirPin.getImage());
-		pin2Button.setToolTipText(Messages.AbstractMapComponent_add_dir_marker);
-		pin2Button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == pin2Button) {
 				if (camCount > 0) {
 					DirPinDialog dialog = new DirPinDialog(header.getShell());
 					if (dialog.open() == DirPinDialog.OK) {
@@ -398,60 +370,13 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 				} else
 					execute(NLS.bind("locationShown({0}, {1});", mapData.computeAllTitels(), //$NON-NLS-1$
 							mapData.computesAllImages()));
-			}
-		});
-		explanationLabel = new Label(header, SWT.WRAP);
-		explanationLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		explanationLabel.setText(Messages.AbstractMapComponent_explanation);
-		deleteBar = new ToolBar(header, SWT.HORIZONTAL);
-		deleteButton = new ToolItem(deleteBar, SWT.PUSH);
-		deleteButton.setImage(Icons.delete.getImage());
-		deleteButton.setToolTipText(Messages.AbstractMapComponent_delete_pin);
-		deleteButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == deleteButton) {
 				deleteMarker();
-			}
-		});
-		ToolBar navbar = new ToolBar(header, SWT.HORIZONTAL);
-		backButton = new ToolItem(navbar, SWT.PUSH);
-		backButton.setImage(Icons.backward.getImage());
-		backButton.setToolTipText(Messages.AbstractMapComponent_previous_page);
-		backButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == deleteButton) {
 				backwards();
-			}
-		});
-		forwardButton = new ToolItem(navbar, SWT.PUSH);
-		forwardButton.setImage(Icons.forward.getImage());
-		forwardButton.setToolTipText(Messages.AbstractMapComponent_next_page);
-		forwardButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == deleteButton) {
 				forwards();
-			}
-		});
-		searchCombo = new Combo(header, SWT.DROP_DOWN);
-		searchCombo.setLayoutData(new GridData(200, SWT.DEFAULT));
-		searchCombo.setVisibleItemCount(8);
-		searchCombo.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.character == 13) {
-					startSearch(e.stateMask);
-					e.doit = false;
-				}
-			}
-		});
-		searchCombo.setItems(GpsActivator.getDefault().getSearchHistory());
-		searchButton = new Button(header, SWT.PUSH);
-		searchButton.setLayoutData(new GridData(120, SWT.DEFAULT));
-		searchButton.setText(Messages.AbstractMapComponent_search);
-		searchButton.setToolTipText(Messages.AbstractMapComponent_configure);
-		searchButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
+			} else if (e.widget == searchCombo) {
 				if ((e.stateMask & SWT.CONTROL) != 0) {
 					IGeocodingService currentService = getSearchService();
 					SearchDetailDialog dialog = new SearchDetailDialog(searchButton.getShell(),
@@ -465,7 +390,67 @@ public abstract class AbstractMapComponent implements IMapComponent, IPreference
 				}
 				startSearch(e.stateMask);
 			}
-		});
+
+			break;
+
+		case SWT.KeyDown:
+			if (e.character == 13) {
+				startSearch(e.stateMask);
+				e.doit = false;
+			}
+			break;
+		default:
+			e.doit = false;
+		}
+
+	}
+
+	protected void updateCamCount(String data) {
+		camCount = parseInt(data, camCount);
+		updateControls();
+	}
+
+	public void createHeader() {
+		header = new Composite(area, SWT.NONE);
+		header.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		header.setLayout(new GridLayout(7, false));
+		ToolBar pinbar = new ToolBar(header, SWT.HORIZONTAL);
+		pin1Button = new ToolItem(pinbar, SWT.PUSH);
+		pin1Button.setImage(Icons.pin.getImage());
+		pin1Button.setToolTipText(Messages.AbstractMapComponent_add_marker);
+		pin1Button.addListener(SWT.Selection, this);
+		pinbar2 = new ToolBar(header, SWT.HORIZONTAL);
+		pin2Button = new ToolItem(pinbar2, SWT.PUSH);
+		pin2Button.setImage(Icons.dirPin.getImage());
+		pin2Button.setToolTipText(Messages.AbstractMapComponent_add_dir_marker);
+		pin2Button.addListener(SWT.Selection, this);
+		explanationLabel = new Label(header, SWT.WRAP);
+		explanationLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		explanationLabel.setText(Messages.AbstractMapComponent_explanation);
+		deleteBar = new ToolBar(header, SWT.HORIZONTAL);
+		deleteButton = new ToolItem(deleteBar, SWT.PUSH);
+		deleteButton.setImage(Icons.delete.getImage());
+		deleteButton.setToolTipText(Messages.AbstractMapComponent_delete_pin);
+		deleteButton.addListener(SWT.Selection, this);
+		ToolBar navbar = new ToolBar(header, SWT.HORIZONTAL);
+		backButton = new ToolItem(navbar, SWT.PUSH);
+		backButton.setImage(Icons.backward.getImage());
+		backButton.setToolTipText(Messages.AbstractMapComponent_previous_page);
+		backButton.addListener(SWT.Selection, this);
+		forwardButton = new ToolItem(navbar, SWT.PUSH);
+		forwardButton.setImage(Icons.forward.getImage());
+		forwardButton.setToolTipText(Messages.AbstractMapComponent_next_page);
+		forwardButton.addListener(SWT.Selection, this);
+		searchCombo = new Combo(header, SWT.DROP_DOWN);
+		searchCombo.setLayoutData(new GridData(200, SWT.DEFAULT));
+		searchCombo.setVisibleItemCount(8);
+		searchCombo.addListener(SWT.KeyDown, this);
+		searchCombo.setItems(GpsActivator.getDefault().getSearchHistory());
+		searchButton = new Button(header, SWT.PUSH);
+		searchButton.setLayoutData(new GridData(120, SWT.DEFAULT));
+		searchButton.setText(Messages.AbstractMapComponent_search);
+		searchButton.setToolTipText(Messages.AbstractMapComponent_configure);
+		searchButton.addListener(SWT.Selection, this);
 		updateSearchButton();
 		InstanceScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID).addPreferenceChangeListener(this);
 	}

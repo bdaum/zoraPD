@@ -690,13 +690,13 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 		switch (event.type) {
 		case SWT.Selection:
 			onSelection(event);
-			break;
+			return;
 		case SWT.SetData:
 			onSetData(event);
-			break;
+			return;
 		case SWT.MouseUp:
 			onMouseUp(event);
-			break;
+			return;
 		case SWT.MouseDoubleClick:
 			GalleryItem item = gallery.getItem(getMousePosition());
 			if (item != null) {
@@ -706,7 +706,6 @@ public abstract class AbstractLightboxView extends AbstractGalleryView
 					viewImageAction.runWithEvent(event);
 				}
 			}
-			break;
 		}
 	}
 

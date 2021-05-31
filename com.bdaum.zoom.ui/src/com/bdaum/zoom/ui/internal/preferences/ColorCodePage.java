@@ -39,7 +39,7 @@ import com.bdaum.zoom.ui.preferences.AbstractPreferencePagePart;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class ColorCodePage extends AbstractPreferencePagePart {
+public class ColorCodePage extends AbstractPreferencePagePart implements ISelectionChangedListener {
 
 	private static final String[] colorCodeOptions = new String[] { PreferenceConstants.COLORCODE_NO,
 			PreferenceConstants.COLORCODE_AUTO, PreferenceConstants.COLORCODE_MANUAL };
@@ -126,11 +126,7 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 		composite.setLayout(new GridLayout(2, false));
 		colorCodeViewer = createComboViewer(composite, Messages.getString("AppearancePreferencePage.show_colorcode"), //$NON-NLS-1$
 				colorCodeOptions, colorCodeLabels, false);
-		colorCodeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateAutoGroup();
-			}
-		});
+		colorCodeViewer.addSelectionChangedListener(this);
 	}
 
 	protected void updateAutoGroup() {
@@ -161,6 +157,11 @@ public class ColorCodePage extends AbstractPreferencePagePart {
 	@Override
 	public String getTooltip() {
 		return Messages.getString("ColorCodePage.color_coding_tooltip"); //$NON-NLS-1$
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateAutoGroup();
 	}
 
 }

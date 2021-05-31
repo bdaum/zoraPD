@@ -28,7 +28,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD $iptcDigestInfo);
 use Image::ExifTool qw(:DataAccess :Utils);
 
-$VERSION = '1.64';
+$VERSION = '1.65';
 
 sub ProcessPhotoshop($$$);
 sub WritePhotoshop($$$);
@@ -982,6 +982,7 @@ sub ProcessPhotoshop($$$)
             DataPos => $$dirInfo{DataPos},
             Size    => $size,
             Start   => $pos,
+            Base    => $$dirInfo{Base},
             Parent  => $$dirInfo{DirName},
         );
         $size += 1 if $size & 0x01; # size is padded to an even # bytes
@@ -1136,7 +1137,7 @@ be preserved when copying Photoshop information via user-defined tags.
 
 =head1 AUTHOR
 
-Copyright 2003-2020, Phil Harvey (philharvey66 at gmail.com)
+Copyright 2003-2021, Phil Harvey (philharvey66 at gmail.com)
 
 This library is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 package com.bdaum.zoom.email.internal.job;
 
@@ -42,6 +42,7 @@ import com.bdaum.zoom.core.Assetbox;
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.email.internal.Activator;
+import com.bdaum.zoom.email.internal.EmailData;
 import com.bdaum.zoom.image.recipe.UnsharpMask;
 import com.bdaum.zoom.job.OperationJob;
 import com.bdaum.zoom.operations.internal.AddTrackRecordsOperation;
@@ -57,25 +58,28 @@ public class EmailJob extends AbstractExportJob {
 	private List<TrackRecord> track = new ArrayList<TrackRecord>();
 	private final int cropMode;
 	private final List<String> to;
+	private List<String> cc;
+	private List<String> bcc;
 
-	public EmailJob(List<Asset> assets, List<String> to, int mode, int sizing, double scale, int maxSize, int cropMode,
+	public EmailJob(List<Asset> assets, List<String> to, List<String> cc, List<String> bcc, int mode, int sizing, double scale, int maxSize, int cropMode,
 			UnsharpMask umask, int jpegQuality, String subject, String message, Set<QueryField> xmpFilter,
 			boolean createWatermark, String copyright, int privacy, boolean trackExports, IAdaptable adaptable) {
 		super(Messages.EmailJob_Preparing_email, assets, mode, sizing, scale, maxSize, umask, jpegQuality, xmpFilter,
 				createWatermark, copyright, privacy, adaptable);
 		this.to = to;
+		this.cc = cc;
+		this.bcc = bcc;
 		this.cropMode = cropMode;
 		this.subject = subject;
 		this.message = message;
 		this.trackExports = trackExports;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @seeorg.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.
-	 * IProgressMonitor)
-	 */
+	public EmailJob(EmailData data, IAdaptable adaptable) {
+		this(data.getAssets(), data.getTo(), data.getCc(), data.getBcc(), data.getMode(), data.getSizing(), data.getScalingFactor(), data.getMaxSize(), data.getCropMode(),
+				data.getUnsharpMask(), data.getJpegQuality(), data.getSubject(), data.getMessage(), data.getFilter(), 
+				data.isWatermark(), data.getCopyright(), data.getPrivacy(), data.isExportTrack(), adaptable);
+	}
 
 	@Override
 	protected IStatus doRun(IProgressMonitor monitor) {
@@ -117,14 +121,12 @@ public class EmailJob extends AbstractExportJob {
 				}
 			}
 		}
-		IStatus sendStatus = Activator.getDefault().sendMail(to, null, null, subject, message, attachments,
+		IStatus sendStatus = Activator.getDefault().sendMail(to, cc, bcc, subject, message, attachments,
 				originalNames);
 		if (!sendStatus.isOK())
 			status.add(sendStatus);
-		if (!track.isEmpty()) {
-			AddTrackRecordsOperation op = new AddTrackRecordsOperation(track);
-			OperationJob.executeOperation(op, adaptable);
-		}
+		if (!track.isEmpty())
+			OperationJob.executeOperation(new AddTrackRecordsOperation(track), adaptable);
 		monitor.done();
 		return status;
 	}

@@ -102,7 +102,6 @@ public class Messages extends NLS {
 	public static String ImportFileSelectionPage_file_selection;
 	public static String ImportFileSelectionPage_grouped_by_date_or_filename;
 	public static String ImportFileSelectionPage_grouped_by_filename;
-	public static String ImportFileSelectionPage_import_date_mask;
 	public static String ImportFileSelectionPage_import_from_device;
 	public static String ImportFileSelectionPage_import_preparation;
 	public static String ImportFileSelectionPage_internal_error;
@@ -204,7 +203,11 @@ public class Messages extends NLS {
 	public static String MetaSelectionPage_select_all;
 	public static String MetaSelectionPage_select_none;
 	public static String MetaSelectionPage_select_the_metadata;
+	public static String PreferenceFilterPage_at_least_one;
+	public static String PreferenceFilterPage_select_groups;
 	public static String PreferenceTargetPage_export_preferences_to_file;
+	public static String PreferenceTargetPage_filter;
+	public static String PreferenceTargetPage_path;
 	public static String PreferenceTargetPage_specify_target_file;
 	public static String PreferenceTargetPage_target_file;
 	public static String PreferenceTargetPage_user_preferences;

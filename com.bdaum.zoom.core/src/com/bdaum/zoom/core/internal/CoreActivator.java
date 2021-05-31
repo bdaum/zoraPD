@@ -32,7 +32,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,6 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
@@ -153,8 +153,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 
 	private File catFile;
 
-	private Map<String, WatchedFolder> observedFolders = Collections
-			.synchronizedMap(new HashMap<String, WatchedFolder>());
+	private Map<String, WatchedFolder> observedFolders = new ConcurrentHashMap<String, WatchedFolder>();
 
 	private LinkedList<CatLocation> recentCats = new LinkedList<CatLocation>();
 
@@ -580,7 +579,7 @@ public class CoreActivator extends Plugin implements ICore, IAdaptable {
 						return (child.isDirectory() && child.getName().matches(generationPattern));
 					}
 				});
-				if (children != null) {
+				if (children != null && children.length > 0) {
 					File indexPath = dbManager.getIndexPath();
 					if (indexPath != null) {
 						String indexFolderName = indexPath.getName();

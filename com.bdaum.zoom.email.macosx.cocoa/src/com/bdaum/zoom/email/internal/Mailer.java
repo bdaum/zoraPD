@@ -71,7 +71,7 @@ public class Mailer extends AbstractMailer {
 			replaceText(sb, BODYVAR, message);
 			replaceText(sb, ATTACHVAR, Core.toStringList(quote(attachments), ','));
 			String[] parms = new String[] { "osascript", "-e", sb.toString() }; //$NON-NLS-1$ //$NON-NLS-2$
-			BatchActivator.executeCommand(parms, null, label, IStatus.OK, IStatus.WARNING, 3000L, "UTF-8", null); //$NON-NLS-1$
+			BatchActivator.executeCommand(parms, null, null, label, IStatus.OK, IStatus.WARNING, 3000L, "UTF-8", null); //$NON-NLS-1$
 		} catch (Throwable e) {
 			return false;
 		}

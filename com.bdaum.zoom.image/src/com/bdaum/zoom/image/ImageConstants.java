@@ -350,6 +350,29 @@ public class ImageConstants {
 		String s = ext.toLowerCase();
 		return s.startsWith("j") && ImageConstants.SWTFORMATS.contains(s); //$NON-NLS-1$
 	}
+	
+	/**
+	 * Test if a an image file is a JPEG file
+	 *
+	 * @param ext
+	 *            - file name extension
+	 * @return true if the file is a JPEG file
+	 */
+	public static boolean isWebP(String ext) {
+		return ext.equalsIgnoreCase("webp"); //$NON-NLS-1$
+	}
+
+	
+	/**
+	 * Test if a an an extension is an image file extension
+	 *
+	 * @param ext
+	 *            - file name extension
+	 * @return true if the file is an image file extension
+	 */
+	public static boolean isImageExt(String ext) {
+		return getAllFormats().contains(ext.toLowerCase());
+	}
 
 	static {
 		Iterator<ImageReader> it = ImageIO.getImageReadersByFormatName("jpeg2000"); //$NON-NLS-1$

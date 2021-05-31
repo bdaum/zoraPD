@@ -22,10 +22,6 @@ package com.bdaum.zoom.ui.internal.preferences;
 
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -41,7 +37,7 @@ import com.bdaum.zoom.ui.internal.widgets.PatternListEditor;
 import com.bdaum.zoom.ui.internal.widgets.RadioButtonGroup;
 import com.bdaum.zoom.ui.internal.widgets.ZDialog;
 
-public class PatternEditDialog extends ZDialog {
+public class PatternEditDialog extends ZDialog implements Listener {
 
 	private String title, prompt;
 
@@ -85,12 +81,7 @@ public class PatternEditDialog extends ZDialog {
 			policyButtonGroup.setToolTipText(0, Messages.getString("PatternEditDialog.Pattern_rejects")); //$NON-NLS-1$
 			policyButtonGroup.setToolTipText(1, Messages.getString("PatternEditDialog.Pattern_accepts")); //$NON-NLS-1$
 			policyButtonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			policyButtonGroup.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					setAcceptOrReject(policyButtonGroup.getSelection() == 0);
-				}
-			});
+			policyButtonGroup.addListener(SWT.Selection, this);
 			policyButtonGroup.setSelection(result.startsWith(">") ? 1 : 0); //$NON-NLS-1$
 		}
 
@@ -103,25 +94,10 @@ public class PatternEditDialog extends ZDialog {
 		errorMsg.setData(CSSProperties.ID, CSSProperties.ERRORS);
 		errorMsg.setForeground(errorMsg.getDisplay().getSystemColor(SWT.COLOR_RED));
 		if (forbiddenChars != null)
-			text.addVerifyListener(new VerifyListener() {
-				public void verifyText(VerifyEvent e) {
-					if (forbiddenChars.indexOf(e.character) >= 0) {
-						e.doit = false;
-						errorMsg.setText(NLS.bind(Messages.getString("PatternEditDialog.bad_chars"), //$NON-NLS-1$
-								forbiddenChars));
-					} else {
-						e.doit = true;
-						errorMsg.setText(""); //$NON-NLS-1$
-					}
-				}
-			});
+			text.addListener(SWT.Verify, this);
 		text.setText(result);
 
-		text.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				result = text.getText();
-			}
-		});
+		text.addListener(SWT.Modify, this);
 		text.setFocus();
 		text.selectAll();
 		return comp;
@@ -134,6 +110,24 @@ public class PatternEditDialog extends ZDialog {
 		else if (!reject && result.endsWith(PatternListEditor.REJECTS))
 			result = result.substring(1, result.length() - PatternListEditor.REJECTS.length())
 					+ PatternListEditor.ACCEPTS;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.type == SWT.Verify ) {
+			if (forbiddenChars.indexOf(e.character) >= 0) {
+				e.doit = false;
+				errorMsg.setText(NLS.bind(Messages.getString("PatternEditDialog.bad_chars"), //$NON-NLS-1$
+						forbiddenChars));
+			} else {
+				e.doit = true;
+				errorMsg.setText(""); //$NON-NLS-1$
+			}
+		} else if (e.type == SWT.Modify )
+			result = text.getText();
+		else
+			setAcceptOrReject(policyButtonGroup.getSelection() == 0);
+		
 	}
 
 }

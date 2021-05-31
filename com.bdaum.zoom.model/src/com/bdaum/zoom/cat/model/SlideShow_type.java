@@ -1,10 +1,10 @@
 package com.bdaum.zoom.cat.model;
 
-import java.util.*;
+import java.util.Date;
 
-import java.lang.String;
-
-import com.bdaum.aoModeling.runtime.*;
+import com.bdaum.aoModeling.runtime.AomValueChangedNotifier;
+import com.bdaum.aoModeling.runtime.ConstraintException;
+import com.bdaum.aoModeling.runtime.IIdentifiableObject;
 
 /**
  * Generated with KLEEN Java Generator V.1.3
@@ -144,6 +144,47 @@ public interface SlideShow_type extends AomValueChangedNotifier,
 	 * @return - value of field titleContent
 	 */
 	public int getTitleContent();
+	
+	/**
+	 * Set value of property titleScheme
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTitleScheme(int _value);
+
+	/**
+	 * Get value of property titleTransparency
+	 *
+	 * @return - value of field titleTransparency
+	 */
+	public int getTitleTransparency();
+	
+	/**
+	 * Set value of property titleTransparencye
+	 *
+	 * @param _value - new field value
+	 */
+	public void setTitleTransparency(int _value);
+
+	/**
+	 * Get value of property titleScheme
+	 *
+	 * @return - value of field titleScheme
+	 */
+	public int getTitleScheme();
+	/**
+	 * Set value of property colorScheme
+	 *
+	 * @param _value - new field value
+	 */
+	public void setColorScheme(int _value);
+
+	/**
+	 * Get value of property colorScheme
+	 *
+	 * @return - value of field colorScheme
+	 */
+	public int getColorScheme();
 
 	/**
 	 * Set value of property adhoc

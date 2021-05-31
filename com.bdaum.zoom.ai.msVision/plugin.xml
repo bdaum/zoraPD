@@ -43,5 +43,11 @@
             file="index.xml">
       </index>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.ai.msvision.internal.preference.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

@@ -668,17 +668,17 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 							});
 							e.doit = false;
 						}
-						break;
+						return;
 					case SWT.KeyDown:
 						if (e.keyCode == SWT.ESC)
 							cancelInput();
 						else if (e.character == SWT.CR)
 							commitInput(asset, captionText);
-						break;
+						return;
 					case SWT.Selection:
 					case SWT.FocusOut:
 						commitInput(asset, captionText);
-						break;
+						return;
 					case SWT.Verify:
 						String errorMessage = QueryField.NAME.isValid(
 								titleInput.getText().substring(0, e.start) + e.text + titleInput.getText().substring(e.end),
@@ -687,7 +687,6 @@ public class LightboxView extends AbstractLightboxView implements Listener {
 						setStatusMessage(errorMessage, true);
 						titleInput.setForeground(titleInputValid ? foreground
 								: titleInput.getControl().getDisplay().getSystemColor(SWT.COLOR_RED));
-						break;
 					}
 				}
 			};

@@ -28,6 +28,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 import com.bdaum.zoom.core.QueryField;
@@ -52,7 +53,7 @@ public class MetadataPreferencePageExtension extends AbstractPreferencePagePart 
 		preferenceStore = WebserverActivator.getDefault().getPreferenceStore();
 		composite = new Composite(parent, SWT.NONE);
 		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(1, false));
+		composite.setLayout(new GridLayout(2, false));
 		ViewerFilter viewerFilter = new ViewerFilter() {
 			@Override
 			public boolean select(Viewer aViewer, Object parentElement, Object element) {
@@ -63,6 +64,9 @@ public class MetadataPreferencePageExtension extends AbstractPreferencePagePart 
 				return false;
 			}
 		};
+		Label label = new Label(composite, SWT.NONE);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		label.setText(Messages.MetadataPreferencePageExtension_made_visible);
 		webMetatadataViewer = MetadataPreferencePage.createViewerGroup(composite, viewerFilter, new MetadataLabelProvider(), null);
 		return composite;
 	}

@@ -23,12 +23,12 @@ package com.bdaum.zoom.fileMonitor.internal.filefilter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 
 public class FilterChain {
 
-	private static final ArrayList<String> EMPTYLIST = new ArrayList<String>(0);
 	private WildCardFilter[] filters;
 	private int baseLength = -1;
 
@@ -85,7 +85,7 @@ public class FilterChain {
 
 	public Collection<String> filter(String[] keywords) {
 		if (keywords == null)
-			return EMPTYLIST;
+			return Collections.emptyList();
 		List<String> result = new ArrayList<String>(keywords.length);
 		for (String keyword : keywords)
 			if (keyword != null && accept(keyword.toString()))
@@ -95,7 +95,7 @@ public class FilterChain {
 
 	public Collection<String> filter(Collection<String> keywords) {
 		if (keywords == null)
-			return EMPTYLIST;
+			return Collections.emptyList();
 		List<String> result = new ArrayList<String>(keywords.size());
 		for (String keyword : keywords)
 			if (keyword != null && accept(keyword.toString()))

@@ -35,9 +35,8 @@ import com.bdaum.zoom.ui.internal.views.AbstractGalleryView;
 public class GalleryDecorateJob extends DecorateJob {
 
 	private final Gallery gallery;
-	private GalleryItem[] items;
+	private GalleryItem[] items, groups;
 	private final AbstractGalleryView view;
-	private GalleryItem[] groups;
 	private GalleryItem group;
 
 	private Runnable groupRunnable = new Runnable() {

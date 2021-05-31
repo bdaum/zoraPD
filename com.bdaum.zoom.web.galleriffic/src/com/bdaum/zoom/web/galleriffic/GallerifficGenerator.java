@@ -54,7 +54,9 @@ public class GallerifficGenerator extends AbstractGalleryGenerator {
 			850, // large
 			1050, // very large
 			520, // small
-			450 // very small
+			450, // very small
+			1920, // HD
+			4000 //4k
 	};
 
 	private static final int[] THUMBSIZE = new int[] { 96, // medium

@@ -116,10 +116,8 @@ public class SlideHoverContribution extends AbstractHoverContribution implements
 	public Object getTarget(Object object) {
 		if (object instanceof HoverTestObject)
 			return new HoverTestAsset();
-		if (object instanceof Slide) {
-			String assetId = ((Slide) object).getAsset();
-			return Core.getCore().getDbManager().obtainAsset(assetId);
-		}
+		if (object instanceof Slide)
+			return Core.getCore().getDbManager().obtainAsset(((Slide) object).getAsset());
 		return null;
 	}
 

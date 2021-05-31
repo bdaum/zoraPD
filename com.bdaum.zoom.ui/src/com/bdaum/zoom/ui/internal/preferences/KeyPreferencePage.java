@@ -55,8 +55,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
@@ -64,7 +62,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
@@ -81,8 +81,9 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.UiConstants;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
+import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class KeyPreferencePage extends AbstractPreferencePage {
+public class KeyPreferencePage extends AbstractPreferencePage implements Listener, ISelectionChangedListener, IDoubleClickListener, IPropertyChangeListener {
 	public static final String ID = "com.bdaum.zoom.ui.preferences.KeywordPreferencePage"; //$NON-NLS-1$
 
 	private static Set<String> hidden;
@@ -106,6 +107,10 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	private Map<String, Binding> commandMap = new HashMap<String, Binding>();
 	private Command[] definedCommands;
 	private Label userLabel;
+
+	private Button restoreButton;
+
+	private Button removeBindingButton;
 
 	static {
 		hidden = new HashSet<String>(Arrays.asList("org.eclipse.ui.help.dynamicHelp", //$NON-NLS-1$
@@ -210,10 +215,12 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 	private void createBindingTable(Composite composite) {
 		bindingViewer = new TableViewer(composite, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		Table table = bindingViewer.getTable();
-		table.setLayoutData(new GridData(550, 300));
+		GridData layoutData = new GridData(SWT.FILL, SWT.BEGINNING, true, false);
+		layoutData.heightHint = 300;
+		table.setLayoutData(layoutData);
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
-		commandColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.command"), 200); //$NON-NLS-1$
+		commandColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.command"), 220); //$NON-NLS-1$
 		commandLabelProvider = new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -236,10 +243,10 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 				}
 				return super.getFont(element);
 			}
-			
+
 		};
 		commandColumn.setLabelProvider(commandLabelProvider);
-		keyColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.keys"), 150); //$NON-NLS-1$
+		keyColumn = createColumn(bindingViewer, Messages.getString("KeyPreferencePage.keys"), 170); //$NON-NLS-1$
 		keyLabelProvider = new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -270,11 +277,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		bindingViewer.setContentProvider(ArrayContentProvider.getInstance());
 		new SortColumnManager(bindingViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 0);
 		bindingViewer.setComparator(ZViewerComparator.INSTANCE);
-		bindingViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateDetails();
-			}
-		});
+		bindingViewer.addSelectionChangedListener(this);
 	}
 
 	private static TableViewerColumn createColumn(final TableViewer viewer, String lab, int w) {
@@ -291,46 +294,57 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		buttonBar.setLayout(layout);
 		buttonBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
-		final Button removeBindingButton = new Button(buttonBar, SWT.PUSH);
+		removeBindingButton = new Button(buttonBar, SWT.PUSH);
 		removeBindingButton.setText(Messages.getString("KeyPreferencePage.remove_shortcuts")); //$NON-NLS-1$
-		removeBindingButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public final void widgetSelected(final SelectionEvent event) {
-				if (selectedCommand != null) {
-					Binding b = commandMap.get(selectedCommand.getId());
-					if (b != null) {
-						Binding userBinding = new KeyBinding((KeySequence) b.getTriggerSequence(), null, activeSchemeId,
-								b.getContextId(), null, null, null, Binding.USER);
-						userMap.put(userBinding.getTriggerSequence(), userBinding);
-						commandMap.remove(selectedCommand.getId());
-					}
-					refreshViewer();
-					doValidate();
-				}
-			}
-		});
+		removeBindingButton.addListener(SWT.Selection, this);
+		restoreButton = new Button(buttonBar, SWT.PUSH);
+		restoreButton.setText(Messages.getString("KeyPreferencePage.restore_command")); //$NON-NLS-1$
+		restoreButton.addListener(SWT.Selection, this);
+		return buttonBar;
+	}
 
-		final Button restore = new Button(buttonBar, SWT.PUSH);
-		restore.setText(Messages.getString("KeyPreferencePage.restore_command")); //$NON-NLS-1$
-		restore.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public final void widgetSelected(final SelectionEvent event) {
-				if (selectedCommand != null) {
-					String id = selectedCommand.getId();
-					Binding b = commandMap.get(id);
+	@Override
+	public void handleEvent(Event event) {
+		if (selectedCommand != null) {
+			String id = selectedCommand.getId();
+			Binding b = commandMap.get(id);
+			if (b != null) {
+				if (event.widget == restoreButton) {
 					userMap.remove(b.getTriggerSequence());
 					for (Binding sb : systemMap.values()) {
-						if (sb.getParameterizedCommand() != null && sb.getParameterizedCommand().getId().equals(id)) {
-							commandMap.put(sb.getParameterizedCommand().getId(), sb);
+						ParameterizedCommand command = sb.getParameterizedCommand();
+						if (command != null && command.getId().equals(id)) {
+							commandMap.put(id, sb);
 							break;
 						}
 					}
-					refreshViewer();
-					doValidate();
+				} else {
+					KeySequence triggerSequence = (KeySequence) b.getTriggerSequence();
+					Binding userBinding = new KeyBinding(triggerSequence, null, activeSchemeId, b.getContextId(), null,
+							null, null, Binding.USER);
+					userMap.put(triggerSequence, userBinding);
+					commandMap.remove(id);
 				}
+				refreshViewer();
+				doValidate();
 			}
-		});
-		return buttonBar;
+		}
+	}
+
+	@Override
+	protected void doUpdateButtons() {
+		Binding b = selectedCommand != null ? commandMap.get(selectedCommand.getId()) : null;
+		if (b != null) {
+			removeBindingButton.setEnabled(true);
+			KeySequence triggerSequence = (KeySequence) b.getTriggerSequence();
+			Binding userBinding = userMap.get(triggerSequence);
+			restoreButton.setEnabled(commandMap.containsKey(selectedCommand.getId())
+					&& userBinding instanceof KeyBinding && ((KeyBinding) userBinding).getType() == Binding.USER);
+		} else {
+			removeBindingButton.setEnabled(false);
+			restoreButton.setEnabled(false);
+		}
+		super.doUpdateButtons();
 	}
 
 	protected void refreshViewer() {
@@ -349,19 +363,20 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 
 	@SuppressWarnings("unused")
 	private void createDefinitionArea(Composite parent) {
-		final Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(2, false));
-		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.command2")); //$NON-NLS-1$
-		nameField = new Text(composite, SWT.SINGLE | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY);
+		final CGroup group = new CGroup(parent, SWT.NONE);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		group.setLayout(new GridLayout(2, false));
+		group.setText(Messages.getString("KeyPreferencePage.new_key_assign")); //$NON-NLS-1$
+		new Label(group, SWT.NONE).setText(Messages.getString("KeyPreferencePage.command2")); //$NON-NLS-1$
+		nameField = new Text(group, SWT.SINGLE | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY);
 		nameField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.description")); //$NON-NLS-1$
-		descriptionField = new Text(composite, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
+		new Label(group, SWT.NONE).setText(Messages.getString("KeyPreferencePage.description")); //$NON-NLS-1$
+		descriptionField = new Text(group, SWT.MULTI | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY | SWT.WRAP);
 		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		layoutData.heightHint = 50;
 		descriptionField.setLayoutData(layoutData);
-		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.key_sequence")); //$NON-NLS-1$
-		Composite keyGroup = new Composite(composite, SWT.NONE);
+		new Label(group, SWT.NONE).setText(Messages.getString("KeyPreferencePage.key_sequence")); //$NON-NLS-1$
+		Composite keyGroup = new Composite(group, SWT.NONE);
 		keyGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
@@ -371,39 +386,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		keyField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		keySequenceField = new KeySequenceText(keyField);
 		keySequenceField.setKeyStrokeLimit(2);
-		keySequenceField.addPropertyChangeListener(new IPropertyChangeListener() {
-			public final void propertyChange(final PropertyChangeEvent event) {
-				if (!event.getOldValue().equals(event.getNewValue())) {
-					final KeySequence keySequence = keySequenceField.getKeySequence();
-					if (selectedCommand == null || !keySequence.isComplete())
-						return;
-					boolean empty = keySequence.isEmpty();
-					Binding newBinding;
-					Binding b = commandMap.get(selectedCommand.getId());
-					if (b != null) {
-						if (!keySequence.equals(b.getTriggerSequence())) {
-							newBinding = new KeyBinding(keySequence, empty ? null : b.getParameterizedCommand(),
-									activeSchemeId, b.getContextId(), null, null, null, Binding.USER);
-							userMap.remove(b.getTriggerSequence());
-							userMap.put(keySequence, newBinding);
-							if (empty)
-								commandMap.remove(selectedCommand.getId());
-							else
-								commandMap.put(selectedCommand.getId(), newBinding);
-						}
-					} else if (!empty) {
-						ParameterizedCommand pc = new ParameterizedCommand(selectedCommand, null);
-						newBinding = new KeyBinding(keySequence, pc, activeSchemeId, "org.eclipse.ui.contexts.window", //$NON-NLS-1$
-								null, null, null, Binding.USER);
-						userMap.put(keySequence, newBinding);
-						commandMap.put(selectedCommand.getId(), newBinding);
-					}
-					refreshViewer();
-					doValidate();
-					keyField.setSelection(keyField.getTextLimit());
-				}
-			}
-		});
+		keySequenceField.addPropertyChangeListener(this);
 		final Button helpButton = new Button(keyGroup, SWT.ARROW | SWT.LEFT);
 		helpButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		helpButton.setToolTipText(Messages.getString("KeyPreferencePage.add_a_special_key")); //$NON-NLS-1$
@@ -425,41 +408,39 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			final KeyStroke trappedKey = (KeyStroke) trappedKeyItr.next();
 			final MenuItem menuItem = new MenuItem(addKeyMenu, SWT.PUSH);
 			menuItem.setText(trappedKey.format());
-			menuItem.addSelectionListener(new SelectionAdapter() {
+			menuItem.addListener(SWT.Selection, new Listener() {
 				@Override
-				public void widgetSelected(SelectionEvent e) {
+				public void handleEvent(Event e) {
 					keySequenceField.insert(trappedKey);
 					keyField.setFocus();
 					keyField.setSelection(keyField.getTextLimit());
 				}
 			});
 		}
-		helpButton.addSelectionListener(new SelectionAdapter() {
+		helpButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent selectionEvent) {
+			public void handleEvent(Event selectionEvent) {
 				Point buttonLocation = helpButton.getLocation();
-				buttonLocation = composite.toDisplay(buttonLocation.x, buttonLocation.y);
-				Point buttonSize = helpButton.getSize();
-				addKeyMenu.setLocation(buttonLocation.x, buttonLocation.y + buttonSize.y);
+				buttonLocation = group.toDisplay(buttonLocation.x, buttonLocation.y);
+				addKeyMenu.setLocation(buttonLocation.x, buttonLocation.y + helpButton.getSize().y);
 				addKeyMenu.setVisible(true);
 			}
 		});
-		new Label(composite, SWT.NONE);
-		userLabel = new Label(composite, SWT.NONE);
+		new Label(group, SWT.NONE);
+		userLabel = new Label(group, SWT.NONE);
 		userLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 	}
 
 	private void createConflictsArea(Composite parent) {
-		Composite composite = new Composite(parent, SWT.NONE);
-		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		composite.setLayout(new GridLayout(1, false));
-		new Label(composite, SWT.NONE).setText(Messages.getString("KeyPreferencePage.conflicts")); //$NON-NLS-1$
-		conflictViewer = new TableViewer(composite,
-				SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER | SWT.FULL_SELECTION);
+		CGroup group = new CGroup(parent, SWT.NONE);
+		group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		group.setLayout(new GridLayout(1, false));
+		group.setText(Messages.getString("KeyPreferencePage.conflicts")); //$NON-NLS-1$
+		conflictViewer = new TableViewer(group, SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
 		Table table = conflictViewer.getTable();
 		TableViewerColumn bindingNameColumn = new TableViewerColumn(conflictViewer, SWT.LEAD);
 		bindingNameColumn.getColumn().setWidth(250);
-		table.setLayoutData(new GridData(250, 80));
+		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		bindingNameColumn.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -484,15 +465,7 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			}
 		});
 		conflictViewer.setContentProvider(ArrayContentProvider.getInstance());
-		conflictViewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-				if (!selection.isEmpty()) {
-					Binding[] conflict = (Binding[]) selection.getFirstElement();
-					bindingViewer.setSelection(new StructuredSelection(conflict[0]));
-				}
-			}
-		});
+		conflictViewer.addDoubleClickListener(this);
 	}
 
 	@Override
@@ -503,15 +476,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 		commandMap.clear();
 		activeSchemeId = bindingService.getActiveScheme().getId();
 		Binding[] bindings = bindingService.getBindings();
-		for (Binding binding : bindings) {
-			if (activeSchemeId.equals(binding.getSchemeId())) {
-				TriggerSequence triggerSequence = binding.getTriggerSequence();
-				if (binding.getType() == Binding.SYSTEM)
-					systemMap.put(triggerSequence, binding);
-				else
-					userMap.put(triggerSequence, binding);
-			}
-		}
+		for (Binding binding : bindings)
+			if (activeSchemeId.equals(binding.getSchemeId()))
+				(binding.getType() == Binding.SYSTEM ? systemMap : userMap).put(binding.getTriggerSequence(), binding);
 		updateViewer();
 		ISelection selection = bindingViewer.getSelection();
 		if (selection.isEmpty())
@@ -551,10 +518,8 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			if (binding.getParameterizedCommand() != null && binding.getSchemeId().equals(activeSchemeId)) {
 				TriggerSequence triggerSequence = binding.getTriggerSequence();
 				List<Binding> list = conflictMap.get(triggerSequence);
-				if (list == null) {
-					list = new ArrayList<Binding>();
-					conflictMap.put(triggerSequence, list);
-				}
+				if (list == null)
+					conflictMap.put(triggerSequence, list = new ArrayList<Binding>());
 				list.add(binding);
 			}
 		}
@@ -568,10 +533,8 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 					&& binding.getSchemeId().equals(activeSchemeId)) {
 				TriggerSequence triggerSequence = binding.getTriggerSequence();
 				List<Binding> list = conflictMap.get(triggerSequence);
-				if (list == null) {
-					list = new ArrayList<Binding>();
-					conflictMap.put(triggerSequence, list);
-				}
+				if (list == null)
+					conflictMap.put(triggerSequence, list = new ArrayList<Binding>());
 				if (!list.contains(binding))
 					list.add(binding);
 			}
@@ -626,7 +589,9 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 						keySequenceField.setKeySequence((KeySequence) triggerSequence);
 					else
 						keySequenceField.setKeySequence(null);
-					userLabel.setText(binding.getType() == Binding.USER ? Messages.getString("KeyPreferencePage.user_defined") : ""); //$NON-NLS-1$ //$NON-NLS-2$
+					userLabel.setText(
+							binding.getType() == Binding.USER ? Messages.getString("KeyPreferencePage.user_defined") //$NON-NLS-1$
+									: ""); //$NON-NLS-1$
 				} else {
 					keySequenceField.setKeySequence(null);
 					userLabel.setText(""); //$NON-NLS-1$
@@ -634,6 +599,51 @@ public class KeyPreferencePage extends AbstractPreferencePage {
 			} catch (NotDefinedException e) {
 				// ignore
 			}
+		}
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateDetails();
+		updateButtons();
+	}
+	
+	public void doubleClick(DoubleClickEvent event) {
+		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+		if (!selection.isEmpty()) {
+			Binding[] conflict = (Binding[]) selection.getFirstElement();
+			bindingViewer.setSelection(new StructuredSelection(conflict[0]));
+		}
+	}
+	
+	public final void propertyChange(final PropertyChangeEvent event) {
+		if (!event.getOldValue().equals(event.getNewValue())) {
+			final KeySequence keySequence = keySequenceField.getKeySequence();
+			if (selectedCommand == null || !keySequence.isComplete())
+				return;
+			boolean empty = keySequence.isEmpty();
+			Binding newBinding;
+			Binding b = commandMap.get(selectedCommand.getId());
+			if (b != null) {
+				if (!keySequence.equals(b.getTriggerSequence())) {
+					newBinding = new KeyBinding(keySequence, empty ? null : b.getParameterizedCommand(),
+							activeSchemeId, b.getContextId(), null, null, null, Binding.USER);
+					userMap.remove(b.getTriggerSequence());
+					userMap.put(keySequence, newBinding);
+					if (empty)
+						commandMap.remove(selectedCommand.getId());
+					else
+						commandMap.put(selectedCommand.getId(), newBinding);
+				}
+			} else if (!empty) {
+				ParameterizedCommand pc = new ParameterizedCommand(selectedCommand, null);
+				newBinding = new KeyBinding(keySequence, pc, activeSchemeId, "org.eclipse.ui.contexts.window", //$NON-NLS-1$
+						null, null, null, Binding.USER);
+				userMap.put(keySequence, newBinding);
+				commandMap.put(selectedCommand.getId(), newBinding);
+			}
+			refreshViewer();
+			doValidate();
+			keyField.setSelection(keyField.getTextLimit());
 		}
 	}
 

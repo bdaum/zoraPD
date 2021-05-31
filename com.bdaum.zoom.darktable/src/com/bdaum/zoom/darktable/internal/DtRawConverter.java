@@ -51,7 +51,7 @@ public class DtRawConverter extends AbstractRawConverter {
 		} else if (Constants.LINUX) {
 			if (parentFile == null) {
 				try {
-					String result = BatchUtilities.executeCommand(LOCATEDARKTABLE, null,
+					String result = BatchUtilities.executeCommand(LOCATEDARKTABLE, null, null, 
 							Messages.DtRawConverter_locate_darktable, IStatus.OK, IStatus.WARNING, -1, 1000L, "UTF-8", null); //$NON-NLS-1$
 					if (result != null) {
 						StringTokenizer st = new StringTokenizer(result, "\n"); //$NON-NLS-1$

@@ -56,7 +56,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.FlatGroup;
 
 @SuppressWarnings("restriction")
-public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
+public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable, Listener, ISelectionChangedListener {
 
 	private static final String SETTINGSID = "com.bdaum.zoom.ui.structEditDialog"; //$NON-NLS-1$
 	private static final String HIERARCHICAL_STRUCT = "hierarchicalStruct"; //$NON-NLS-1$
@@ -117,21 +117,11 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 		}
 		radioGroup = new FlatGroup(composite, SWT.NONE, settings, HIERARCHICAL_STRUCT + qfield.getType());
 		radioGroup.setLayoutData(new GridData(SWT.END, SWT.BEGINNING, false, false));
-		radioGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				structComponent.update();
-			}
-		});
+		radioGroup.addListener(SWT.Selection, this);
 		structComponent = new StructComponent(dbManager, composite, value, qfield.getType(), true, null, radioGroup,
 				null, 0, settings);
 		structComponent.fillValues();
-		structComponent.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				value = (AomObject) ((IStructuredSelection) event.getSelection()).getFirstElement();
-				updateButtons();
-			}
-		});
+		structComponent.addSelectionChangedListener(this);
 		return area;
 	}
 
@@ -214,5 +204,16 @@ public class StructEditDialog extends ZTitleAreaDialog implements IAdaptable {
 		radioGroup.saveSettings();
 		structComponent.saveSettings();
 		super.okPressed();
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		value = (AomObject) ((IStructuredSelection) event.getSelection()).getFirstElement();
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		structComponent.update();
 	}
 }

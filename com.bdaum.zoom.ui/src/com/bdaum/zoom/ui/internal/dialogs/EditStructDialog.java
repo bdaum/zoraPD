@@ -128,7 +128,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 				return Format.MISSINGENTRYSTRING;
 			IFormatter formatter = qf.getFormatter();
 			if (formatter != null)
-				return formatter.toString(value);
+				return formatter.format(value);
 			switch (qf.getType()) {
 			case QueryField.T_POSITIVELONG:
 				if (value instanceof Long && ((Long) value).longValue() < 0)
@@ -152,23 +152,11 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 			case QueryField.T_DATE:
 				if (value instanceof Date)
 					return Format.DFDT.get().format((Date) value);
-				break;
 			}
 			return String.valueOf(value);
 		}
 
 	}
-
-	// public static class ViewComparator extends ViewerComparator {
-	//
-	// @Override
-	// public int compare(Viewer viewer, Object e1, Object e2) {
-	// if (e1 instanceof QueryField && e2 instanceof QueryField)
-	// return ((QueryField) e1).getLabel().compareToIgnoreCase(
-	// ((QueryField) e2).getLabel());
-	// return super.compare(viewer, e1, e2);
-	// }
-	// }
 
 	public Map<QueryField, Object> backup = new HashMap<QueryField, Object>();
 
@@ -240,7 +228,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 				if (value != null) {
 					IFormatter formatter = qf.getFormatter();
 					if (formatter != null)
-						return formatter.toString(value);
+						return formatter.format(value);
 					if (value instanceof Date)
 						return Format.DFDT.get().format((Date) value);
 				}
@@ -258,7 +246,7 @@ public class EditStructDialog extends ZTitleAreaDialog implements IAdaptable {
 						IFormatter formatter = qf.getFormatter();
 						if (formatter != null)
 							try {
-								value = formatter.fromString((String) value);
+								value = formatter.parse((String) value);
 							} catch (ParseException e) {
 								return;
 							}

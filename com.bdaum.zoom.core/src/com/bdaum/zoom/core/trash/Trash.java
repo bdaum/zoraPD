@@ -355,7 +355,7 @@ public class Trash extends HistoryItem {
 						String[] cmd = new String[] { "trash", null }; //$NON-NLS-1$
 						for (File file : toBeDeleted) {
 							cmd[1] = file.getAbsolutePath();
-							BatchUtilities.executeCommand(cmd, null, Messages.Trash_send_to_trash, IStatus.OK,
+							BatchUtilities.executeCommand(cmd, null, null, Messages.Trash_send_to_trash, IStatus.OK,
 									IStatus.ERROR, -1, 1500L, "UTF-8", null); //$NON-NLS-1$
 						}
 						return;

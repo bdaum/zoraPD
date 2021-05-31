@@ -15,14 +15,13 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.widgets;
 
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -52,8 +51,7 @@ public class NumericControl extends Composite implements Listener {
 
 	public NumericControl(Composite parent, int style) {
 		super(parent, style & SWT.BORDER);
-		if ((style & LOGARITHMIC) != 0)
-			logarithmic = true;
+		logarithmic = (style & LOGARITHMIC) != 0;
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = layout.verticalSpacing = 0;
 		setLayout(layout);
@@ -84,23 +82,22 @@ public class NumericControl extends Composite implements Listener {
 		return v < 0 ? -Math.pow(10, v) + 1 : Math.pow(10, v) - 1;
 	}
 
-	@Override
-	public void addFocusListener(FocusListener listener) {
-		spinner.addFocusListener(listener);
-	}
-
-	@Override
-	public void removeFocusListener(FocusListener listener) {
-		spinner.removeFocusListener(listener);
-	}
-
 	public void addListener(int type, Listener listener) {
 		if (type == SWT.Selection)
 			listeners.add(listener);
+		else if (type == SWT.FocusIn)
+			spinner.addListener(SWT.FocusIn, listener);
+		else if (type == SWT.FocusOut)
+			spinner.addListener(SWT.FocusOut, listener);
 	}
 
 	public void removeListener(int type, Listener listener) {
-		listeners.remove(listener);
+		if (type == SWT.Selection)
+			listeners.remove(listener);
+		else if (type == SWT.FocusIn)
+			spinner.removeListener(SWT.FocusIn, listener);
+		else if (type == SWT.FocusOut)
+			spinner.removeListener(SWT.FocusOut, listener);
 	}
 
 	/**
@@ -306,25 +303,25 @@ public class NumericControl extends Composite implements Listener {
 		case SWT.MouseDown:
 			mouseDown = true;
 			processMouseEvent(event);
-			break;
+			return;
 		case SWT.MouseUp:
 			mouseDown = false;
-			break;
+			return;
 		case SWT.MouseDoubleClick:
 			mouseDown = false;
 			spinner.setSelection(selection);
 			canvas.redraw();
-			break;
+			return;
 		case SWT.MouseMove:
 			if (mouseDown)
 				processMouseEvent(event);
-			break;
+			return;
 		case SWT.Selection:
 		case SWT.DefaultSelection:
 		case SWT.Modify:
 			fireEvent(event);
 			canvas.redraw();
-			break;
+			return;
 		case SWT.Paint:
 			Rectangle clientArea = canvas.getClientArea();
 			double minimum = getMinimum();
@@ -338,15 +335,17 @@ public class NumericControl extends Composite implements Listener {
 			double range = maximum - minimum;
 			int x = (int) (range <= 0 ? 0 : clientArea.width * (v1 - minimum) / range + 0.5d);
 			GC gc = event.gc;
+			gc.setBackground(getBackground());
+			gc.setAlpha(255);
+			gc.fillRectangle(clientArea.x, clientArea.y, clientArea.width, clientArea.height);
+			gc.setBackground(getForeground());
 			if (x < clientArea.width) {
-				gc.setBackground(getBackground());
+				gc.setAlpha(96);
 				gc.fillRectangle(clientArea.x + x, clientArea.y, clientArea.width - x, clientArea.height);
+				gc.setAlpha(255);
 			}
-			if (x > 0) {
-				gc.setBackground(getForeground());
+			if (x > 0)
 				gc.fillRectangle(clientArea.x, clientArea.y, x, clientArea.height);
-			}
-			break;
 		}
 	}
 
@@ -359,9 +358,7 @@ public class NumericControl extends Composite implements Listener {
 				maximum = toLog(maximum);
 				minimum = toLog(minimum);
 			}
-			double range = maximum - minimum;
-			int x = ev.x - clientArea.x;
-			double value = range * x / clientArea.width + minimum;
+			double value = (maximum - minimum) * (ev.x - clientArea.x) / clientArea.width + minimum;
 			if (logarithmic)
 				value = toLin(value);
 			int v = (int) (value + 0.5d);

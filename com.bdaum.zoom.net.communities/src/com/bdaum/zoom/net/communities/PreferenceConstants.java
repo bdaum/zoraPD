@@ -19,7 +19,48 @@
  */
 package com.bdaum.zoom.net.communities;
 
-public interface PreferenceConstants {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-	String COMMUNITYACCOUNTS = "com.bdaum.zoom.communityAccounts."; //$NON-NLS-1$
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+
+import com.bdaum.zoom.common.PreferenceRegistry;
+import com.bdaum.zoom.common.PreferenceRegistry.IPreferenceConstants;
+
+public class PreferenceConstants implements IPreferenceConstants {
+
+	public static final String COMMUNITYACCOUNTS = "com.bdaum.zoom.communityAccounts."; //$NON-NLS-1$
+	public static final String COMMUNITIES = Messages.PreferenceConstants_communities; 
+
+	@Override
+	public List<Object> getRootElements() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Object> getChildren(Object group) {
+		if (group == PreferenceRegistry.INTERNET) 
+			return Arrays.asList(COMMUNITIES);
+		if (group == COMMUNITIES) {
+			List<Object> result = new ArrayList<>();
+			for (IExtension ext : Platform.getExtensionRegistry()
+					.getExtensionPoint(CommunitiesActivator.PLUGIN_ID, "community").getExtensions()) //$NON-NLS-1$
+				for (IConfigurationElement conf : ext.getConfigurationElements())
+					result.add(COMMUNITYACCOUNTS + conf.getAttribute("id")); //$NON-NLS-1$
+			return result;
+		}
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public IEclipsePreferences getNode() {
+		return InstanceScope.INSTANCE.getNode(CommunitiesActivator.PLUGIN_ID);
+	}
+
 }

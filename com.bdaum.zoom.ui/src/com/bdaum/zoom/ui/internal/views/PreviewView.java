@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.views;
@@ -87,24 +87,20 @@ public class PreviewView extends ImageView implements IFrameListener {
 	private static final String BW = "bs"; //$NON-NLS-1$
 	private static final String HISTO = "histo"; //$NON-NLS-1$
 	protected Canvas canvas;
-	private Asset currentItem;
-	private Action bwToggleAction;
-	private Action cueToggleAction;
-	private boolean bw;
+	private Asset currentItem, selectedItem;
+	private Action cueToggleAction, bwToggleAction, showHistogramAction, setFilterAction;
+	private boolean bw, rightClick, cue;
 	private RGB filter;
 	private Image bwImage;
-	private Action setFilterAction;
-	protected boolean cue;
-	private Asset selectedItem;
 	private AssetSelection assetSelection = AssetSelection.EMPTY;
 	private Rectangle2D currentFrame = new Rectangle2D.Double(0d, 0d, 1d, 1d);
 	private CaptionManager captionManager = new CaptionManager();
 	private boolean showHisto = true;
 	private HistogramManager histogramManager = new HistogramManager();
-	private Action showHistogramAction;
 	private Rectangle histoRegion;
 	private TimerTask task;
 	private Timer timer = new Timer();
+	private int clicks;
 
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
@@ -163,34 +159,49 @@ public class PreviewView extends ImageView implements IFrameListener {
 			paintControl(e);
 			return;
 		}
-		if (e.type == SWT.MouseUp && histoRegion != null && histoRegion.contains(e.x, e.y)) {
-			if (task != null) {
-				task.cancel();
-				task = null;
-			}
-			if (e.count == 1) {
-				task = new TimerTask() {
-					@Override
-					public void run() {
-						if (!canvas.isDisposed())
-							canvas.getDisplay().asyncExec(() -> {
-								try {
-									if (!canvas.isDisposed())
-										getSite().getPage().showView(HistogramView.ID);
-								} catch (PartInitException e) {
-									// should not happen
-								}
-							});
-					}
-				};
-				timer.schedule(task, 300);
-				e.doit = false;
+		if (e.type == SWT.MouseUp) {
+			if ((e.stateMask & SWT.BUTTON3) != 0)
+				rightClick = true;
+			else if ((e.stateMask & SWT.BUTTON1) != 0 && histoRegion != null && histoRegion.contains(e.x, e.y)) {
+				if (rightClick) {
+					rightClick = false;
+					return;
+				}
+				clicks = e.count;
+				if (task != null) {
+					task.cancel();
+					task = null;
+				}
+				if (clicks == 1) {
+					task = new TimerTask() {
+						@Override
+						public void run() {
+							if (!canvas.isDisposed())
+								canvas.getDisplay().asyncExec(() -> {
+									try {
+										if (!canvas.isDisposed() && clicks == 1)
+											popupHistogram();
+									} catch (PartInitException e) {
+										// should not happen
+									}
+								});
+						}
+					};
+					timer.schedule(task, 300);
+					e.doit = false;
+				}
 			}
 		}
 		if (e.doit)
 			captionManager.handleEvent(e);
 		if (e.doit)
 			super.handleEvent(e);
+	}
+	
+	private void popupHistogram() throws PartInitException {
+		HistogramView hView = (HistogramView) getSite().getPage().showView(HistogramView.ID);
+		if (hView != null)
+			hView.setBw(bw);
 	}
 
 	@Override
@@ -200,6 +211,7 @@ public class PreviewView extends ImageView implements IFrameListener {
 			@Override
 			public void run() {
 				cue = !cue;
+				updateActions(false);
 			}
 		};
 		cueToggleAction.setImageDescriptor(Icons.cue.getDescriptor());
@@ -319,6 +331,8 @@ public class PreviewView extends ImageView implements IFrameListener {
 	protected void fillContextMenu(IMenuManager manager) {
 		updateActions(true);
 		boolean readOnly = dbIsReadonly();
+		captionManager.fillMenu(manager);
+		manager.add(new Separator(IZoomActionConstants.MB_SUBMENUS));
 		fillEditAndSearchGroup(manager, readOnly);
 		fillVoiceNote(manager, readOnly);
 		fillMetaData(manager, readOnly);
@@ -357,6 +371,7 @@ public class PreviewView extends ImageView implements IFrameListener {
 			boolean enabled = selectedItem != null;
 			bwToggleAction.setEnabled(enabled);
 			cueToggleAction.setEnabled(enabled);
+			cueToggleAction.setImageDescriptor(cue ? Icons.cue.getDescriptor() : Icons.nocue.getDescriptor());
 			setFilterAction.setEnabled(enabled);
 			showHistogramAction.setEnabled(enabled);
 			super.updateActions(force);
@@ -423,7 +438,8 @@ public class PreviewView extends ImageView implements IFrameListener {
 				gc.setAlpha(144);
 				gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
 				gc.drawRectangle(x - 1, y - 1, w3 + 2, h3 + 2);
-				histogramManager.paint(gc, x, y, w3, h3, true, true, true, true, true, true);
+				histogramManager.paint(gc, x, y, w3, h3, bw ? HistogramManager.CONTRAST : HistogramManager.DARK, true,
+						true, !bw, !bw, !bw, false);
 				histoRegion = new Rectangle(x, y, w3, h3);
 			} else
 				histoRegion = null;

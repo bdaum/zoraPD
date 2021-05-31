@@ -236,9 +236,9 @@ public class ArchiveCommand extends AbstractCommandHandler {
 												long estimated = elapsed / i * remainingImages;
 												monitor.subTask(NLS.bind(Messages.ArchiveAction_elapsed_time,
 														Format.timeFormatter
-																.toString((int) ((elapsed + 30000) / 60000)),
+																.format((int) ((elapsed + 30000) / 60000)),
 														Format.timeFormatter
-																.toString((int) ((estimated + 30000) / 60000))));
+																.format((int) ((estimated + 30000) / 60000))));
 											}
 										}
 									}

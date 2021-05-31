@@ -300,10 +300,10 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 		switch (e.type) {
 		case SWT.MouseUp:
 			openKeywordDialog();
-			break;
+			return;
 		case SWT.Modify:
 			validatePage();
-			break;
+			return;
 		case SWT.Selection:
 			if (e.widget == focalLength35Field) {
 				int fac = factorField.getSelection();
@@ -338,7 +338,6 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 			}
 			else
 				setF35();
-			break;
 		}
 	}
 
@@ -479,14 +478,14 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 		String fn = fnumberTimeField.getText().trim();
 		if (!fn.isEmpty())
 			try {
-				QueryField.EXIF_FNUMBER.getFormatter().fromString(fn);
+				QueryField.EXIF_FNUMBER.getFormatter().parse(fn);
 			} catch (ParseException e) {
 				errorMessage = e.getMessage();
 			}
 		String exp = exposureTimeField.getText().trim();
 		if (!exp.isEmpty())
 			try {
-				QueryField.EXIF_EXPOSURETIME.getFormatter().fromString(exp);
+				QueryField.EXIF_EXPOSURETIME.getFormatter().parse(exp);
 			} catch (ParseException e) {
 				errorMessage = e.getMessage();
 			}
@@ -645,14 +644,14 @@ public class ImportAnalogPropertiesPage extends ColoredWizardPage implements Lis
 		String exp = exposureTimeField.getText().trim();
 		if (!exp.isEmpty())
 			try {
-				properties.exposureTime = (Double) QueryField.EXIF_EXPOSURETIME.getFormatter().fromString(exp);
+				properties.exposureTime = (Double) QueryField.EXIF_EXPOSURETIME.getFormatter().parse(exp);
 			} catch (ParseException e) {
 				properties.exposureTime = Double.NaN;
 			}
 		String fn = fnumberTimeField.getText().trim();
 		if (!fn.isEmpty())
 			try {
-				properties.fNumber = (Double) QueryField.EXIF_FNUMBER.getFormatter().fromString(fn);
+				properties.fNumber = (Double) QueryField.EXIF_FNUMBER.getFormatter().parse(fn);
 			} catch (ParseException e) {
 				properties.fNumber = Double.NaN;
 			}

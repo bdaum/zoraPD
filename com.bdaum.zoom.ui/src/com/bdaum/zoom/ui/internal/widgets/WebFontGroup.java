@@ -110,10 +110,9 @@ public class WebFontGroup implements Listener {
 				if (dialog.open() == Window.OK)
 					setFont(dialog.getResult());
 			}
-			break;
+			return;
 		case SWT.Dispose:
 			image.dispose();
-			break;
 		}
 	}
 

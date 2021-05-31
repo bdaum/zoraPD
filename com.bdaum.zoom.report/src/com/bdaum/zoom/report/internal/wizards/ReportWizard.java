@@ -20,7 +20,6 @@
 package com.bdaum.zoom.report.internal.wizards;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -94,7 +93,7 @@ public class ReportWizard extends ZWizard implements IWorkbenchWizard {
 		setDialogSettings(UiActivator.getDefault(), SETTINGSID);
 		setWindowTitle(Constants.APPLICATION_NAME);
 		SimpleDateFormat sdf = new SimpleDateFormat(Messages.ReportWizard_yyyyMMddhhmmaa);
-		String title = NLS.bind(Messages.ReportWizard_report_from_x, sdf.format(new Date()));
+		String title = NLS.bind(Messages.ReportWizard_report_from_x, sdf.format(System.currentTimeMillis()));
 		IDbManager dbManager = Core.getCore().getDbManager();
 		String description = dbManager.getMeta(true).getDescription();
 		if (description == null || description.isEmpty())

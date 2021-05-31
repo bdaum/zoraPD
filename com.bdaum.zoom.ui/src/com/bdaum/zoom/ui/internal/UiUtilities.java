@@ -36,9 +36,12 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -244,10 +247,8 @@ public class UiUtilities {
 				}
 			String[] vols = volumes.toArray(new String[volumes.size()]);
 			Arrays.sort(vols);
-			String stringlist = Core.toStringList(vols, ", "); //$NON-NLS-1$
-			AcousticMessageDialog.openWarning(shell, Messages.UiUtilities_Files_missing,
-					(all) ? NLS.bind(msgTemplate, Messages.UiUtilities_All, stringlist)
-							: NLS.bind(msgTemplate, errands.size(), stringlist));
+			AcousticMessageDialog.openWarning(shell, Messages.UiUtilities_Files_missing, NLS.bind(msgTemplate,
+					all ? Messages.UiUtilities_All : String.valueOf(errands.size()), Core.toStringList(vols, ", "))); //$NON-NLS-1$
 		}
 	}
 
@@ -419,7 +420,7 @@ public class UiUtilities {
 	public static String computeFieldStringValue(FieldDescriptor fd, Object value) {
 		IFormatter formatter = fd.getDetailQueryField().getFormatter();
 		if (formatter != null)
-			return formatter.toString(value);
+			return formatter.format(value);
 		if (value == null)
 			return ""; //$NON-NLS-1$
 		switch (fd.getDetailQueryField().getType()) {
@@ -441,7 +442,7 @@ public class UiUtilities {
 		boolean undefined = trim.isEmpty() || trim.equals("-"); //$NON-NLS-1$
 		if (formatter != null)
 			try {
-				return formatter.fromString(trim);
+				return formatter.parse(trim);
 			} catch (ParseException ex) {
 				undefined = true;
 			}
@@ -492,7 +493,7 @@ public class UiUtilities {
 			IFormatter formatter = fieldDescriptor.getDetailQueryField().getFormatter();
 			if (formatter != null)
 				try {
-					formatter.fromString(text);
+					formatter.parse(text);
 					return null;
 				} catch (ParseException ex) {
 					// do nothing
@@ -820,13 +821,11 @@ public class UiUtilities {
 				}
 				sb.append(' ');
 				int relation = crit.getRelation();
-				for (int k = 0; k < QueryField.ALLRELATIONS.length; k++) {
-					int rel = QueryField.ALLRELATIONS[k];
-					if ((rel & relation) != 0) {
+				for (int k = 0; k < QueryField.ALLRELATIONS.length; k++)
+					if ((QueryField.ALLRELATIONS[k] & relation) != 0) {
 						sb.append(QueryField.ALLRELATIONLABELS[k]);
 						break;
 					}
-				}
 				sb.append(" \""); //$NON-NLS-1$
 				sb.append(value);
 				sb.append('"');
@@ -1011,14 +1010,14 @@ public class UiUtilities {
 			org.eclipse.swt.graphics.Color marginColor) {
 		IDbManager dbManager = Core.getCore().getDbManager();
 		int maxW = -1;
-		RegionImpl maxRegion = null;
+		Region maxRegion = null;
 		List<RegionImpl> regions = dbManager.obtainObjects(RegionImpl.class, "album", sm.getStringId(), //$NON-NLS-1$
 				QueryField.EQUALS);
 		int noRegions = regions.size();
 		int trials = Math.min(5, noRegions);
 		while (noRegions > 0) {
 			int j = (int) (Math.random() * noRegions);
-			RegionImpl region = regions.get(j);
+			Region region = regions.get(j);
 			String rect64 = region.getStringId();
 			int l = rect64.length();
 			if (l > 12) {
@@ -1137,21 +1136,20 @@ public class UiUtilities {
 
 	public static Date getCreationDate(Asset asset) {
 		Date date = asset.getDateCreated();
-		if (date == null)
+		if (date == null) {
 			date = asset.getDateTimeOriginal();
-		if (date == null)
-			date = asset.getDateTime();
+			if (date == null)
+				return asset.getDateTime();
+		}
 		return date;
 	}
 
 	private static final String ELLIPSIS = "..."; //$NON-NLS-1$
 
 	public static String shortenText(String s, int maxchars) {
-		if (s == null || s.length() <= maxchars)
-			return s;
-		return s.substring(0, maxchars) + ELLIPSIS;
+		return (s == null || s.length() <= maxchars) ? s : s.substring(0, maxchars) + ELLIPSIS;
 	}
-	
+
 	public static void showTooltip(ToolTip tooltip, int x, int y, String title, String msg) {
 		int hover = CommonUtilities.computeHoverTime(title.length() + msg.length());
 		tooltip.setLocation(x, y);
@@ -1165,5 +1163,54 @@ public class UiUtilities {
 		});
 	}
 
+	public static void updateCheckboxTree(CheckStateChangedEvent event) {
+		Object source = event.getSource();
+		if (source instanceof CheckboxTreeViewer) {
+			Object element = event.getElement();
+			CheckboxTreeViewer viewer = (CheckboxTreeViewer) source;
+			viewer.expandToLevel(element, CheckboxTreeViewer.ALL_LEVELS);
+			updateParent(viewer, element);
+			updateChildren(viewer, element, event.getChecked());
+		}
+	}
+
+	private static void updateChildren(CheckboxTreeViewer viewer, Object element, boolean checked) {
+		viewer.setGrayed(element, false);
+		for (Object child : ((ITreeContentProvider) viewer.getContentProvider()).getChildren(element)) {
+			viewer.setChecked(child, checked);
+			updateChildren(viewer, child, checked);
+		}
+	}
+
+	private static void updateParent(CheckboxTreeViewer viewer, Object element) {
+		ITreeContentProvider contentProvider = (ITreeContentProvider) viewer.getContentProvider();
+		Object parent = contentProvider.getParent(element);
+		if (parent != null) {
+			Object[] children = contentProvider.getChildren(parent);
+			int n = 0;
+			boolean grayed = false;
+			for (Object child : children) {
+				if (viewer.getChecked(child))
+					++n;
+				grayed |= viewer.getGrayed(child);
+			}
+			if (n == 0) {
+				viewer.setChecked(parent, false);
+				viewer.setGrayed(parent, grayed);
+			} else if (n == children.length) {
+				viewer.setChecked(parent, true);
+				viewer.setGrayed(parent, grayed);
+			} else
+				viewer.setGrayed(parent, true);
+			updateParent(viewer, parent);
+		}
+	}
+
+	public static void checkAllInTrre(CheckboxTreeViewer viewer, boolean checked) {
+		ITreeContentProvider contentProvider = (ITreeContentProvider) viewer.getContentProvider();
+		Object[] elements = contentProvider.getElements(viewer.getInput());
+		for (Object element : elements)
+			viewer.setSubtreeChecked(element, checked);
+	}
 
 }

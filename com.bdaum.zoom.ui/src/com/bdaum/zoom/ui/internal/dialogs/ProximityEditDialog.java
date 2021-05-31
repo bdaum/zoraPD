@@ -24,13 +24,13 @@ import java.text.ParseException;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -46,18 +46,12 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class ProximityEditDialog extends ZTitleAreaDialog {
+public class ProximityEditDialog extends ZTitleAreaDialog implements Listener {
 
 	private final SmartCollection coll;
 	private NumericControl distanceField;
 	private Text latField;
 	private Text lonField;
-	private ModifyListener modifyListener = new ModifyListener() {
-
-		public void modifyText(ModifyEvent e) {
-			updateButtons();
-		}
-	};
 	private SmartCollectionImpl collection;
 	private FindInNetworkGroup findInNetworkGroup;
 
@@ -74,13 +68,13 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 
 	private boolean validate() {
 		try {
-			Format.latitudeFormatter.fromString(latField.getText());
+			Format.latitudeFormatter.parse(latField.getText());
 		} catch (ParseException e) {
 			setErrorMessage(e.getMessage());
 			return false;
 		}
 		try {
-			Format.longitudeFormatter.fromString(lonField.getText());
+			Format.longitudeFormatter.parse(lonField.getText());
 		} catch (ParseException e) {
 			setErrorMessage(e.getMessage());
 			return false;
@@ -113,11 +107,11 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_latitude);
 		latField = new Text(comp, SWT.BORDER);
 		latField.setLayoutData(new GridData(80, SWT.DEFAULT));
-		latField.addModifyListener(modifyListener);
+		latField.addListener(SWT.Modify, this);
 		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_longitude);
 		lonField = new Text(comp, SWT.BORDER);
 		lonField.setLayoutData(new GridData(80, SWT.DEFAULT));
-		lonField.addModifyListener(modifyListener);
+		lonField.addListener(SWT.Modify, this);
 		new Label(comp, SWT.NONE).setText(Messages.ProximityEditDialog_distance);
 		distanceField = new NumericControl(comp, SWT.NONE);
 		distanceField.setDigits(3);
@@ -132,9 +126,9 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 		Criterion criterion = coll.getCriterion(0);
 		Double[] values = (Double[]) criterion.getValue();
 		distanceField.setSelection((int) (values[2] * 1000));
-		String lat = Format.latitudeFormatter.toString(values[0]);
+		String lat = Format.latitudeFormatter.format(values[0]);
 		latField.setText(lat);
-		String lon = Format.longitudeFormatter.toString(values[0]);
+		String lon = Format.longitudeFormatter.format(values[0]);
 		lonField.setText(lon);
 	}
 
@@ -142,13 +136,13 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		Double lat;
 		try {
-			lat = (Double) Format.latitudeFormatter.fromString(latField.getText());
+			lat = (Double) Format.latitudeFormatter.parse(latField.getText());
 		} catch (ParseException e) {
 			lat = Double.NaN;
 		}
 		Double lon;
 		try {
-			lon = (Double) Format.longitudeFormatter.fromString(lonField.getText());
+			lon = (Double) Format.longitudeFormatter.parse(lonField.getText());
 		} catch (ParseException e) {
 			lon = Double.NaN;
 		}
@@ -164,6 +158,11 @@ public class ProximityEditDialog extends ZTitleAreaDialog {
 
 	public SmartCollectionImpl getResult() {
 		return collection;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

@@ -8,13 +8,13 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.aoModeling.runtime.AomObject;
@@ -23,7 +23,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 
-public class IndexedMemberDialog extends ZTitleAreaDialog {
+public class IndexedMemberDialog extends ZTitleAreaDialog implements ISelectionChangedListener, Listener {
 
 	private ListViewer viewer;
 	private IndexedMember[] members;
@@ -71,67 +71,19 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 				return (element instanceof IndexedMember && ((IndexedMember) element).getValue() != null);
 			}
 		} });
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		Composite buttonGroup = new Composite(composite, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		buttonGroup.setLayout(new GridLayout(1, false));
 		editButton = new Button(buttonGroup, SWT.PUSH);
 		editButton.setText(Messages.IndexedMemberDialog_edit);
-		editButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
-				StructEditDialog dialog = new StructEditDialog(editButton.getShell(), (AomObject) member.getValue(),
-						qfield);
-				if (dialog.open() == Window.OK) {
-					for (int i = 0; i < members.length; i++)
-						if (members[i] == member) {
-							members[i].setValue(dialog.getResult());
-							break;
-						}
-					viewer.setInput(members);
-				}
-			}
-		});
+		editButton.addListener(SWT.Selection, this);
 		addButton = new Button(buttonGroup, SWT.PUSH);
 		addButton.setText(Messages.IndexedMemberDialog_add);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				StructEditDialog dialog = new StructEditDialog(editButton.getShell(), null, qfield);
-				if (dialog.open() == Window.OK) {
-					IndexedMember[] newMembers = new IndexedMember[members.length + 1];
-					System.arraycopy(members, 0, newMembers, 0, members.length);
-					newMembers[members.length - 1].setValue(dialog.getResult());
-					newMembers[members.length - 1].setIndex(members.length - 1);
-					newMembers[members.length] = new IndexedMember(qfield, null, members.length);
-					viewer.setInput(members = newMembers);
-				}
-			}
-		});
+		addButton.addListener(SWT.Selection, this);
 		removeButton = new Button(buttonGroup, SWT.PUSH);
 		removeButton.setText(Messages.IndexedMemberDialog_remove);
-		removeButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
-				for (int i = 0; i < members.length; i++) {
-					if (members[i] == member) {
-						IndexedMember[] newMembers = new IndexedMember[members.length - 1];
-						System.arraycopy(members, 0, newMembers, 0, i);
-						System.arraycopy(members, i + 1, newMembers, i, members.length - i - 1);
-						for (int j = i; j < newMembers.length; j++)
-							newMembers[j].setIndex(j);
-						viewer.setInput(members = newMembers);
-						break;
-					}
-				}
-			}
-		});
+		removeButton.addListener(SWT.Selection, this);
 		return area;
 	}
 
@@ -148,5 +100,52 @@ public class IndexedMemberDialog extends ZTitleAreaDialog {
 	public IndexedMember[] getResult() {
 		return members;
 	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == addButton) {
+			StructEditDialog dialog = new StructEditDialog(editButton.getShell(), null, qfield);
+			if (dialog.open() == Window.OK) {
+				IndexedMember[] newMembers = new IndexedMember[members.length + 1];
+				System.arraycopy(members, 0, newMembers, 0, members.length);
+				newMembers[members.length - 1].setValue(dialog.getResult());
+				newMembers[members.length - 1].setIndex(members.length - 1);
+				newMembers[members.length] = new IndexedMember(qfield, null, members.length);
+				viewer.setInput(members = newMembers);
+			}
+		} else if (e.widget == editButton) {
+			IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
+			StructEditDialog dialog = new StructEditDialog(editButton.getShell(), (AomObject) member.getValue(),
+					qfield);
+			if (dialog.open() == Window.OK) {
+				for (int i = 0; i < members.length; i++)
+					if (members[i] == member) {
+						members[i].setValue(dialog.getResult());
+						break;
+					}
+				viewer.setInput(members);
+			}
+		} else {
+			IndexedMember member = (IndexedMember) viewer.getStructuredSelection().getFirstElement();
+			for (int i = 0; i < members.length; i++) {
+				if (members[i] == member) {
+					IndexedMember[] newMembers = new IndexedMember[members.length - 1];
+					System.arraycopy(members, 0, newMembers, 0, i);
+					System.arraycopy(members, i + 1, newMembers, i, members.length - i - 1);
+					for (int j = i; j < newMembers.length; j++)
+						newMembers[j].setIndex(j);
+					viewer.setInput(members = newMembers);
+					break;
+				}
+			}
+		}
+		// TODO Automatisch generierter Methodenstub
+		
+	}
+
 
 }

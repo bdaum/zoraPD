@@ -72,6 +72,10 @@
  <context id="import_page_context" title="Import-Einstellungen">
     <description>Einstellungen für den Import von Bildern</description>
     <topic href="html/reference/importPrefs.html" label="Import-Einstellungen"/>
+    <topic href="html/reference/dcraw.html" label="DCRAW und Nachfolger"/>
+    <topic href="html/concepts/raw.html" label="RAW-Verarbeitung"/>
+    <topic href="html/tasks/import.html" label="Bilder importieren"/>
+    
  </context>
  <context id="catalog_page_context" title="Katalogeinstellungen">
     <description>Katalogeigenschaften verwalten</description>
@@ -132,10 +136,13 @@
  <context id="auto_page_context" title="Einstellungen für automatische Aktionen">
     <description>Automatische Aktionen konfigurieren</description>
     <topic href="html/reference/autoPrefs.html" label="Einstellungen für automatische Aktionen"/>
+    <topic href="html/reference/autoRule.html" label="Automatische Regeln"/>
+    <topic href="html/reference/catalog.html" label="Kollektionen"/>
  </context>
  <context id="general_page_context" title="Allgemeine Einstellungen">
     <description>Allgemeine Einstellungen</description>
     <topic href="html/reference/generalPrefs.html" label="Allgemeine Einstellungen"/>
+    <topic href="html/tasks/tuning.html" label="Tuning"/>
  </context>
  <context id="keys_page_context" title="Tastenkürzel-Einstellungen">
     <description>Tastenkürzel-Einstellungen</description>
@@ -144,10 +151,15 @@
  <context id="keyword_page_context" title="Schlagwort-Einstellungen">
     <description>Schlagwort-Einstellungen</description>
     <topic href="html/reference/keywordPrefs.html" label="Schlagwort-Einstellungen"/>
+    <topic href="html/reference/keyworddef.html" label="Schlagwörter definieren"/>
+    <topic href="html/reference/keywordSearch.html" label="Schlagwortsuche"/>
+    <topic href="html/tasks/keywords.html" label="Mit Schlagworten arbeiten"/>
  </context>
  <context id="metadata_page_context" title="Metadaten-Einstellungen">
     <description>Metadaten-Einstellungen</description>
     <topic href="html/reference/metadataPrefs.html" label="Metadaten-Einstellungen"/>
+    <topic href="html/concepts/basic.html" label="Grundlegende Konzepte"/>
+    <topic href="html/reference/metadata.html" label="Metadaten"/>
  </context>
  <context id="watchedFolders_page_context" title="Überwachte Ordner">
     <description>Verwaltung der überwachten Ordner</description>
@@ -368,6 +380,8 @@
    <context id="externalPrograms" title="Externe Programme">
       <description>Externe Bildbetrachter und spezifische Bildbearbeitungsprogramme können leicht aufgerufen werden.</description>
       <topic href="html/reference/fileAssociations.html" label="Dateiassoziationen"/>
+      <topic href="html/concepts/basic.html" label="Grundlegende Konzepte"/>
+      <topic href="html/reference/imageViewer.html" label="Bildbetrachter"/>
    </context>
    <context id="presentations" title="Ausstellungen, Dia-shows und Webgalerien">
       <description>Präsentationen wie Ausstellungen, Dia-shows und Webgalerien können interaktiv angelegt werden. Webgalerien können mittels FTP zum Web hochgeladen werden.uploaded to the Web.</description>

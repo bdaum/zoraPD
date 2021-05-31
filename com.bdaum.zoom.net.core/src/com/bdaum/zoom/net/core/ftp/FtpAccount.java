@@ -1,4 +1,4 @@
-/* Copyright 2009-2015 Berthold Daum
+/* Copyright 2009-2021 Berthold Daum
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.IFTPService;
 import com.bdaum.zoom.core.db.IDbErrorHandler;
@@ -94,8 +95,8 @@ public class FtpAccount {
 	 * @return account object
 	 */
 	public static FtpAccount findAccount(String name) {
-		String ess = Platform.getPreferencesService().getString(
-				Activator.PLUGIN_ID, PreferenceConstants.FTPACCOUNTS, "", null); //$NON-NLS-1$
+		String ess = Platform.getPreferencesService().getString(Activator.PLUGIN_ID, PreferenceConstants.FTPACCOUNTS,
+				"", null); //$NON-NLS-1$
 		String search = name + FIELDSEP;
 		StringTokenizer st = new StringTokenizer(ess, SEPS);
 		while (st.hasMoreTokens()) {
@@ -113,8 +114,8 @@ public class FtpAccount {
 	 */
 	public static List<FtpAccount> getAllAccounts() {
 		ArrayList<FtpAccount> ftpAccounts = new ArrayList<FtpAccount>();
-		String s = Platform.getPreferencesService().getString(
-				Activator.PLUGIN_ID, PreferenceConstants.FTPACCOUNTS, "", null); //$NON-NLS-1$
+		String s = Platform.getPreferencesService().getString(Activator.PLUGIN_ID, PreferenceConstants.FTPACCOUNTS, "", //$NON-NLS-1$
+				null);
 		if (s != null) {
 			StringTokenizer st = new StringTokenizer(s, SEPS);
 			while (st.hasMoreTokens())
@@ -132,11 +133,10 @@ public class FtpAccount {
 	public static void saveAccounts(List<FtpAccount> ftpAccounts) {
 		StringBuilder sb = new StringBuilder(4096);
 		for (FtpAccount ftpAccount : ftpAccounts)
-			if (ftpAccount.getName() != null
-					&& !ftpAccount.getName().isEmpty())
+			if (ftpAccount.getName() != null && !ftpAccount.getName().isEmpty())
 				sb.append(ftpAccount.toString()).append(SEP);
-		BatchUtilities.putPreferences(InstanceScope.INSTANCE
-				.getNode(Activator.PLUGIN_ID), PreferenceConstants.FTPACCOUNTS, sb.toString());
+		BatchUtilities.putPreferences(InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID),
+				PreferenceConstants.FTPACCOUNTS, sb.toString());
 	}
 
 	private FtpAccount(String s) {
@@ -166,7 +166,7 @@ public class FtpAccount {
 				else if (key == TRACK_EXPORT)
 					trackExport = Boolean.parseBoolean(value);
 				else if (key == PASSWORD)
-					password = value;
+					password = CommonUtilities.decode(value);
 				else if (key == PORT)
 					try {
 						port = Integer.parseInt(value);
@@ -204,7 +204,7 @@ public class FtpAccount {
 		appendString(sb, NOTES, notes);
 		appendString(sb, PASSIVE_MODE, String.valueOf(passiveMode));
 		appendString(sb, TRACK_EXPORT, String.valueOf(trackExport));
-		appendString(sb, PASSWORD, password);
+		appendString(sb, PASSWORD, CommonUtilities.encode(password));
 		appendString(sb, PORT, String.valueOf(port));
 		appendString(sb, PREFIX, prefix);
 		appendString(sb, WEB_HOST, webHost);
@@ -285,8 +285,7 @@ public class FtpAccount {
 	}
 
 	private static String encode(String pw) {
-		return pw != null ? Base64.encodeBytes(pw.getBytes())
-				: null;
+		return pw != null ? Base64.encodeBytes(pw.getBytes()) : null;
 	}
 
 	/**
@@ -408,8 +407,8 @@ public class FtpAccount {
 	}
 
 	/**
-	 * Sets the directory that is mapped to the web host The target directory
-	 * must start with this prefix
+	 * Sets the directory that is mapped to the web host The target directory must
+	 * start with this prefix
 	 *
 	 * @param prefix
 	 *            - directory prefix or null
@@ -491,8 +490,7 @@ public class FtpAccount {
 		String wh = getWebUrl();
 		if (wh != null) {
 			try {
-				IWebBrowser browser = PlatformUI.getWorkbench()
-						.getBrowserSupport().getExternalBrowser();
+				IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
 				browser.openURL(new URL(BatchUtilities.encodeBlanks(wh)));
 			} catch (PartInitException e) {
 				// ignore
@@ -532,8 +530,7 @@ public class FtpAccount {
 	public String getUrl() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("ftp://").append(getHost()).append(':').append( //$NON-NLS-1$
-				String.valueOf(getPort())).append('/')
-				.append(stripSlashes(getDirectory()));
+				String.valueOf(getPort())).append('/').append(stripSlashes(getDirectory()));
 		return sb.toString();
 	}
 
@@ -551,9 +548,8 @@ public class FtpAccount {
 			u = wh + '/' + file.getName();
 		} else {
 			StringBuilder sb = new StringBuilder();
-			sb.append(IFTPService.FTPSCHEME)
-					.append("://").append(getHost()).append('/').append( //$NON-NLS-1$
-							getDirectory()).append('/').append(file.getName());
+			sb.append(IFTPService.FTPSCHEME).append("://").append(getHost()).append('/').append( //$NON-NLS-1$
+					getDirectory()).append('/').append(file.getName());
 			u = sb.toString();
 		}
 		return BatchUtilities.encodeBlanks(u);
@@ -581,9 +577,7 @@ public class FtpAccount {
 				ftp.login(getLogin(), getPassword());
 			reply = ftp.getReplyCode();
 			if (!FTPReply.isPositiveCompletion(reply))
-				throw new IOException(NLS.bind(
-						Messages.FtpAccount_ftp_server_refused,
-						ftp.getReplyString()));
+				throw new IOException(NLS.bind(Messages.FtpAccount_ftp_server_refused, ftp.getReplyString()));
 			if (isPassiveMode())
 				ftp.enterLocalPassiveMode();
 			ftp.setFileType(FTP.BINARY_FILE_TYPE);
@@ -610,13 +604,12 @@ public class FtpAccount {
 	 * @param adaptable
 	 *            - adaptable instance. Must at least provide a Shell instance
 	 * @param deleteTransferred
-	 *            - true if transferred files shall be deleted on the client
-	 *            site
+	 *            - true if transferred files shall be deleted on the client site
 	 * @return number of transferred files or -1 in case of abort
 	 * @throws IOException
 	 */
-	public int transferFiles(File[] files, IProgressMonitor monitor,
-			IAdaptable adaptable, boolean deleteTransferred) throws IOException {
+	public int transferFiles(File[] files, IProgressMonitor monitor, IAdaptable adaptable, boolean deleteTransferred)
+			throws IOException {
 		filecount = countFiles(files);
 		monitor.beginTask(Messages.FtpAccount_uploading_files, filecount + 1);
 		FTPClient ftp = null;
@@ -624,33 +617,27 @@ public class FtpAccount {
 			ftp = login();
 			String dir = stripSlashes(getDirectory());
 			int n = 0;
-			boolean result = ftp.changeWorkingDirectory(Core
-					.encodeUrlSegment(dir));
+			boolean result = ftp.changeWorkingDirectory(Core.encodeUrlSegment(dir));
 			if (!result) {
 				if (monitor.isCanceled())
 					return -1;
 				boolean createDir = true;
 				IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 				if (errorHandler != null)
-					createDir = errorHandler.question(
-							Messages.FtpAccount_directory_does_not_exist,
-							Messages.FtpAccount_specified_dir_does_not_exist,
-							adaptable);
+					createDir = errorHandler.question(Messages.FtpAccount_directory_does_not_exist,
+							Messages.FtpAccount_specified_dir_does_not_exist, adaptable);
 				if (createDir) {
 					StringTokenizer st = new StringTokenizer(dir, "/"); //$NON-NLS-1$
 					while (st.hasMoreTokens()) {
 						String token = st.nextToken();
 						ftp.makeDirectory(token);
-						result = ftp.changeWorkingDirectory(Core
-								.encodeUrlSegment(token));
+						result = ftp.changeWorkingDirectory(Core.encodeUrlSegment(token));
 						if (!result)
-							throw new IOException(
-									Messages.FtpAccount_directory_creation_failed);
+							throw new IOException(Messages.FtpAccount_directory_creation_failed);
 					}
 
 				} else
-					throw new IOException(
-							Messages.FtpAccount_target_dir_does_not_exist);
+					throw new IOException(Messages.FtpAccount_target_dir_does_not_exist);
 			}
 			if (files != null) {
 				monitor.worked(1);
@@ -658,8 +645,7 @@ public class FtpAccount {
 				replaceAll = false;
 				if (monitor.isCanceled())
 					return -1;
-				n = transferFiles(ftp, files, monitor, adaptable,
-						deleteTransferred);
+				n = transferFiles(ftp, files, monitor, adaptable, deleteTransferred);
 			}
 
 			// transfer files
@@ -700,8 +686,7 @@ public class FtpAccount {
 	}
 
 	@SuppressWarnings("fallthrough")
-	private int transferFiles(FTPClient ftp, File[] files,
-			IProgressMonitor monitor, IAdaptable adaptable,
+	private int transferFiles(FTPClient ftp, File[] files, IProgressMonitor monitor, IAdaptable adaptable,
 			boolean deleteTransferred) throws IOException {
 		if (monitor.isCanceled())
 			return -1;
@@ -718,43 +703,33 @@ public class FtpAccount {
 			if (file.isDirectory()) {
 				if (ftpFile != null) {
 					if (!ftpFile.isDirectory())
-						throw new IOException(
-								NLS.bind(
-										Messages.FtpAccount_cannot_replace_file_with_subdir,
-										filename));
-					boolean result = ftp.changeWorkingDirectory(Core
-							.encodeUrlSegment(filename));
+						throw new IOException(NLS.bind(Messages.FtpAccount_cannot_replace_file_with_subdir, filename));
+					boolean result = ftp.changeWorkingDirectory(Core.encodeUrlSegment(filename));
 					if (!result)
-						throw new IOException(
-								NLS.bind(
-										Messages.FtpAccount_cannot_change_to_working_dir,
-										filename));
+						throw new IOException(NLS.bind(Messages.FtpAccount_cannot_change_to_working_dir, filename));
 					// System.out.println(filename + " is new directory"); //$NON-NLS-1$
 				} else {
 					ftp.makeDirectory(filename);
-					boolean result = ftp.changeWorkingDirectory(Core
-							.encodeUrlSegment(filename));
+					boolean result = ftp.changeWorkingDirectory(Core.encodeUrlSegment(filename));
 					if (!result)
-						throw new IOException(
-								Messages.FtpAccount_creation_of_subdir_failed);
+						throw new IOException(Messages.FtpAccount_creation_of_subdir_failed);
 					// System.out.println(filename + " is new directory"); //$NON-NLS-1$
 				}
 				if (monitor.isCanceled())
 					return -1;
-				int c = transferFiles(ftp, file.listFiles(), monitor,
-						adaptable, deleteTransferred);
-				if (c < 0)
-					return -1;
-				n += c;
+				File[] children = file.listFiles();
+				if (files != null) {
+					int c = transferFiles(ftp, children, monitor, adaptable, deleteTransferred);
+					if (c < 0)
+						return -1;
+					n += c;
+				}
 				ftp.changeToParentDirectory();
 				// System.out.println("Returned to parent directory"); //$NON-NLS-1$
 			} else {
 				if (ftpFile != null) {
 					if (ftpFile.isDirectory())
-						throw new IOException(
-								NLS.bind(
-										Messages.FtpAccount_cannot_replace_subdir_with_file,
-										filename));
+						throw new IOException(NLS.bind(Messages.FtpAccount_cannot_replace_subdir_with_file, filename));
 					if (skipAll) {
 						if (deleteTransferred)
 							file.delete();
@@ -764,28 +739,17 @@ public class FtpAccount {
 						if (monitor.isCanceled())
 							return -1;
 						int ret = 4;
-						IDbErrorHandler errorHandler = Core.getCore()
-								.getErrorHandler();
+						IDbErrorHandler errorHandler = Core.getCore().getErrorHandler();
 						if (errorHandler != null) {
-							String[] buttons = (filecount > 1) ? new String[] {
-									Messages.FtpAccount_overwrite,
-									Messages.FtpAccount_overwrite_all,
-									IDialogConstants.SKIP_LABEL,
-									Messages.FtpAccount_skip_all,
-									IDialogConstants.CANCEL_LABEL }
-									: new String[] {
-											Messages.FtpAccount_overwrite,
-											IDialogConstants.SKIP_LABEL,
+							String[] buttons = (filecount > 1)
+									? new String[] { Messages.FtpAccount_overwrite, Messages.FtpAccount_overwrite_all,
+											IDialogConstants.SKIP_LABEL, Messages.FtpAccount_skip_all,
+											IDialogConstants.CANCEL_LABEL }
+									: new String[] { Messages.FtpAccount_overwrite, IDialogConstants.SKIP_LABEL,
 											IDialogConstants.CANCEL_LABEL };
-							ret = errorHandler
-									.showMessageDialog(
-											Messages.FtpAccount_file_already_exists,
-											null,
-											NLS.bind(
-													Messages.FtpAccount_file_exists_overwrite,
-													filename),
-											MessageDialog.QUESTION, buttons, 0,
-											adaptable);
+							ret = errorHandler.showMessageDialog(Messages.FtpAccount_file_already_exists, null,
+									NLS.bind(Messages.FtpAccount_file_exists_overwrite, filename),
+									MessageDialog.QUESTION, buttons, 0, adaptable);
 						}
 						if (filecount > 1) {
 							switch (ret) {
@@ -818,12 +782,11 @@ public class FtpAccount {
 						}
 					}
 					ftp.deleteFile(Core.encodeUrlSegment(filename));
-					//					System.out.println(filename + " deleted"); //$NON-NLS-1$
+					// System.out.println(filename + " deleted"); //$NON-NLS-1$
 				}
-				try (BufferedInputStream in = new BufferedInputStream(
-						new FileInputStream(file))) {
+				try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
 					ftp.storeFile(Core.encodeUrlSegment(filename), in);
-					//					System.out.println(filename + " stored"); //$NON-NLS-1$
+					// System.out.println(filename + " stored"); //$NON-NLS-1$
 					n++;
 				} finally {
 					if (deleteTransferred)

@@ -51,7 +51,7 @@ import com.bdaum.zoom.ui.internal.widgets.SectionLayoutGroup;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class EditSlideDialog extends ZTitleAreaDialog {
+public class EditSlideDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final int RESET = 9999;
 	private final SlideImpl slide;
@@ -85,13 +85,6 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		updateButtons();
 	}
 
-	private final Listener listener = new Listener() {
-		@Override
-		public void handleEvent(Event event) {
-			updateButtons();
-		}
-	};
-
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -101,7 +94,7 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_title);
 		titleField = new Text(comp, SWT.BORDER);
 		titleField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 4, 1));
-		titleField.addListener(SWT.Modify, listener);
+		titleField.addListener(SWT.Modify, this);
 		if (slide.getAsset() != null) {
 			new Label(comp, SWT.NONE).setText(Messages.EditSlideDialog_image);
 			imageField = new Text(comp, SWT.BORDER | SWT.READ_ONLY);
@@ -171,7 +164,7 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		field.setMaximum(max);
 		field.setIncrement(5);
 		field.setPageIncrement(50);
-		field.addListener(SWT.Selection, listener);
+		field.addListener(SWT.Selection, this);
 		field.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 4, 1));
 		return field;
 	}
@@ -265,5 +258,11 @@ public class EditSlideDialog extends ZTitleAreaDialog {
 		Core.getCore().getDbManager().safeTransaction(null, slide);
 		super.okPressed();
 	}
+	
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
+	}
+
 
 }

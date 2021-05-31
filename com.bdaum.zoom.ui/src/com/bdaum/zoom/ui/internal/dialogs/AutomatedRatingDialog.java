@@ -51,7 +51,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class AutomatedRatingDialog extends ZTitleAreaDialog {
+public class AutomatedRatingDialog extends ZTitleAreaDialog implements ISelectionChangedListener {
 
 	private static final String SETTINGSID = "autoRating"; //$NON-NLS-1$
 	private static final String PROVIDER = "provider"; //$NON-NLS-1$
@@ -109,14 +109,7 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 					return super.getText(element);
 				}
 			});
-			providerViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-				@Override
-				public void selectionChanged(SelectionChangedEvent event) {
-					selectedProvider = (String) providerViewer.getStructuredSelection().getFirstElement();
-					updateModelViewer();
-					validate();
-				}
-			});
+			providerViewer.addSelectionChangedListener(this);
 		} else {
 			new Label(providerGroup, SWT.NONE).setText(ratingProviderNames[0]);
 			selectedProvider = ratingProviderIds[0];
@@ -134,12 +127,7 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 				return super.getText(element);
 			}
 		});
-		modelViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				validate();
-			}
-		});
+		modelViewer.addSelectionChangedListener(this);
 
 		CGroup optionsGroup = CGroup.create(composite, 1, Messages.AutomatedRatingDialog_options);
 		new Label(optionsGroup, SWT.NONE).setText(Messages.AutomatedRatingDialog_max_rating);
@@ -172,8 +160,8 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 			String selectedModel = (String) modelViewer.getStructuredSelection().getFirstElement();
 			if (selectedModel == null)
 				selectedModel = settings.get(MODEL);
-//			modelIds = aiService.getRatingModelIds(selectedProvider);
-//			modelLabels = aiService.getRatingModelLabels(selectedProvider);
+			// modelIds = aiService.getRatingModelIds(selectedProvider);
+			// modelLabels = aiService.getRatingModelLabels(selectedProvider);
 			modelViewer.setInput(modelIds);
 			if (selectedModel != null)
 				modelViewer.setSelection(new StructuredSelection(selectedModel));
@@ -184,8 +172,8 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 	protected void okPressed() {
 		saveValues();
 		OperationJob.executeOperation(new AutoRatingOperation(assets, selectedProvider,
-				(String) modelViewer.getStructuredSelection().getFirstElement(),
-				overwriteButton.getSelection(), maxField.getSelection()), this);
+				(String) modelViewer.getStructuredSelection().getFirstElement(), overwriteButton.getSelection(),
+				maxField.getSelection()), this);
 		super.okPressed();
 	}
 
@@ -207,6 +195,15 @@ public class AutomatedRatingDialog extends ZTitleAreaDialog {
 			errorMessage = Messages.AutomatedRatingDialog_select_sujet;
 		setErrorMessage(errorMessage);
 		getButton(OK).setEnabled(errorMessage == null);
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent e) {
+		if (e.getSource() == providerViewer) {
+			selectedProvider = (String) providerViewer.getStructuredSelection().getFirstElement();
+			updateModelViewer();
+		}
+		validate();
 	}
 
 }

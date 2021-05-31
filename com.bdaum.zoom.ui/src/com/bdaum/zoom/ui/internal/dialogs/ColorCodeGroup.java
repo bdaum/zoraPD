@@ -109,12 +109,11 @@ public class ColorCodeGroup extends Composite implements Listener {
 							ibounds.height, i * width, 0, width, height);
 				}
 			gc.drawImage(Icons.tri.getImage(), width * (code + 1), height);
-			break;
+			return;
 		case SWT.MouseDown:
 			code = e.x / width - 1;
 			canvas.redraw();
 			fireSelection(e);
-			break;
 		}
 		
 	}

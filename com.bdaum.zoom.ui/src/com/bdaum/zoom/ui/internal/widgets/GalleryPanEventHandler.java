@@ -19,6 +19,8 @@
  */
 package com.bdaum.zoom.ui.internal.widgets;
 
+import java.awt.event.InputEvent;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
@@ -26,6 +28,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.piccolo2d.PCamera;
 import org.piccolo2d.PNode;
 import org.piccolo2d.event.PInputEvent;
+import org.piccolo2d.event.PInputEventFilter;
 import org.piccolo2d.event.PInputEventListener;
 import org.piccolo2d.event.PPanEventHandler;
 import org.piccolo2d.extras.swt.PSWTText;
@@ -74,8 +77,32 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 		this.speed = this.sensitivity =sensitivity;
 		setMouseSpeed();
 		setAutopan(false);
+		setZoomkey();
 		InstanceScope.INSTANCE.getNode(UiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(this);
+	}
+	
+	private void setZoomkey() {
+		PInputEventFilter eventFilter = getEventFilter();
+		switch (Platform.getPreferencesService().getInt(UiActivator.PLUGIN_ID, PreferenceConstants.ZOOMKEY,
+				PreferenceConstants.ZOOMALT, null)) {
+		case PreferenceConstants.ZOOMRIGHT:
+			eventFilter.setAndMask(InputEvent.BUTTON1_MASK);
+			eventFilter.setNotMask(InputEvent.BUTTON3_MASK);
+			break;
+		case PreferenceConstants.ZOOMALT:
+			eventFilter.setAndMask(InputEvent.BUTTON1_MASK);
+			eventFilter.setNotMask(InputEvent.ALT_MASK);
+			break;
+		case PreferenceConstants.ZOOMSHIFT:
+			eventFilter.setAndMask(InputEvent.BUTTON1_MASK);
+			eventFilter.setNotMask(InputEvent.SHIFT_MASK);
+			break;
+		default:
+			eventFilter.setAndMask(0);
+			eventFilter.setNotMask(0);
+			break;
+		}
 	}
 
 	private void setMouseSpeed() {
@@ -129,7 +156,9 @@ public class GalleryPanEventHandler extends PPanEventHandler implements
 	}
 
 	public void preferenceChange(PreferenceChangeEvent event) {
-		if (event.getKey().equals(PreferenceConstants.MOUSE_SPEED))
+		if (event.getKey().equals(PreferenceConstants.ZOOMKEY))
+			setZoomkey();
+		else if (event.getKey().equals(PreferenceConstants.MOUSE_SPEED))
 			setMouseSpeed();
 	}
 

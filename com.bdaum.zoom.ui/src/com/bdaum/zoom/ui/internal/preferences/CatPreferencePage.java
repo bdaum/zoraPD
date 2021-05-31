@@ -22,11 +22,11 @@ package com.bdaum.zoom.ui.internal.preferences;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -36,29 +36,15 @@ import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.dialogs.EditMetaDialog;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 
-public class CatPreferencePage extends AbstractPreferencePage {
+public class CatPreferencePage extends AbstractPreferencePage implements Listener {
 
 	@Override
 	protected void createPageContents(Composite composite) {
 		setHelp(HelpContextIds.CAT_PREFERENCE_PAGE);
-		Label label = new Label(composite, SWT.WRAP);
-		label.setText(Messages.getString("CatPreferencePage.catalog_settings_apply_to_specific")); //$NON-NLS-1$
+		new Label(composite, SWT.WRAP).setText(Messages.getString("CatPreferencePage.catalog_settings_apply_to_specific")); //$NON-NLS-1$
 		Button button = new Button(composite, SWT.PUSH);
 		button.setText(Messages.getString("CatPreferencePage.edit_cat_settings")); //$NON-NLS-1$
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-				if (activeWorkbenchWindow != null) {
-					final IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
-					if (activePage != null)
-						BusyIndicator.showWhile(activeWorkbenchWindow.getShell().getDisplay(), () -> {
-							new EditMetaDialog(getShell(), activePage, Core.getCore().getDbManager(), false, null)
-									.open();
-						});
-				}
-			}
-		});
+		button.addListener(SWT.Selection, this);
 		fillValues();
 	}
 
@@ -75,6 +61,18 @@ public class CatPreferencePage extends AbstractPreferencePage {
 	@Override
 	protected void doPerformOk() {
 		// do nothing
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		IWorkbenchWindow activeWorkbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (activeWorkbenchWindow != null) {
+			final IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+			if (activePage != null)
+				BusyIndicator.showWhile(activeWorkbenchWindow.getShell().getDisplay(), () -> {
+					new EditMetaDialog(getShell(), activePage, Core.getCore().getDbManager(), false, null).open();
+				});
+		}
 	}
 
 }

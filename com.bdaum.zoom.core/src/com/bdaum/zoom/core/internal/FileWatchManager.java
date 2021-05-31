@@ -23,13 +23,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.ListenerList;
@@ -77,7 +76,7 @@ public class FileWatchManager implements IFileWatcher {
 	private int todoKind;
 	private Map<File, WatchedFolder> observedFolders = new Hashtable<File, WatchedFolder>(5);
 	private String defaultWatchFilters;
-	protected Set<File> previousFiles = Collections.synchronizedSet(new HashSet<File>());
+	protected Set<File> previousFiles = ConcurrentHashMap.newKeySet(3);
 	protected IRecipeDetector previousDetector;
 	protected int previousKind;
 
@@ -99,11 +98,11 @@ public class FileWatchManager implements IFileWatcher {
 						if (!paused.isEmpty() || isFileIgnored(file))
 							return;
 						fileChangedDaemon.cancel();
-						Set<File> imageFiles = new HashSet<File>(3);
+						Set<File> imageFiles = ConcurrentHashMap.newKeySet(3);
 						IRecipeDetector recipeDetector = findImageFiles(findRecipeDetectors(file), file, imageFiles);
 						if (kind == previousKind || previousKind == CREATED && kind == MODIFIED)
 							kind = previousKind;
-							previousFiles.removeAll(imageFiles);
+						previousFiles.removeAll(imageFiles);
 						processFileChanges(null);
 						previousKind = kind;
 						previousFiles = imageFiles;
@@ -142,13 +141,15 @@ public class FileWatchManager implements IFileWatcher {
 		if (filename.toLowerCase().endsWith(".xmp")) { //$NON-NLS-1$
 			filename = filename.substring(0, filename.length() - 4);
 			File folder = file.getParentFile();
-			for (File member : folder.listFiles(mediaFilter))
-				if (member.isFile()) {
-					String mname = member.getName();
-					if (mname.startsWith(filename)
-							&& (filename.length() == mname.length() || mname.lastIndexOf('.') == filename.length()))
-						result.add(member);
-				}
+			File[] members = folder.listFiles(mediaFilter);
+			if (members != null)
+				for (File member : members)
+					if (member.isFile()) {
+						String mname = member.getName();
+						if (mname.startsWith(filename)
+								&& (filename.length() == mname.length() || mname.lastIndexOf('.') == filename.length()))
+							result.add(member);
+					}
 			return null;
 		}
 		if (recipeDetectors != null) {
@@ -364,7 +365,7 @@ public class FileWatchManager implements IFileWatcher {
 		ignore(target, opId);
 		source.copy(target, monitor);
 	}
-	
+
 	public void dispose() {
 		fileChangedDaemon.cancel();
 		if (fileMonitor != null)

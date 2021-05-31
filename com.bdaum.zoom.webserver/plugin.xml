@@ -55,5 +55,11 @@
             file="index.xml">
       </index>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.webserver.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

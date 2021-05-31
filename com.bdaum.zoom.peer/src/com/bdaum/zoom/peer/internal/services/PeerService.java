@@ -30,11 +30,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -206,8 +206,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#select(com.bdaum.zoom.
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#select(com.bdaum.zoom.
 	 * cat.model.group.SmartCollection, com.bdaum.zoom.core.IAssetFilter)
 	 */
 	public String select(SmartCollection scoll, IAssetFilter[] assetFilters) {
@@ -230,8 +229,7 @@ public class PeerService implements IPeerService, Serializable {
 	 * (nicht-Javadoc)
 	 *
 	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#getSelect(java.lang.String
-	 * )
+	 * com.bdaum.zoom.core.internal.peer.IPeerService#getSelect(java.lang.String )
 	 */
 	@SuppressWarnings("unchecked")
 	public Collection<? extends Asset> getSelect(String ticket) {
@@ -251,8 +249,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#hasPeerPeerProviders()
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#hasPeerPeerProviders()
 	 */
 	public boolean hasPeerPeerProviders() {
 		return PeerActivator.getDefault().hasPeerProviders();
@@ -284,8 +281,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#isOwnedByPeer(java.lang
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#isOwnedByPeer(java.lang
 	 * .String)
 	 */
 	public boolean isOwnedByPeer(String assetId) {
@@ -295,8 +291,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#getAssetOrigin(java.lang
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#getAssetOrigin(java.lang
 	 * .String)
 	 */
 	public AssetOrigin getAssetOrigin(String assetId) {
@@ -306,8 +301,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#scheduleTransferJob(com
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#scheduleTransferJob(com
 	 * .bdaum.zoom.cat.model.asset.Asset,
 	 * com.bdaum.zoom.core.internal.peer.AssetOrigin)
 	 */
@@ -341,8 +335,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (non-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#obtainAsset(java.lang.
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#obtainAsset(java.lang.
 	 * String, java.io.File, java.lang.String)
 	 */
 	public Asset obtainAsset(String peer, File catFile, String assetId)
@@ -358,8 +351,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#getPeerProvider(java.lang
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#getPeerProvider(java.lang
 	 * .String)
 	 */
 	public IPeerProvider getPeerProvider(String location) throws ConnectionLostException {
@@ -470,13 +462,12 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#select(com.bdaum.zoom.
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#select(com.bdaum.zoom.
 	 * cat.model.group.SmartCollection, com.bdaum.zoom.core.IAssetFilter)
 	 */
 	public String askForValueProposals(String field, String subfield) {
 		String ticket = PEER_SELECT + (counter++);
-		Set<String> proposals = Collections.synchronizedSet(new HashSet<String>(100));
+		Set<String> proposals = ConcurrentHashMap.newKeySet(100);
 		responseMap.put(ticket, proposals);
 		IPeerProvider[] peerProviders = PeerActivator.getDefault().getPeerProviders();
 		Thread[] jobs = new ProposalSelectTask[peerProviders.length];
@@ -492,8 +483,7 @@ public class PeerService implements IPeerService, Serializable {
 	 * (nicht-Javadoc)
 	 *
 	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#getSelect(java.lang.String
-	 * )
+	 * com.bdaum.zoom.core.internal.peer.IPeerService#getSelect(java.lang.String )
 	 */
 	@SuppressWarnings("unchecked")
 	public Set<String> getProposals(String ticket) {
@@ -511,8 +501,7 @@ public class PeerService implements IPeerService, Serializable {
 	/*
 	 * (nicht-Javadoc)
 	 *
-	 * @see
-	 * com.bdaum.zoom.core.internal.peer.IPeerService#discardProposals(java.
+	 * @see com.bdaum.zoom.core.internal.peer.IPeerService#discardProposals(java.
 	 * lang.String)
 	 */
 	public void discardTask(String ticket) {
@@ -525,8 +514,7 @@ public class PeerService implements IPeerService, Serializable {
 
 	public String askForTagCloud(int occurences) {
 		String ticket = PEER_SELECT + (counter++);
-		Map<String, List<ScoredString>> tags = Collections
-				.synchronizedMap(new HashMap<String, List<ScoredString>>(300));
+		Map<String, List<ScoredString>> tags = new ConcurrentHashMap<String, List<ScoredString>>(300);
 		responseMap.put(ticket, tags);
 		IPeerProvider[] peerProviders = PeerActivator.getDefault().getPeerProviders();
 		Thread[] jobs = new TagCloudTask[peerProviders.length];

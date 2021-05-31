@@ -15,13 +15,12 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2011-2017 Berthold Daum  
+ * (c) 2011-2021 Berthold Daum  
  */
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -31,7 +30,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -42,8 +40,6 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -55,7 +51,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.core.QueryField;
-import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.SortColumnManager;
 import com.bdaum.zoom.ui.internal.UiActivator;
@@ -67,10 +62,10 @@ import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 import com.bdaum.zoom.ui.internal.widgets.FilterField;
 
-public class CodesDialog extends ZTitleAreaDialog {
-	private static final Topic[] EMPTYTOPICS = new Topic[0];
+public class CodesDialog extends ZTitleAreaDialog implements ISelectionChangedListener, IDoubleClickListener, Listener {
+	
 
-	private final class TopicFilter extends ViewerFilter {
+	public final class TopicFilter extends ViewerFilter {
 		private final boolean deep;
 		private final Set<String> filterExclusions;
 
@@ -87,67 +82,6 @@ public class CodesDialog extends ZTitleAreaDialog {
 		}
 	}
 
-	public class TopicContentProvider implements ITreeContentProvider {
-
-		public void dispose() {
-			// do nothing
-		}
-
-		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-			// do nothing
-		}
-
-		public Object[] getElements(Object inputElement) {
-			if (inputElement instanceof Topic[])
-				return (Topic[]) inputElement;
-			return EMPTYTOPICS;
-		}
-
-		public Object[] getChildren(Object parentElement) {
-			if (parentElement instanceof Topic) {
-				List<Topic> subTopics = ((Topic) parentElement).getSubTopics();
-				if (subTopics != null)
-					return subTopics.toArray();
-			}
-			return EMPTYTOPICS;
-		}
-
-		public Object getParent(Object element) {
-			if (element instanceof Topic)
-				return ((Topic) element).getParent();
-			return null;
-		}
-
-		public boolean hasChildren(Object element) {
-			if (element instanceof Topic)
-				return ((Topic) element).getSubTopics() != null;
-			return false;
-		}
-
-	}
-
-	public class TopicLabelProvider extends ZColumnLabelProvider {
-		private final int column;
-
-		public TopicLabelProvider(int column) {
-			this.column = column;
-		}
-
-		@Override
-		public String getText(Object element) {
-			if (element instanceof Topic) {
-				switch (column) {
-				case 0:
-					return ((Topic) element).getCode();
-				case 2:
-					return ((Topic) element).getDescription();
-				}
-			}
-			return element.toString();
-		}
-
-	}
-
 	private String result;
 	private ColumnViewer topicViewer;
 	private final String dflt;
@@ -157,22 +91,6 @@ public class CodesDialog extends ZTitleAreaDialog {
 	protected Topic selectedTopic;
 	private final Set<String> exclusions;
 	private Combo customField;
-
-	private IDoubleClickListener doubleClickListener = new IDoubleClickListener() {
-		public void doubleClick(DoubleClickEvent event) {
-			okPressed();
-		}
-	};
-
-	private ISelectionChangedListener selectionChangedListener = new ISelectionChangedListener() {
-		public void selectionChanged(SelectionChangedEvent event) {
-			IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-			if (!selection.isEmpty())
-				selectedTopic = ((Topic) selection.getFirstElement());
-			updateFields();
-			updateButtons();
-		}
-	};
 
 	public CodesDialog(Shell parentShell, QueryField qfield, String dflt, String[] exclusions) {
 		super(parentShell);
@@ -200,11 +118,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 		composite.setLayout(new GridLayout(2, false));
 		filterField = new FilterField(composite);
 		filterField.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
-		filterField.addListener(SWT.Modify, new Listener() {
-			public void handleEvent(Event e) {
-				updateViewers();
-			}
-		});
+		filterField.addListener(SWT.Modify, this);
 		if (parser.hasRecentTopics()) {
 			Label recentLabel = new Label(composite, SWT.NONE);
 			recentLabel.setText(Messages.CodesDialog_recent_topics);
@@ -220,12 +134,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 			customField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			customField.setItems(parser.getCustomTopics());
 			customField.setText(""); //$NON-NLS-1$
-			customField.addModifyListener(new ModifyListener() {
-				@Override
-				public void modifyText(ModifyEvent e) {
-					updateButtons();
-				}
-			});
+			customField.addListener(SWT.Modify, this);
 		}
 		topicViewer.getControl().setFocus();
 		return area;
@@ -263,8 +172,8 @@ public class CodesDialog extends ZTitleAreaDialog {
 			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 1);
 		recentViewer.setComparator(ZViewerComparator.INSTANCE);
 		recentViewer.setFilters(new ViewerFilter[] { new TopicFilter(false, exclusions) });
-		recentViewer.addSelectionChangedListener(selectionChangedListener);
-		recentViewer.addDoubleClickListener(doubleClickListener);
+		recentViewer.addSelectionChangedListener(this);
+		recentViewer.addDoubleClickListener(this);
 		ZColumnViewerToolTipSupport.enableFor(recentViewer);
 	}
 
@@ -279,7 +188,7 @@ public class CodesDialog extends ZTitleAreaDialog {
 			treeViewer.getTree().setLinesVisible(true);
 			treeViewer.getTree().setHeaderVisible(true);
 			if (!parser.isByName())
-				createTreeColumn(treeViewer, 120, Messages.CodesDialog_code, 0);
+				createTreeColumn(treeViewer, 100, Messages.CodesDialog_code, 0);
 			createTreeColumn(treeViewer, 150, Messages.CodesDialog_name, 1);
 			createTreeColumn(treeViewer, 300, Messages.CodesDialog_explanation, 2);
 			UiUtilities.installDoubleClickExpansion(treeViewer);
@@ -291,10 +200,10 @@ public class CodesDialog extends ZTitleAreaDialog {
 			tableViewer.getTable().setLinesVisible(true);
 			tableViewer.getTable().setHeaderVisible(true);
 			if (!parser.isByName())
-				createTableColumn(tableViewer, 120, Messages.CodesDialog_code, 0);
+				createTableColumn(tableViewer, 100, Messages.CodesDialog_code, 0);
 			createTableColumn(tableViewer, 150, Messages.CodesDialog_name, 1);
 			createTableColumn(tableViewer, 300, Messages.CodesDialog_explanation, 2);
-			tableViewer.addDoubleClickListener(doubleClickListener);
+			tableViewer.addDoubleClickListener(this);
 			topicViewer = tableViewer;
 		}
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
@@ -307,18 +216,18 @@ public class CodesDialog extends ZTitleAreaDialog {
 			new SortColumnManager(recentViewer, new int[] { SWT.UP, SWT.UP, SWT.UP }, 1);
 		topicViewer.setComparator(ZViewerComparator.INSTANCE);
 		topicViewer.setFilters(new ViewerFilter[] { new TopicFilter(true, exclusions) });
-		topicViewer.addSelectionChangedListener(selectionChangedListener);
+		topicViewer.addSelectionChangedListener(this);
 		ZColumnViewerToolTipSupport.enableFor(topicViewer);
 	}
 
-	private void createTreeColumn(TreeViewer treeViewer, int width, String text, int index) {
+	private static void createTreeColumn(TreeViewer treeViewer, int width, String text, int index) {
 		TreeViewerColumn col = new TreeViewerColumn(treeViewer, SWT.NONE);
 		col.getColumn().setWidth(width);
 		col.getColumn().setText(text);
 		col.setLabelProvider(new TopicLabelProvider(index));
 	}
 
-	private void createTableColumn(TableViewer tableViewer, int width, String text, int index) {
+	private static void createTableColumn(TableViewer tableViewer, int width, String text, int index) {
 		TableViewerColumn col = new TableViewerColumn(tableViewer, SWT.NONE);
 		col.getColumn().setWidth(width);
 		col.getColumn().setText(text);
@@ -365,6 +274,27 @@ public class CodesDialog extends ZTitleAreaDialog {
 
 	public String getResult() {
 		return result;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+		if (!selection.isEmpty())
+			selectedTopic = ((Topic) selection.getFirstElement());
+		updateFields();
+		updateButtons();
+	}
+	
+	public void doubleClick(DoubleClickEvent event) {
+		okPressed();
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == customField)
+			updateButtons();
+		else
+			updateViewers();
+		
 	}
 
 }

@@ -153,12 +153,12 @@ public class AddAlbumOperation extends DbOperation {
 							if (albums == null || newAlbums.length != albums.length) {
 								asset.setAlbum(newAlbums);
 								toBeStored.add(asset);
-								List<String> assetIds = tempAlbum.getAsset();
-								if (assetIds == null)
-									assetIds = Collections.singletonList(assetId);
-								else if (!assetIds.contains(assetId))
-									assetIds.add(assetId);
 							}
+							List<String> assetIds = tempAlbum.getAsset();
+							if (assetIds == null)
+								tempAlbum.setAsset(assetIds = new ArrayList<String>());
+							if (!assetIds.contains(assetId))
+								assetIds.add(assetId);
 							String[] persons = asset.getPerson();
 							if (tempAlbum.getAlbum() && tempAlbum.getSystem() && persons != null
 									&& persons.length > 0) {

@@ -95,7 +95,7 @@ public interface IZoomCommandIds {
 
 	String ShowInFolder = "com.bdaum.zoom.ui.command.showInFolder"; //$NON-NLS-1$
 
-	String ShowInTimeline = "com.bdaum.zoom.ui.command.showInTimkeline"; //$NON-NLS-1$
+	String ShowInTimeline = "com.bdaum.zoom.ui.command.showInTimeline"; //$NON-NLS-1$
 
 	String ShowInMap = "com.bdaum.zoom.ui.command.showInMap"; //$NON-NLS-1$
 

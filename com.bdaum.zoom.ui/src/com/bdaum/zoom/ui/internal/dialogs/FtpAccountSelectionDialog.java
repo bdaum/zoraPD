@@ -39,7 +39,7 @@ import com.bdaum.zoom.net.core.ftp.FtpAccount;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 
-public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
+public class FtpAccountSelectionDialog extends ZTitleAreaDialog implements ISelectionChangedListener {
 
 	private TableViewer ftpViewer;
 	private FtpAccount account;
@@ -79,11 +79,7 @@ public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 			}
 		});
 		ftpViewer.setComparator(ZViewerComparator.INSTANCE);
-		ftpViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		ftpViewer.addSelectionChangedListener(this);
 		List<FtpAccount> ftpAccounts = FtpAccount.getAllAccounts();
 		ftpViewer.setInput(ftpAccounts);
 		return area;
@@ -98,6 +94,10 @@ public class FtpAccountSelectionDialog extends ZTitleAreaDialog {
 
 	public FtpAccount getResult() {
 		return account;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 }

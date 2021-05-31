@@ -98,10 +98,10 @@ public class CatalogContentProvider implements ITreeContentProvider {
 	}
 
 	protected Object[] getChildren(Object parent, String annotation) {
-		if (parent instanceof GroupImpl) {
+		if (parent instanceof Group) {
 			List<IIdentifiableObject> children = new ArrayList<>();
 			Set<String> ids = new HashSet<String>();
-			GroupImpl group = (GroupImpl) parent;
+			Group group = (Group) parent;
 			String groupId = group.getStringId();
 			if (group.getSubgroup() != null)
 				children.addAll(group.getSubgroup());

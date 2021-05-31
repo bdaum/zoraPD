@@ -3,6 +3,9 @@
    <context id="peerDefinitions_page_context" title="Network user preferences">
       <description>Network user preferences</description>
       <topic href="html/networkPrefs.html" label="Network user preferences"/>
+      <topic href="html/networkConcepts.html" label="Network concepts"/>
+      <topic href="html/peerDef.html" label="Peer definition"/>
+      <topic href="html/sharedCatalogs.html" label="Shared catalogs"/>
    </context>
    <context id="peerDefinitions_dialog_context" title="Define peer address">
       <description>Define peer address</description>

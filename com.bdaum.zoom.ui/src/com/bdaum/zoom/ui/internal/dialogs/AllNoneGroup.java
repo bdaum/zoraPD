@@ -20,11 +20,11 @@
 package com.bdaum.zoom.ui.internal.dialogs;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Listener;
 
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 
@@ -39,24 +39,21 @@ public class AllNoneGroup extends Composite {
 	 * @param parent
 	 *            - parent composite
 	 * @param selectionListener
-	 *            - required selection listener. event.widget.getData() is
-	 *            either ALL or NONE
+	 *            - required selection listener. event.widget.getData() is either
+	 *            ALL or NONE
 	 */
-	public AllNoneGroup(Composite parent,
-			final SelectionListener selectionListener) {
+	public AllNoneGroup(Composite parent, final Listener selectionListener) {
 		super(parent, SWT.NONE);
 		setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
 		GridLayout layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		setLayout(layout);
-		Button selectAllButton = WidgetFactory.createPushButton(this,
-				Messages.AllNoneGroup_selectAll, SWT.BEGINNING);
+		Button selectAllButton = WidgetFactory.createPushButton(this, Messages.AllNoneGroup_selectAll, SWT.BEGINNING);
 		selectAllButton.setData(ALL);
-		selectAllButton.addSelectionListener(selectionListener);
-		Button selectNoneButton = WidgetFactory.createPushButton(this,
-				Messages.AllNoneGroup_selectNone, SWT.BEGINNING);
+		selectAllButton.addListener(SWT.Selection, selectionListener);
+		Button selectNoneButton = WidgetFactory.createPushButton(this, Messages.AllNoneGroup_selectNone, SWT.BEGINNING);
 		selectNoneButton.setData(NONE);
-		selectNoneButton.addSelectionListener(selectionListener);
+		selectNoneButton.addListener(SWT.Selection, selectionListener);
 	}
 
 }

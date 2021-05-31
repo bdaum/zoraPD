@@ -1,3 +1,22 @@
+/*
+ * This file is part of the ZoRa project: http://www.photozora.org.
+ *
+ * ZoRa is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * ZoRa is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ZoRa; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c) 2009-2021 Berthold Daum  
+ */
 package com.bdaum.zoom.email.internal;
 
 import java.io.BufferedWriter;
@@ -8,42 +27,166 @@ import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.UUID;
+
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.program.Program;
 
+import com.bdaum.zoom.common.CommonUtilities;
 import com.bdaum.zoom.core.Core;
 import com.itextpdf.text.pdf.codec.Base64;
 
 public abstract class AbstractMailer implements IMailer {
 
-	private String ADD_ATTACHMENTS_MANUALLY = Messages.IMailer_adding_attachments;
+	private static final String ADD_ATTACHMENTS_MANUALLY = Messages.IMailer_adding_attachments;
+
+	public Session getSession(Properties properties) {
+		Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
+			@Override
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(properties.getProperty("mail.smtp.user"), //$NON-NLS-1$
+						properties.getProperty("mail.smtp.password")); //$NON-NLS-1$
+			}
+		});
+		return session;
+	}
+
+	private Properties getProperties() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		Properties props = new Properties();
+		props.put("mail.transport.protocol", "smtp"); //$NON-NLS-1$//$NON-NLS-2$
+		props.put("mail.smtp.socketFactory", "javax.net.ssl.SSLSocketFactory"); //$NON-NLS-1$//$NON-NLS-2$
+		props.put("mail.smtp.socketFactory.fallback", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+		String port = String.valueOf(preferenceStore.getInt(PreferenceConstants.PORT));
+		props.put("mail.smtp.port", port); //$NON-NLS-1$
+		props.put("mail.smtp.socketFactory.port", port); //$NON-NLS-1$
+		props.put("mail.smtp.ssl.enable", String //$NON-NLS-1$
+				.valueOf(PreferenceConstants.SSL.equals(preferenceStore.getString(PreferenceConstants.SECURITY))));
+		props.put("mail.smtp.starttls.enable", String //$NON-NLS-1$
+				.valueOf(PreferenceConstants.STARTTLS.equals(preferenceStore.getString(PreferenceConstants.SECURITY))));
+		props.put("mail.smtp.host", preferenceStore.getString(PreferenceConstants.HOSTURL)); //$NON-NLS-1$
+		props.put("mail.smtp.auth", "true"); //$NON-NLS-1$//$NON-NLS-2$
+		props.put("mail.smtp.user", preferenceStore.getString(PreferenceConstants.USER)); //$NON-NLS-1$
+		props.put("mail.smtp.password", CommonUtilities.decode(preferenceStore.getString(PreferenceConstants.PASSWORD))); //$NON-NLS-1$
+		props.put("mail.smtp.from", preferenceStore.getString(PreferenceConstants.SENDER)); //$NON-NLS-1$
+		return props;
+	}
 
 	public IStatus sendMail(String label, List<String> to, List<String> cc, List<String> bcc, String subject,
-			String message, List<String> attachments, List<String> originalNames) throws Exception {
+			String message, List<String> attachments, List<String> originalNames, String vcard) throws Exception {
 		MultiStatus status = new MultiStatus(Activator.PLUGIN_ID, 0, Messages.AbstractMailer_send_mail, null);
-		if (attachments == null || attachments.isEmpty())
-			sendMailManually(label, to, cc, bcc, subject, message, null, status);
-		else {
-			List<String> paths = new ArrayList<String>(attachments.size());
-			for (String uri : attachments) {
-				try {
-					paths.add(new File(new URI(uri)).getAbsolutePath());
-				} catch (URISyntaxException e) {
-					// should never happen
-				}
+		if (Activator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.PLATFORMCLIENT)) {
+			if (attachments == null || attachments.isEmpty())
+				sendMailManually(label, to, cc, bcc, subject, message, null, status);
+			else {
+				List<String> paths = new ArrayList<String>(attachments.size());
+				for (String uri : attachments)
+					try {
+						paths.add(new File(new URI(uri)).getAbsolutePath());
+					} catch (URISyntaxException e) {
+						// should never happen
+					}
+				if (!sendMailWithAttachments(label, to, cc, bcc, subject, message, paths, originalNames)
+						&& !exportToEml(label, to, cc, bcc, subject, message, attachments, originalNames, status))
+					sendMailManually(label, to, cc, bcc, subject, message, paths, status);
 			}
-			if (!sendMailWithAttachments(label, to, cc, bcc, subject, message, paths, originalNames)
-					&& !exportToEml(label, to, cc, bcc, subject, message, attachments, originalNames, status))
-				sendMailManually(label, to, cc, bcc, subject, message, paths, status);
+		} else {
+			Properties properties = getProperties();
+			postMail(getSession(properties), properties, to, cc, bcc, subject, message, attachments, originalNames,
+					vcard, status);
 		}
 		return status;
+	}
+
+	public static void postMail(Session session, Properties properties, List<String> to, List<String> cc,
+			List<String> bcc, String subject, String message, List<String> attachments, List<String> originalNames,
+			String vcard, MultiStatus status) {
+		Message msg = new MimeMessage(session);
+		InternetAddress[] addressTo = new InternetAddress[to.size()];
+		try {
+			for (int i = 0; i < addressTo.length; i++)
+				addressTo[i] = new InternetAddress(to.get(i));
+			msg.setRecipients(Message.RecipientType.TO, addressTo);
+			InternetAddress[] addressCc = new InternetAddress[cc.size()];
+			for (int i = 0; i < addressCc.length; i++)
+				addressCc[i] = new InternetAddress(cc.get(i));
+			msg.setRecipients(Message.RecipientType.CC, addressTo);
+			InternetAddress[] addressBcc = new InternetAddress[bcc.size()];
+			for (int i = 0; i < addressBcc.length; i++)
+				addressBcc[i] = new InternetAddress(bcc.get(i));
+			msg.setRecipients(Message.RecipientType.BCC, addressTo);
+			String from = properties.getProperty("mail.smtp.from"); //$NON-NLS-1$
+			if (from != null && !from.isEmpty())
+				msg.setFrom(new InternetAddress(from));
+			msg.setSubject(subject);
+			msg.setSentDate(new Date());
+			if ((attachments == null || attachments.isEmpty()) && (vcard == null || vcard.isEmpty()))
+				msg.setContent(message, "text/plain; charset=ISO-8859-1"); //$NON-NLS-1$
+			else {
+				Multipart multipart = new MimeMultipart();
+				BodyPart messageBodyPart = new MimeBodyPart();
+				messageBodyPart.setContent(message, "text/plain; charset=ISO-8859-1"); //$NON-NLS-1$
+				multipart.addBodyPart(messageBodyPart);
+				int i = 0;
+				if (attachments != null)
+					for (String attachment : attachments) {
+						MimeBodyPart attachmentPart = new MimeBodyPart();
+						try {
+							URI uri = new URI(attachment);
+							File file = new File(uri);
+							String filename = originalNames != null && originalNames.size() > i ? originalNames.get(i)
+									: file.getName();
+							attachmentPart.attachFile(file);
+							attachmentPart.setFileName(filename);
+							multipart.addBodyPart(attachmentPart);
+						} catch (IOException e) {
+							status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+									NLS.bind(Messages.AbstractMailer_io_error, attachment), e));
+						} catch (URISyntaxException e) {
+							status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+									NLS.bind(Messages.AbstractMailer_bad_uri_for_mail, attachment), e));
+						}
+						++i;
+					}
+				if (vcard != null && !vcard.isEmpty()) {
+					MimeBodyPart attachmentPart = new MimeBodyPart();
+					try {
+						attachmentPart.attachFile(new File(vcard));
+						multipart.addBodyPart(attachmentPart);
+					} catch (IOException e) {
+						status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+								Messages.AbstractMailer_io_error_vcard, e));
+					}
+				}
+				msg.setContent(multipart);
+			}
+			Transport.send(msg, properties.getProperty("mail.smtp.user"), properties.getProperty("mail.smtp.password")); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (AddressException e) {
+			status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.AbstractMailer_address_error, e));
+		} catch (MessagingException e) {
+			status.add(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.AbstractMailer_messaging_error, e));
+		}
 	}
 
 	private boolean exportToEml(String label, List<String> to, List<String> cc, List<String> bcc, String subject,
@@ -91,15 +234,13 @@ public abstract class AbstractMailer implements IMailer {
 					}
 				writer.write("\n--" + boundary + "--\n"); //$NON-NLS-1$//$NON-NLS-2$
 			}
-			if (!Program.launch(eml.getAbsolutePath())) {
-				eml.delete();
-				return false;
-			}
-			return true;
+			if (Program.launch(eml.getAbsolutePath()))
+				return true;
+			eml.delete();
 		} catch (IOException e) {
 			addError(status, Messages.AbstractMailer_io_error_creating_eml, e);
-			return false;
 		}
+		return false;
 	}
 
 	private void sendMailManually(String label, List<String> to, List<String> cc, List<String> bcc, String subject,
@@ -109,13 +250,16 @@ public abstract class AbstractMailer implements IMailer {
 		appendUriQuerySegment("cc", cc, mailto); //$NON-NLS-1$
 		appendUriQuerySegment("bcc", bcc, mailto); //$NON-NLS-1$
 		appendUriQuerySegment("subject", subject, mailto); //$NON-NLS-1$
-		String body = message;
+		StringBuilder body = new StringBuilder(200);
+		if (message != null)
+			body.append(message);
 		if (attachments != null) {
-			body = body == null ? ADD_ATTACHMENTS_MANUALLY + "\n    " //$NON-NLS-1$
-					: body + "\n\n" + ADD_ATTACHMENTS_MANUALLY + "\n    "; //$NON-NLS-1$ //$NON-NLS-2$
-			body += Core.toStringList(attachments.toArray(), "\n    "); //$NON-NLS-1$
+			if (message != null)
+				body.append("\n\n"); //$NON-NLS-1$
+			body.append(ADD_ATTACHMENTS_MANUALLY).append("\n    ") //$NON-NLS-1$
+					.append(Core.toStringList(attachments.toArray(), "\n    ")); //$NON-NLS-1$
 		}
-		appendUriQuerySegment("body", body, mailto); //$NON-NLS-1$
+		appendUriQuerySegment("body", body.toString(), mailto); //$NON-NLS-1$
 		try {
 			sendDesktopMail(mailto, attachments);
 		} catch (Exception e1) {
@@ -177,12 +321,12 @@ public abstract class AbstractMailer implements IMailer {
 							int q = Math.min(token.length(), 72 - cnt);
 							sb.append(token.substring(0, q));
 							token = token.substring(q);
-							if (token.isEmpty())
+							if (token.isEmpty()) {
 								cnt += q;
-							else {
-								sb.append('\n');
-								cnt = 0;
+								continue;
 							}
+							sb.append('\n');
+							cnt = 0;
 						}
 					else {
 						sb.append('\n').append(token);

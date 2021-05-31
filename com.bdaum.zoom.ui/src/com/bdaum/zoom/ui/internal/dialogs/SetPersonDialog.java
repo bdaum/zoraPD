@@ -39,14 +39,14 @@ import org.eclipse.jface.viewers.deferred.DeferredContentProvider;
 import org.eclipse.jface.viewers.deferred.SetModel;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.asset.RegionImpl;
@@ -68,7 +68,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
-public class SetPersonDialog extends ZTitleAreaDialog {
+public class SetPersonDialog extends ZTitleAreaDialog implements ISelectionChangedListener, Listener {
 
 	private static final int NEWALBUM = 9999;
 	private static final int DELETEREGION = 9998;
@@ -79,9 +79,7 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 	private TableViewer viewer;
 	private String assignedAlbum;
 	private Map<String, Image> faces = new HashMap<>();
-	private boolean deleteRegion = false;
-	protected boolean cntrlDwn;
-	private boolean deleteAllRegions;
+	protected boolean cntrlDwn, deleteAllRegions, deleteRegion;
 	private int regionCount;
 
 	public SetPersonDialog(Shell parentShell, String assignedAlbum, String assetId) {
@@ -151,8 +149,8 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 		col2.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				if (element instanceof SmartCollectionImpl)
-					return ((SmartCollectionImpl) element).getDescription();
+				if (element instanceof SmartCollection)
+					return ((SmartCollection) element).getDescription();
 				return element.toString();
 			}
 		});
@@ -165,46 +163,35 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 		GridData layoutData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		layoutData.heightHint = 500;
 		viewer.getControl().setLayoutData(layoutData);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				if (cntrlDwn) {
-					SmartCollectionImpl sm = (SmartCollectionImpl) viewer.getStructuredSelection()
-							.getFirstElement();
-					if (sm != null) {
-						CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
-								Messages.AlbumSelectionDialog_edit_person,
-								Messages.AlbumSelectionDialog_person_album_msg, false, true, false, false);
-						if (dialog.open() == Window.OK) {
-							final SmartCollectionImpl album = dialog.getResult();
-							if (album != null) {
-								Set<Object> toBeDeleted = new HashSet<Object>();
-								List<Object> toBeStored = new ArrayList<Object>();
-								Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
-								dbManager.safeTransaction(toBeDeleted, toBeStored);
-							}
-							viewer.update(sm, null);
-						}
-					}
-					cntrlDwn = false;
-				}
-				validate();
-			}
-		});
-		viewer.getControl().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = true;
-			}
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.CTRL)
-					cntrlDwn = false;
-			}
-		});
+		viewer.addSelectionChangedListener(this);
+		viewer.getControl().addListener(SWT.KeyUp, this);
+		viewer.getControl().addListener(SWT.KeyDown, this);
 		return area;
+	}
+	
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (cntrlDwn) {
+			SmartCollectionImpl sm = (SmartCollectionImpl) viewer.getStructuredSelection()
+					.getFirstElement();
+			if (sm != null) {
+				CollectionEditDialog dialog = new CollectionEditDialog(getShell(), sm,
+						Messages.AlbumSelectionDialog_edit_person,
+						Messages.AlbumSelectionDialog_person_album_msg, false, true, false, false);
+				if (dialog.open() == Window.OK) {
+					final SmartCollectionImpl album = dialog.getResult();
+					if (album != null) {
+						Set<Object> toBeDeleted = new HashSet<Object>();
+						List<Object> toBeStored = new ArrayList<Object>();
+						Utilities.updateCollection(dbManager, sm, album, toBeDeleted, toBeStored);
+						dbManager.safeTransaction(toBeDeleted, toBeStored);
+					}
+					viewer.update(sm, null);
+				}
+			}
+			cntrlDwn = false;
+		}
+		validate();
 	}
 
 	@Override
@@ -313,6 +300,20 @@ public class SetPersonDialog extends ZTitleAreaDialog {
 
 	public boolean isDeleteAllRegions() {
 		return deleteAllRegions;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		switch (e.type) {
+		case SWT.KeyUp:
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = false;
+			return;
+		case SWT.KeyDown:
+			if (e.keyCode == SWT.CTRL)
+				cntrlDwn = true;
+		}
+		
 	}
 
 }

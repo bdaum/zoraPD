@@ -77,7 +77,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
@@ -131,7 +130,7 @@ import com.bdaum.zoom.ui.internal.preferences.MetadataPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public abstract class AbstractPropertiesView extends BasicView implements ISelectionProvider, IFieldUpdater {
+public abstract class AbstractPropertiesView extends BasicView implements ISelectionProvider, IFieldUpdater, IMenuListener {
 
 	private static ISchedulingRule refresherRule = new ISchedulingRule() {
 
@@ -387,7 +386,7 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 			} else if (element instanceof IndexedMember)
 				return QueryField.serializeStruct(((IndexedMember) element).getValue(), CLICK_TO_VIEW_DETAILS);
 			else if (element instanceof TrackRecord)
-				return QueryField.TRACK.getFormatter().toString(element);
+				return QueryField.TRACK.getFormatter().format(element);
 			else if (element instanceof String) {
 				String s = (String) element;
 				int p = s.indexOf(':');
@@ -882,14 +881,13 @@ public abstract class AbstractPropertiesView extends BasicView implements ISelec
 	protected void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				AbstractPropertiesView.this.fillContextMenu(manager);
-			}
-		});
-		Menu menu = menuMgr.createContextMenu(getControl());
-		getControl().setMenu(menu);
+		menuMgr.addMenuListener(this);
+		getControl().setMenu(menuMgr.createContextMenu(getControl()));
 		getSite().registerContextMenu(menuMgr, this);
+	}
+	
+	public void menuAboutToShow(IMenuManager manager) {
+		AbstractPropertiesView.this.fillContextMenu(manager);
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {

@@ -56,7 +56,7 @@ import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class GeneralPreferencePage extends AbstractPreferencePage implements Listener {
+public class GeneralPreferencePage extends AbstractPreferencePage implements ISelectionChangedListener, Listener {
 
 	public static final String ID = "com.bdaum.zoom.ui.preferences.GeneralPreferencePage"; //$NON-NLS-1$
 	private NumericControl undoField;
@@ -107,29 +107,7 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 
 		iccViewer = createComboViewer(group, Messages.getString("GeneralPreferencePage.icc_profile"), options, //$NON-NLS-1$
 				labels, false);
-		iccViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				try {
-					String selection = (String) iccViewer.getStructuredSelection().getFirstElement();
-					if (Integer.parseInt(selection) == ImageConstants.CUSTOM) {
-						FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
-						if (customFile != null) {
-							File file = new File(customFile);
-							dialog.setFilterPath(file.getParent());
-							dialog.setFileName(file.getName());
-						}
-						dialog.setFilterExtensions(new String[] { "*.icc;*.icm" }); //$NON-NLS-1$
-						dialog.setFilterNames(
-								new String[] { Messages.getString("GeneralPreferencePage.icc_profiles") }); //$NON-NLS-1$
-						customFile = dialog.open();
-					}
-				} catch (Exception e) {
-					// do nothing
-				}
-			}
-		});
+		iccViewer.addSelectionChangedListener(this);
 		advancedButton = WidgetFactory.createCheckButton(group,
 				Messages.getString("GeneralPreferencePage.use_quality_interpolation"), //$NON-NLS-1$
 				new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
@@ -360,6 +338,27 @@ public class GeneralPreferencePage extends AbstractPreferencePage implements Lis
 				return NLS.bind(Messages.getString("GeneralPreferencePage.icc_file_does_not_exist"), customFile); //$NON-NLS-1$
 		}
 		return null;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		try {
+			String selection = (String) iccViewer.getStructuredSelection().getFirstElement();
+			if (Integer.parseInt(selection) == ImageConstants.CUSTOM) {
+				FileDialog dialog = new FileDialog(getShell(), SWT.OPEN);
+				if (customFile != null) {
+					File file = new File(customFile);
+					dialog.setFilterPath(file.getParent());
+					dialog.setFileName(file.getName());
+				}
+				dialog.setFilterExtensions(new String[] { "*.icc;*.icm" }); //$NON-NLS-1$
+				dialog.setFilterNames(
+						new String[] { Messages.getString("GeneralPreferencePage.icc_profiles") }); //$NON-NLS-1$
+				customFile = dialog.open();
+			}
+		} catch (Exception e) {
+			// do nothing
+		}
 	}
 
 }

@@ -43,7 +43,7 @@ import com.bdaum.zoom.ui.internal.widgets.WebColorGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class ExhibitLayoutDialog extends ZTitleAreaDialog {
+public class ExhibitLayoutDialog extends ZTitleAreaDialog implements Listener {
 
 	private static final int DEFAULTBUTTON = 9999;
 	private final Exhibit exhibit;
@@ -53,6 +53,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 			totalHeightField;
 	private LabelLayoutGroup labelLayoutGroup;
 	private char unit = Core.getCore().getDbFactory().getDimUnit();
+	private boolean updating = false;
 
 	public ExhibitLayoutDialog(Shell parentShell, ExhibitionImpl exhibition, Exhibit exhibit) {
 		super(parentShell, HelpContextIds.EXHIBITLAYOUT_DIALOG);
@@ -80,34 +81,17 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		imageGroup.setLayout(new GridLayout(4, false));
 		imageGroup.setText(Messages.ExhibitLayoutDialog_image);
 		new Label(imageGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_size + captionUnitcmin());
-		Listener listener = new Listener() {
-			boolean updating = false;
-			@Override
-			public void handleEvent(Event event) {
-				if (event.widget == matWidthField || event.widget == frameWidthField) {
-					updateColorGroups();
-					updateTotal();
-				} else if (!updating) {
-					updating = true;
-					try {
-					updateSizeFields(event.widget);
-					} finally {
-						updating = false;
-					}
-				}
-			}
-		};
 		imageWidthField = new NumericControl(imageGroup, SWT.NONE);
 		imageWidthField.setMaximum(10000);
 		imageWidthField.setDigits(1);
 		imageWidthField.setLogrithmic(true);
-		imageWidthField.addListener(SWT.Selection, listener);
+		imageWidthField.addListener(SWT.Selection, this);
 		new Label(imageGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_x);
 		imageHeightField = new NumericControl(imageGroup, SWT.NONE);
 		imageHeightField.setMaximum(10000);
 		imageHeightField.setDigits(1);
 		imageHeightField.setLogrithmic(true);
-		imageHeightField.addListener(SWT.Selection, listener);
+		imageHeightField.addListener(SWT.Selection, this);
 		CGroup matGroup = new CGroup(comp, SWT.NONE);
 		matGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
 		matGroup.setLayout(new GridLayout(4, false));
@@ -116,7 +100,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		matWidthField = new NumericControl(matGroup, SWT.NONE);
 		matWidthField.setMaximum(1000);
 		matWidthField.setDigits(1);
-		matWidthField.addListener(SWT.Selection, listener);
+		matWidthField.addListener(SWT.Selection, this);
 		matColorGroup = new WebColorGroup(matGroup, Messages.ExhibitLayoutDialog_color);
 		CGroup frameGroup = new CGroup(comp, SWT.NONE);
 		frameGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
@@ -126,7 +110,7 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		frameWidthField = new NumericControl(frameGroup, SWT.NONE);
 		frameWidthField.setMaximum(100);
 		frameWidthField.setDigits(1);
-		frameWidthField.addListener(SWT.Selection, listener);
+		frameWidthField.addListener(SWT.Selection, this);
 		frameColorGroup = new WebColorGroup(frameGroup, Messages.ExhibitLayoutDialog_color);
 		CGroup totalGroup = new CGroup(comp, SWT.NONE);
 		totalGroup.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false));
@@ -137,14 +121,14 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 		totalWidthField.setMaximum(10000);
 		totalWidthField.setDigits(1);
 		totalWidthField.setLogrithmic(true);
-		totalWidthField.addListener(SWT.Selection, listener);
+		totalWidthField.addListener(SWT.Selection, this);
 
 		new Label(totalGroup, SWT.NONE).setText(Messages.ExhibitLayoutDialog_x);
 		totalHeightField = new NumericControl(totalGroup, SWT.NONE);
 		totalHeightField.setMaximum(10000);
 		totalHeightField.setDigits(1);
 		totalHeightField.setLogrithmic(true);
-		totalHeightField.addListener(SWT.Selection, listener);
+		totalHeightField.addListener(SWT.Selection, this);
 		CGroup labelGroup = new CGroup(comp, SWT.NONE);
 		labelGroup.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
 		labelGroup.setLayout(new GridLayout());
@@ -288,6 +272,21 @@ public class ExhibitLayoutDialog extends ZTitleAreaDialog {
 
 	private int toMm(int x) {
 		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (event.widget == matWidthField || event.widget == frameWidthField) {
+			updateColorGroups();
+			updateTotal();
+		} else if (!updating) {
+			updating = true;
+			try {
+				updateSizeFields(event.widget);
+			} finally {
+				updating = false;
+			}
+		}
 	}
 
 }

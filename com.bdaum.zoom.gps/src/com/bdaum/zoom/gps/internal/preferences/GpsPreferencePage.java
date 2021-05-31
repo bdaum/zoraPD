@@ -30,8 +30,6 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -49,7 +47,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
 import com.bdaum.zoom.core.Core;
-import com.bdaum.zoom.core.ISpellCheckingService;
 import com.bdaum.zoom.css.CSSProperties;
 import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.css.internal.CssActivator;
@@ -68,7 +65,7 @@ import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.dialogs.ComputeTimeshiftDialog;
 import com.bdaum.zoom.ui.internal.widgets.CheckboxButton;
-import com.bdaum.zoom.ui.internal.widgets.CheckedText;
+import com.bdaum.zoom.ui.internal.widgets.Password;
 import com.bdaum.zoom.ui.internal.widgets.WidgetFactory;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
@@ -76,7 +73,7 @@ import com.bdaum.zoom.ui.widgets.CLink;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
 @SuppressWarnings("restriction")
-public class GpsPreferencePage extends AbstractPreferencePage implements Listener {
+public class GpsPreferencePage extends AbstractPreferencePage implements Listener, ISelectionChangedListener {
 
 	public class EditNogoDialog extends ZTitleAreaDialog implements Listener {
 
@@ -197,14 +194,13 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 				diameter = diameterScale.getSelection() / 100d;
 				if (mapComponent != null)
 					mapComponent.setArea(latitude, longitude, Core.toKm(diameter, unit));
-				break;
+				return;
 			case SWT.Verify:
 				if (e.keyCode == ',')
 					e.doit = false;
-				break;
+				return;
 			case SWT.Modify:
 				validateGeo();
-				break;
 			}
 		}
 
@@ -242,7 +238,7 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 	private Spinner toleranceHourField;
 	private Spinner toleranceMinuteField;
 	private Combo combo;
-	private Map<String, CheckedText> keyMap = new HashMap<>(5);
+	private Map<String, Password> keyMap = new HashMap<>(5);
 	private Map<String, Label> linkMap = new HashMap<>(5);
 
 	private String[] serviceNames;
@@ -311,29 +307,10 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 				dflt = i;
 		}
 		combo.setItems(serviceNames);
-		combo.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				int index = combo.getSelectionIndex();
-				if (index >= 0) {
-					String description = GpsActivator.getDefault().getNamingServiceByName(serviceNames[index])
-							.getDescription();
-					if (description != null && !description.isEmpty())
-						combo.setToolTipText(description);
-				} else
-					combo.setToolTipText(""); //$NON-NLS-1$
-			}
-		});
+		combo.addListener(SWT.Selection, this);
 		Button button = new Button(comboGroup, SWT.PUSH);
 		button.setText(Messages.getString("GpsPreferencePage.details")); //$NON-NLS-1$
-		button.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				SearchDetailDialog dialog = new SearchDetailDialog(getShell(), combo.getText());
-				if (dialog.open() == SearchDetailDialog.OK)
-					setNamingServiceCombo(dialog.getResult());
-			}
-		});
+		button.addListener(SWT.Selection, this);
 
 		new Label(group, SWT.NONE).setText(Messages.getString("GpsPreferencePage.maxRequests")); //$NON-NLS-1$
 		reqhField = new Spinner(group, SWT.BORDER);
@@ -353,8 +330,7 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 		for (IGeocodingService service : GpsActivator.getDefault().getNamingServices()) {
 			for (Parameter parameter : service.getParameters()) {
 				new Label(group, SWT.NONE).setText(parameter.getLabel());
-				CheckedText field = new CheckedText(group, SWT.SINGLE | SWT.LEAD | SWT.BORDER,
-						ISpellCheckingService.NOSPELLING);
+				Password field = new Password(group, SWT.BORDER);
 				field.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 				field.setToolTipText(parameter.getTooltip());
 				field.addListener(SWT.Modify, this);
@@ -377,9 +353,18 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 		switch (e.type) {
 		case SWT.Modify:
 			validateAccounts();
-			break;
+			return;
 		case SWT.Selection:
-			if (e.widget == computeButton) {
+			if (e.widget == combo) {
+				int index = combo.getSelectionIndex();
+				if (index >= 0) {
+					String description = GpsActivator.getDefault().getNamingServiceByName(serviceNames[index])
+							.getDescription();
+					if (description != null && !description.isEmpty())
+						combo.setToolTipText(description);
+				} else
+					combo.setToolTipText(""); //$NON-NLS-1$
+			} else if (e.widget == computeButton) {
 				ComputeTimeshiftDialog dialog = new ComputeTimeshiftDialog(getShell(),
 						timeShiftMinuteField.getSelection(), Messages.getString("GpsPreferencePage.enter_current_time"), //$NON-NLS-1$
 						Messages.getString("GpsPreferencePage.tracker_time"), //$NON-NLS-1$
@@ -407,15 +392,17 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 				nogoAreas.remove(area);
 				nogoViewer.remove(area);
 				updateButtons();
-			}
-			else if (e.widget instanceof CLink)
+			} else if (e.widget instanceof CLink)
 				try {
-					String link = ((CLink) e.widget).getText();
-					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(link));
+					PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(new URL(((CLink) e.widget).getText()));
 				} catch (PartInitException | MalformedURLException e1) {
 					// do nothing
 				}
-			break;
+			else {
+				SearchDetailDialog dialog = new SearchDetailDialog(getShell(), combo.getText());
+				if (dialog.open() == SearchDetailDialog.OK)
+					setNamingServiceCombo(dialog.getResult());
+			}
 		}
 
 	}
@@ -477,14 +464,10 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 		GpsUtilities.getGeoAreas(preferenceStore, nogoAreas);
 		nogoViewer.setInput(nogoAreas);
 		reqhField.setSelection(preferenceStore.getInt(PreferenceConstants.HOURLYLIMIT));
-		String nservice = preferenceStore.getString(PreferenceConstants.NAMINGSERVICE);
-		setNamingServiceCombo(nservice);
+		setNamingServiceCombo(preferenceStore.getString(PreferenceConstants.NAMINGSERVICE));
 		for (IGeocodingService service : GpsActivator.getDefault().getNamingServices())
-			for (Parameter parameter : service.getParameters()) {
-				CheckedText field = keyMap.get(parameter.getId());
-				field.setText(preferenceStore.getString(parameter.getId()));
-				field.setHint(parameter.getHint());
-			}
+			for (Parameter parameter : service.getParameters())
+				keyMap.get(parameter.getId()).setText(preferenceStore.getString(parameter.getId()));
 	}
 
 	private void setNamingServiceCombo(String nservice) {
@@ -615,12 +598,7 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 		col1.getColumn().setWidth(200);
 		col1.setLabelProvider(ZColumnLabelProvider.getDefaultInstance());
 		nogoViewer.setContentProvider(ArrayContentProvider.getInstance());
-		nogoViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateTableButtons();
-			}
-		});
+		nogoViewer.addSelectionChangedListener(this);
 		Composite buttonGroup = new Composite(viewerGroup, SWT.NONE);
 		buttonGroup.setLayoutData(new GridData(SWT.END, SWT.FILL, false, true));
 		buttonGroup.setLayout(new GridLayout(1, false));
@@ -636,6 +614,11 @@ public class GpsPreferencePage extends AbstractPreferencePage implements Listene
 		deleteButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		deleteButton.setText(Messages.getString("GpsPreferencePage.remove")); //$NON-NLS-1$
 		deleteButton.addListener(SWT.Selection, this);
+	}
+	
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateTableButtons();
 	}
 
 	protected void updateTableButtons() {

@@ -48,19 +48,15 @@ public class ExportPreferencesWizard extends ZWizard implements IExportWizard {
 	@Override
 	public void addPages() {
 		ImageDescriptor imageDescriptor = Icons.pref64.getDescriptor();
-		super.addPages();
-		prefPage = new PreferenceTargetPage();
+		addPage(prefPage = new PreferenceTargetPage());
 		prefPage.setImageDescriptor(imageDescriptor);
-		addPage(prefPage);
 	}
 
 	@Override
 	public boolean performFinish() {
-		String path = prefPage.getPath();
-		if (path != null) {
-			prefPage.saveSettings();
+		if (prefPage.finish()) {
 			saveDialogSettings();
-			BatchUtilities.exportPreferences(new File(path));
+			BatchUtilities.exportPreferences(new File(prefPage.getPath()), prefPage.getFilter());
 			return true;
 		}
 		return false;

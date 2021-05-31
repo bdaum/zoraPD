@@ -34,6 +34,7 @@ public class Messages extends NLS {
 	public static String InternetPreferencePage_remove_tooltip;
 	public static String InternetPreferencePage_System_proxy_config;
 	public static String InternetPreferencePage_Timeout;
+	public static String PreferenceConstants_general;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

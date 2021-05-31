@@ -12,5 +12,8 @@
       <description>Eine HTML-Seite aus ausgewählten Bilder erzeugen</description>
       <topic href="html/html.html" label="HTML-Assistent"/>
    </context>
+   <context id="mail_page_context" title="E-Mail Einstellungen">
+      <topic href="html/emailPrefs.html" label="E-Mail Einstellungen"/>
+   </context>
 
 </contexts>

@@ -26,7 +26,6 @@ import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.httpclient.HttpException;
 import org.eclipse.swt.widgets.Control;
 import org.xml.sax.SAXException;
 
@@ -114,7 +113,7 @@ public interface IGeocodingService {
 
 	void setDescription(String description);
 
-	double getElevation(double lat, double lon) throws UnknownHostException, HttpException, IOException;
+	double getElevation(double lat, double lon) throws UnknownHostException, IOException;
 
 	void saveSearchParameters();
 

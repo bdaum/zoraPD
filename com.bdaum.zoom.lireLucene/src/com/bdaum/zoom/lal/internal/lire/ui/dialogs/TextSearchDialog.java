@@ -25,8 +25,6 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -34,7 +32,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.TextSearchOptions_typeImpl;
@@ -55,7 +55,7 @@ import com.bdaum.zoom.ui.internal.dialogs.FindWithinGroup;
 import com.bdaum.zoom.ui.internal.widgets.SearchResultGroup;
 
 @SuppressWarnings("restriction")
-public class TextSearchDialog extends ZTitleAreaDialog {
+public class TextSearchDialog extends ZTitleAreaDialog implements Listener {
 	private static final String SETTINGSID = "com.bdaum.zoom.textSearchDialog"; //$NON-NLS-1$
 	private static final String HISTORY = "history"; //$NON-NLS-1$
 
@@ -151,11 +151,7 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 		combo.setItems(items);
 		if (combo.getItemCount() > 0)
 			combo.setText(combo.getItem(0));
-		combo.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
+		combo.addListener(SWT.Modify, this);
 		data = new GridData(SWT.FILL, SWT.CENTER, true, false);
 		data.widthHint = 350;
 		combo.setLayoutData(data);
@@ -216,6 +212,11 @@ public class TextSearchDialog extends ZTitleAreaDialog {
 
 	public SmartCollectionImpl getResult() {
 		return result;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 
 }

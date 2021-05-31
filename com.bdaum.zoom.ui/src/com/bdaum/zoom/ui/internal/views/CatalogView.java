@@ -158,7 +158,7 @@ import com.bdaum.zoom.ui.internal.operations.SlideshowPropertiesOperation;
 import com.bdaum.zoom.ui.internal.wizards.MergeCatWizard;
 
 @SuppressWarnings("restriction")
-public class CatalogView extends AbstractCatalogView implements IPerspectiveListener {
+public class CatalogView extends AbstractCatalogView implements IPerspectiveListener, ISelectionChangedListener {
 
 	public final class CatalogDragSourceListener implements DragSourceListener {
 		public void dragStart(DragSourceEvent event) {
@@ -698,28 +698,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 		UiUtilities.installDoubleClickExpansion((TreeViewer) viewer);
 		ZColumnViewerToolTipSupport.enableFor(viewer);
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.CATALOG_VIEW);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(final SelectionChangedEvent event) {
-				selectionChanged = true;
-				if (viewer.getStructuredSelection().getFirstElement() == WASTEBASKET) {
-					try {
-						getSite().getPage().showView(TrashcanView.ID);
-					} catch (PartInitException e) {
-						// shouldn't happen
-					}
-					return;
-				}
-				if (!settingSelection) {
-					cancelJobs(CatalogView.this);
-					new SelectionJob(viewer, event).schedule();
-				}
-				if (cntrlDwn && editItemAction.isEnabled()) {
-					if (!settingSelection)
-						editItemAction.run();
-					cntrlDwn = false;
-				}
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		addCtrlKeyListener();
 		viewer.addDropSupport(OPERATIONS, allTypes, new CatalogDropTargetListener(viewer.getControl()));
 		viewer.addDragSupport(DND.DROP_MOVE, new Transfer[] { selectionTransfer }, new CatalogDragSourceListener());
@@ -802,6 +781,27 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			}
 		});
 		updateActions(viewer.getStructuredSelection(), true);
+	}
+	
+	public void selectionChanged(final SelectionChangedEvent event) {
+		selectionChanged = true;
+		if (viewer.getStructuredSelection().getFirstElement() == WASTEBASKET) {
+			try {
+				getSite().getPage().showView(TrashcanView.ID);
+			} catch (PartInitException e) {
+				// shouldn't happen
+			}
+			return;
+		}
+		if (!settingSelection) {
+			cancelJobs(CatalogView.this);
+			new SelectionJob(viewer, event).schedule();
+		}
+		if (cntrlDwn && editItemAction.isEnabled()) {
+			if (!settingSelection)
+				editItemAction.run();
+			cntrlDwn = false;
+		}
 	}
 
 	public void perspectiveChanged(IWorkbenchPage page, IPerspectiveDescriptor perspective, String changeId) {
@@ -1205,7 +1205,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			public void run() {
 				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
-					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), (GroupImpl) obj, null,
+					ExhibitionImpl show = ExhibitionEditDialog.open(getSite().getShell(), null, (GroupImpl) obj, null,
 							Messages.getString("CatalogView.create_exhibition"), false, null); //$NON-NLS-1$
 					if (show != null) {
 						((TreeViewer) viewer).add(obj, show);
@@ -1223,7 +1223,7 @@ public class CatalogView extends AbstractCatalogView implements IPerspectiveList
 			public void run() {
 				Object obj = viewer.getStructuredSelection().getFirstElement();
 				if (obj instanceof GroupImpl) {
-					WebGalleryImpl result = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(),
+					WebGalleryImpl result = WebGalleryEditDialog.openWebGalleryEditDialog(getSite().getShell(), null,
 							(GroupImpl) obj, null, Messages.getString("CatalogView.web_gallery"), false, false, null); //$NON-NLS-1$
 					if (result != null) {
 						((TreeViewer) viewer).add(obj, result);

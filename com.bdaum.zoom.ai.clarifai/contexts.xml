@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <contexts>
    <context id="pref_page_context">
-      <description>Preferences for the Clarifai web service</description>
       <topic href="html/clarifai.html" label="Clarifai preferences"/>
    </context>
 </contexts>

@@ -47,7 +47,7 @@ public class QualityGroup implements Listener {
 
 	private CGroup group;
 
-	public QualityGroup(Composite parent, boolean resolution) {
+	public QualityGroup(Composite parent, boolean resolution, boolean method) {
 		group = new CGroup(parent, SWT.NONE);
 		GridLayout layout = (GridLayout) parent.getLayout();
 		group.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, layout.numColumns, 1));
@@ -65,7 +65,7 @@ public class QualityGroup implements Listener {
 		layout = new GridLayout();
 		layout.marginHeight = layout.marginWidth = 0;
 		jpegGroup.setLayout(layout);
-		compressionGroup = new CompressionGroup(jpegGroup, false);
+		compressionGroup = new CompressionGroup(jpegGroup, method);
 		sharpenGroup = new SharpeningGroup(group);
 	}
 	
@@ -152,9 +152,9 @@ public class QualityGroup implements Listener {
 	}
 
 	public void fillValues(Boolean applySharpening, float radius, float amount, int threshold, int jpegQuality,
-			int scalingMethod) {
+			int scalingMethod, boolean useWebp) {
 		sharpenGroup.fillValues(applySharpening, radius, amount, threshold);
-		compressionGroup.fillValues(jpegQuality, false);
+		compressionGroup.fillValues(jpegQuality, useWebp);
 	}
 
 	public void setEnabled(boolean enabled) {
@@ -168,6 +168,14 @@ public class QualityGroup implements Listener {
 
 	public void setVisible(boolean visible) {
 		group.setVisible(visible);
+	}
+
+	public void setUseWebP(boolean b) {
+		compressionGroup.setUseWebP(b);
+	}
+
+	public boolean getUseWebP() {
+		return compressionGroup.getUseWebp();
 	}
 
 }

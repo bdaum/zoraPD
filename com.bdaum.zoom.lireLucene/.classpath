@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-backward-codecs-7.7.2.jar" sourcepath="C:/Users/User/Desktop/lucene-7.7.2-src"/>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-analyzers-common-7.7.2.jar" sourcepath="C:/Users/User/Desktop/lucene-7.7.2-src"/>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-core-7.7.2.jar" sourcepath="C:/javasource/lucene-7.7.2"/>
-	<classpathentry exported="true" kind="lib" path="lib/lucene-queryparser-7.7.2.jar" sourcepath="C:/javasource/lucene-7.7.2"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-analyzers-common-7.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-backward-codecs-7.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-core-7.7.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/lucene-queryparser-7.7.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-codec-1.10.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/opencv-2411.jar"/>

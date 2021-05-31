@@ -15,13 +15,10 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2016 Berthold Daum  
+ * (c) 2016-2021 Berthold Daum  
  */
 package com.bdaum.zoom.ai.msvision.internal.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -41,58 +38,67 @@ import com.bdaum.zoom.ai.msvision.internal.MsVisionActivator;
 import com.bdaum.zoom.ai.msvision.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.core.internal.ai.Prediction;
 import com.bdaum.zoom.core.internal.ai.Prediction.Token;
-import com.microsoft.projectoxford.vision.VisionServiceRestClient;
-import com.microsoft.projectoxford.vision.contract.Adult;
-import com.microsoft.projectoxford.vision.contract.AnalysisResult;
-import com.microsoft.projectoxford.vision.contract.Caption;
-import com.microsoft.projectoxford.vision.contract.Category;
-import com.microsoft.projectoxford.vision.contract.Description;
-import com.microsoft.projectoxford.vision.contract.Face;
-import com.microsoft.projectoxford.vision.contract.FaceRectangle;
-import com.microsoft.projectoxford.vision.contract.Tag;
-import com.microsoft.projectoxford.vision.rest.VisionServiceException;
+import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVision;
+import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionClient;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.AdultInfo;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.AnalyzeImageInStreamOptionalParameter;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.Category;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.ComputerVisionErrorResponseException;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.Details;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.FaceDescription;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.FaceRectangle;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.ImageAnalysis;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.ImageCaption;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.ImageDescriptionDetails;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.ImageTag;
+import com.microsoft.azure.cognitiveservices.vision.computervision.models.VisualFeatureTypes;
 
 public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 
 	private static final String SERVICENAME = "Microsoft Computer Vision API"; //$NON-NLS-1$
-	private static final String[] CELEBRITIES = new String[] { "Celebrities" }; //$NON-NLS-1$
-	private static final String[] EMPTY = new String[0];
 
 	public Prediction predict(byte[] jpeg) {
 		Prediction prediction = null;
 		MsVisionActivator activator = MsVisionActivator.getDefault();
-		VisionServiceRestClient client = activator.getClient();
-		List<String> features = new ArrayList<>();
-		features.add("Categories"); //$NON-NLS-1$
-		features.add("Tags"); //$NON-NLS-1$
-		if (generateDescription())
-			features.add("Description"); //$NON-NLS-1$
-		if (checkFaces())
-			features.add("Faces"); //$NON-NLS-1$
-		if (checkAdultContent())
-			features.add("Adult"); //$NON-NLS-1$
-		String[] details = checkCelebrities() ? CELEBRITIES : EMPTY;
-		try (InputStream stream = new ByteArrayInputStream(jpeg)) {
-			AnalysisResult analysisResult = client.analyzeImage(stream, features.toArray(new String[features.size()]),
-					details);
+		ComputerVisionClient client = activator.getClient();
+		try {
+			ComputerVision computerVision = client.computerVision();
+			AnalyzeImageInStreamOptionalParameter parameter = new AnalyzeImageInStreamOptionalParameter();
+			List<VisualFeatureTypes> visualFeatures = new ArrayList<VisualFeatureTypes>();
+			visualFeatures.add(VisualFeatureTypes.CATEGORIES);
+			visualFeatures.add(VisualFeatureTypes.TAGS);
+			if (generateDescription())
+				visualFeatures.add(VisualFeatureTypes.DESCRIPTION);
+			if (checkFaces())
+				visualFeatures.add(VisualFeatureTypes.FACES);
+			if (checkAdultContent())
+				visualFeatures.add(VisualFeatureTypes.ADULT);
+			parameter.withVisualFeatures(visualFeatures);
+			if (checkCelebrities()) {
+				List<Details> details = new ArrayList<Details>();
+				details.add(Details.CELEBRITIES);
+				details.add(Details.LANDMARKS);
+				parameter.withDetails(details);
+			}
+			ImageAnalysis analysis = computerVision.analyzeImageInStream(jpeg, parameter);
 			IPreferenceStore preferenceStore = activator.getPreferenceStore();
 			int maxConcepts = preferenceStore.getInt(PreferenceConstants.MAXCONCEPTS);
 			float minConfidence = preferenceStore.getInt(PreferenceConstants.MINCONFIDENCE) * 0.01f;
 			List<Token> cats = new ArrayList<>();
-			List<Category> categories = analysisResult.categories;
+			List<Category> categories = analysis.categories();
 			if (categories != null)
 				for (Category category : categories)
-					cats.add(new Token(CategoryMessages.getString(category.name), (float) category.score));
+					cats.add(new Token(CategoryMessages.getString(category.name()), (float) category.score()));
 			if (cats.size() >= maxConcepts)
 				cats = cats.subList(0, maxConcepts);
 			Collections.sort(cats, TokenComparator.INSTANCE);
 			List<Token> keywords = new ArrayList<>();
-			List<Tag> tags = analysisResult.tags;
+			List<ImageTag> tags = analysis.tags();
 			if (tags != null)
-				for (Tag tag : tags) {
-					double score = tag.confidence;
+				for (ImageTag tag : tags) {
+					double score = tag.confidence();
 					if (score >= minConfidence)
-						keywords.add(new Token(tag.name, (float) score));
+						keywords.add(new Token(tag.name(), (float) score));
 				}
 			if (keywords.size() >= maxConcepts)
 				keywords = keywords.subList(0, maxConcepts);
@@ -121,6 +127,8 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 						}
 					}
 					String translate = translatorClient.translate(sb.toString());
+					if (translate == null)
+						translate = sb.toString();
 					String translatedCats = null;
 					String translatedTags = null;
 					if (trTags) {
@@ -143,13 +151,13 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 			prediction = new Prediction(SERVICENAME, cats.toArray(new Token[cats.size()]),
 					keywords.toArray(new Token[keywords.size()]), Status.OK_STATUS);
 			if (generateDescription()) {
-				Description description = analysisResult.description;
+				ImageDescriptionDetails description = analysis.description();
 				if (description != null) {
-					List<Caption> captions = description.captions;
+					List<ImageCaption> captions = description.captions();
 					if (!captions.isEmpty()) {
 						List<Token> descriptions = new ArrayList<>(captions.size());
-						for (Caption caption : captions)
-							descriptions.add(new Token(caption.text, (float) caption.confidence));
+						for (ImageCaption caption : captions)
+							descriptions.add(new Token(caption.text(), (float) caption.confidence()));
 						Collections.sort(descriptions, TokenComparator.INSTANCE);
 						String descr = descriptions.get(0).getLabel();
 						if (preferenceStore.getBoolean(PreferenceConstants.TRANSLATE_DESCRIPTION)) {
@@ -165,26 +173,33 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 			}
 			if (checkFaces()) {
 				List<Rectangle> rects = new ArrayList<>();
-				List<Face> faces = analysisResult.faces;
+				List<FaceDescription> faces = analysis.faces();
 				if (faces != null)
-					for (Face face : faces) {
-						FaceRectangle faceRectangle = face.faceRectangle;
-						rects.add(new Rectangle(faceRectangle.left, faceRectangle.top, faceRectangle.width,
-								faceRectangle.height));
+					for (FaceDescription face : faces) {
+						FaceRectangle faceRectangle = face.faceRectangle();
+						rects.add(new Rectangle(faceRectangle.left(), faceRectangle.top(), faceRectangle.width(),
+								faceRectangle.height()));
 					}
 				prediction.setFaces(rects);
 			}
 			if (checkAdultContent()) {
-				Adult adult = analysisResult.adult;
-				boolean isAdultContent = adult != null && adult.isAdultContent;
-				boolean isRacyContent = adult != null && adult.isRacyContent;
+				AdultInfo adult = analysis.adult();
+				boolean isAdultContent = adult != null && adult.isAdultContent();
+				boolean isRacyContent = adult != null && adult.isRacyContent();
 				prediction.setSafeForWork(isAdultContent ? 0f : 1f, isRacyContent ? 0f : 1f);
 			}
 			return prediction;
-		} catch (VisionServiceException e) {
-			return new Prediction(SERVICENAME, null, null, new Status(IStatus.ERROR, MsVisionActivator.PLUGIN_ID,
-					Messages.MsVisionServiceProvider_ms_vision_exception, e));
-		} catch (IOException e) {
+		} catch (ComputerVisionErrorResponseException e1) {
+			String message = e1.getMessage();
+			int p = message.indexOf("message\":\""); //$NON-NLS-1$
+			if (p >= 0) {
+				message = message.substring(p + 10);
+				if (message.endsWith("\"}}")) //$NON-NLS-1$
+					message = message.substring(0, message.length() - 3);
+			}
+			return new Prediction(SERVICENAME, null, null,
+					new Status(IStatus.ERROR, MsVisionActivator.PLUGIN_ID, message, e1));
+		} catch (Throwable e) {
 			return new Prediction(SERVICENAME, null, null, new Status(IStatus.ERROR, MsVisionActivator.PLUGIN_ID,
 					Messages.MsVisionServiceProvider_ms_vision_io_error, e));
 		}
@@ -197,8 +212,7 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 			while (st.hasMoreTokens()) {
 				if (!it.hasNext())
 					break;
-				Token token = it.next();
-				token.setLabel(st.nextToken().trim());
+				it.next().setLabel(st.nextToken().trim());
 			}
 		}
 	}
@@ -227,7 +241,6 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 	public String getTitle() {
 		return Messages.MsVisionServiceProvider_ms_vision_proposals;
 	}
-	
 
 	@Override
 	public float getMarkAbove() {
@@ -243,6 +256,5 @@ public class MsVisionServiceProvider extends AbstractAiServiceProvider {
 	public boolean isAccountValid() {
 		return MsVisionActivator.getDefault().getClient() != null;
 	}
-
 
 }

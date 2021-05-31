@@ -52,7 +52,7 @@ import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
 import com.bdaum.zoom.ui.internal.widgets.ExpandCollapseGroup;
 
-public class PresentationSelectDialog extends ZTitleAreaDialog {
+public class PresentationSelectDialog extends ZTitleAreaDialog implements ISelectionChangedListener {
 
 	private static final String SLIDESHOWS = Messages.PresentationSelectDialog_slideshows;
 	private static final String EXHIBITIONS = Messages.PresentationSelectDialog_exhibitions;
@@ -180,20 +180,20 @@ public class PresentationSelectDialog extends ZTitleAreaDialog {
 		});
 		viewer.setComparator(ZViewerComparator.INSTANCE);
 		UiUtilities.installDoubleClickExpansion(viewer);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
-				if (firstElement instanceof IdentifiableObject)
-					selectedItem = (IdentifiableObject) firstElement;
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		viewer.setInput(ALL);
 		return area;
 	}
 
 	public IdentifiableObject getResult() {
 		return selectedItem;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		Object firstElement = ((IStructuredSelection) viewer.getSelection()).getFirstElement();
+		if (firstElement instanceof IdentifiableObject)
+			selectedItem = (IdentifiableObject) firstElement;
+		updateButtons();
 	}
 
 }

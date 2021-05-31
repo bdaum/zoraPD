@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -30,5 +30,5 @@ public interface HelpContextIds extends IHelpContexts {
 	public static final String EMAIL_WIZARD = PREFIX + "email" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String PDF_WIZARD = PREFIX + "pdf" + WIZARD_POSTFIX; //$NON-NLS-1$
 	public static final String HTML_WIZARD = PREFIX + "html" + WIZARD_POSTFIX; //$NON-NLS-1$
-
+	public static final String MAIL_PREFERENCES = PREFIX + "mail" + PAGE_POSTFIX; //$NON-NLS-1$
 }

@@ -4648,7 +4648,7 @@ public class QueryField {
 		if (useFormatter) {
 			IFormatter formatter1 = getFormatter();
 			if (formatter1 != null)
-				return formatter1.toString(value);
+				return formatter1.format(value);
 		}
 		switch (getType()) {
 		case QueryField.T_BOOLEAN:

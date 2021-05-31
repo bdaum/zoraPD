@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -73,22 +73,16 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 		Composite composite = createComposite(parent, 3);
 		String[] filterExtensions;
 		String[] filterNames;
-		String fileName;
 		if (pdf) {
 			filterExtensions = new String[] { "*.pdf;*.PDF", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
 			filterNames = new String[] { Messages.PDFTargetFilePage_portable_document_format,
 					Messages.PDFTargetFilePage_all_files };
-			fileName = "*.pdf"; //$NON-NLS-1$
 			fileEditor = new FileEditor(composite, SWT.SAVE | SWT.READ_ONLY, Messages.PDFTargetFilePage_target_file,
-					true, filterExtensions, filterNames, path, fileName, true, dialogSettings);
+					true, filterExtensions, filterNames, path, "*.pdf", false, dialogSettings); //$NON-NLS-1$
 			fileEditor.addListener(SWT.Modify, this);
 		} else {
 			outputTargetGroup = new OutputTargetGroup(composite,
-					new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), new Listener() {
-						public void handleEvent(Event e) {
-							validatePage();
-						}
-					}, false, true, false);
+					new GridData(GridData.FILL, GridData.BEGINNING, true, false, 3, 1), this, false, true, false);
 			new Label(composite, SWT.NONE).setText(Messages.PDFTargetFilePage_weblink);
 			linkField = new Text(composite, SWT.BORDER);
 			linkField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
@@ -96,11 +90,13 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 
 		new Label(composite, SWT.NONE).setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 3, 1));
 		setControl(composite);
-		setHelp(pdf ? HelpContextIds.PDF_WIZARD : HelpContextIds.HTML_WIZARD);
-		if (pdf)
-			qualityGroup = new QualityGroup(composite, pdf);
-		else
+		if (pdf) {
+			setHelp(HelpContextIds.PDF_WIZARD);
+			qualityGroup = new QualityGroup(composite, pdf, false);
+		} else {
+			setHelp(HelpContextIds.HTML_WIZARD);
 			exportModeGroup = new ExportModeGroup(composite, ExportModeGroup.JPEG | ExportModeGroup.WEBP);
+		}
 		setTitle(Messages.PDFTargetFilePage_target_file);
 		setMessage(NLS.bind(Messages.PDFTargetFilePage_set_target_file, type));
 		fillValues();
@@ -108,7 +104,8 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 	}
 
 	public void handleEvent(Event event) {
-		path = fileEditor.getFilterPath();
+		if (pdf)
+			path = fileEditor.getFilterPath();
 		validatePage();
 	}
 
@@ -165,18 +162,22 @@ public class PDFTargetFilePage extends ColoredWizardPage implements Listener {
 		return qualityGroup != null ? qualityGroup.getUnsharpMask() : exportModeGroup.getUnsharpMask();
 	}
 
-	public void finish() {
-		dialogSettings.put(pdf ? PDFPATH : HTMLPATH, path);
-		if (qualityGroup != null)
-			qualityGroup.saveSettings(dialogSettings);
-		if (exportModeGroup != null)
-			exportModeGroup.saveSettings(dialogSettings);
-		if (outputTargetGroup != null)
-			outputTargetGroup.saveValues(dialogSettings);
-		if (linkField != null)
-			dialogSettings.put(WEBLINK, linkField.getText());
-		if (fileEditor != null)
-			fileEditor.saveValues();
+	public boolean finish() {
+		if (fileEditor == null || fileEditor.testSave()) {
+			dialogSettings.put(pdf ? PDFPATH : HTMLPATH, path);
+			if (qualityGroup != null)
+				qualityGroup.saveSettings(dialogSettings);
+			if (exportModeGroup != null)
+				exportModeGroup.saveSettings(dialogSettings);
+			if (outputTargetGroup != null)
+				outputTargetGroup.saveValues(dialogSettings);
+			if (linkField != null)
+				dialogSettings.put(WEBLINK, linkField.getText());
+			if (fileEditor != null)
+				fileEditor.saveValues();
+			return true;
+		}
+		return false;
 	}
 
 	public int getJpegQuality() {

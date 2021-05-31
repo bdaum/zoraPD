@@ -20,8 +20,6 @@
 
 package com.bdaum.zoom.ui.internal.dialogs;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.IInputValidator;
@@ -32,15 +30,15 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.ListSelectionDialog;
 
@@ -61,7 +59,7 @@ import com.bdaum.zoom.ui.internal.widgets.TextWithVariableGroup;
 import com.bdaum.zoom.ui.widgets.CGroup;
 import com.bdaum.zoom.ui.widgets.NumericControl;
 
-public class LayoutComponent implements IInputValidator {
+public class LayoutComponent implements IInputValidator, Listener {
 
 	private class LoadLayoutDialog extends ZListDialog {
 
@@ -116,10 +114,12 @@ public class LayoutComponent implements IInputValidator {
 	protected static final String[] PAGEVARIABLES = new String[] { Constants.PT_CATALOG, Constants.PT_TODAY,
 			Constants.PT_COUNT, Constants.PT_PAGENO, Constants.PT_COLLECTION, Constants.PT_USER, Constants.PT_OWNER };
 
-//	protected static final String[] CAPTIONVARIABLES = new String[] { Constants.PI_TITLE, Constants.PI_NAME, 
-//			Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_CREATIONYEAR, Constants.PI_SIZE,
-//			Constants.PT_COLLECTION, Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
-	
+	// protected static final String[] CAPTIONVARIABLES = new String[] {
+	// Constants.PI_TITLE, Constants.PI_NAME,
+	// Constants.PI_FORMAT, Constants.PI_CREATIONDATE, Constants.PI_CREATIONYEAR,
+	// Constants.PI_SIZE,
+	// Constants.PT_COLLECTION, Constants.PI_SEQUENCENO, Constants.PI_PAGEITEM };
+
 	private static final String[] CAPTIONTEMPLATES = new String[] { "- {sequenceNo} -", //$NON-NLS-1$
 			"- {pageItem} -", //$NON-NLS-1$
 			"{title}", //$NON-NLS-1$
@@ -280,60 +280,11 @@ public class LayoutComponent implements IInputValidator {
 		loadButton = new Button(buttonGroup, SWT.PUSH);
 		loadButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		loadButton.setText(Messages.LayoutComponent_load_layout);
-		loadButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				List<PageLayout_typeImpl> set = Core.getCore().getDbManager().obtainObjects(PageLayout_typeImpl.class,
-						"type", type, QueryField.EQUALS); //$NON-NLS-1$
-				LoadLayoutDialog dialog = new LoadLayoutDialog(loadButton.getShell(), SWT.BORDER);
-				dialog.setTitle(Messages.LayoutComponent_load_layout_title);
-				dialog.setMessage(Messages.LayoutComponent_select_layout);
-				dialog.setContentProvider(ArrayContentProvider.getInstance());
-				dialog.setLabelProvider(new ZColumnLabelProvider() {
-					@Override
-					public String getText(Object element) {
-						if (element instanceof PageLayout_typeImpl)
-							return ((PageLayout_typeImpl) element).getName();
-						return null;
-					}
-				});
-				dialog.setInput(set);
-				dialog.create();
-				dialog.setComparator(ZViewerComparator.INSTANCE);
-				if (dialog.open() == ListSelectionDialog.OK) {
-					Object[] result = dialog.getResult();
-					if (result != null && result.length > 0 && result[0] instanceof PageLayout_typeImpl)
-						fillValues((PageLayout_typeImpl) result[0]);
-				}
-			}
-		});
+		loadButton.addListener(SWT.Selection, this);
 		final Button saveButton = new Button(buttonGroup, SWT.PUSH);
 		saveButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 		saveButton.setText(Messages.LayoutComponent_save_layout);
-		saveButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Date now = new Date();
-				SimpleDateFormat df = Format.MDY_FORMAT.get(); 
-				InputDialog dialog = new InputDialog(saveButton.getShell(), Messages.LayoutComponent_layout_name,
-						Messages.LayoutComponent_layout_name_msg, df.format(now), LayoutComponent.this);
-				if (dialog.open() == InputDialog.OK) {
-					String value = dialog.getValue();
-					IDbManager dbManager = Core.getCore().getDbManager();
-					if (!dbManager.obtainObjects(PageLayout_typeImpl.class, "name", value, //$NON-NLS-1$
-							QueryField.EQUALS).isEmpty()
-							&& !AcousticMessageDialog.openQuestion(loadButton.getShell(),
-									Messages.LayoutComponent_save_layout_title, Messages.LayoutComponent_layout_exists))
-						return;
-					PageLayout_typeImpl newLayout = new PageLayout_typeImpl();
-					saveValues(newLayout);
-					newLayout.setName(value);
-					newLayout.setType(type);
-					dbManager.storeAndCommit(newLayout);
-					updateButtons();
-				}
-			}
-		});
+		saveButton.addListener(SWT.Selection, this);
 		new Label(buttonGroup, SWT.NONE);
 		updateButtons();
 	}
@@ -454,6 +405,54 @@ public class LayoutComponent implements IInputValidator {
 
 	private int toMm(int x) {
 		return unit == 'i' ? (int) (x * 2.54d + 0.5d) : x;
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (event.widget == loadButton) {
+			List<PageLayout_typeImpl> set = Core.getCore().getDbManager().obtainObjects(PageLayout_typeImpl.class,
+					"type", type, QueryField.EQUALS); //$NON-NLS-1$
+			LoadLayoutDialog dialog = new LoadLayoutDialog(loadButton.getShell(), SWT.BORDER);
+			dialog.setTitle(Messages.LayoutComponent_load_layout_title);
+			dialog.setMessage(Messages.LayoutComponent_select_layout);
+			dialog.setContentProvider(ArrayContentProvider.getInstance());
+			dialog.setLabelProvider(new ZColumnLabelProvider() {
+				@Override
+				public String getText(Object element) {
+					if (element instanceof PageLayout_typeImpl)
+						return ((PageLayout_typeImpl) element).getName();
+					return null;
+				}
+			});
+			dialog.setInput(set);
+			dialog.create();
+			dialog.setComparator(ZViewerComparator.INSTANCE);
+			if (dialog.open() == ListSelectionDialog.OK) {
+				Object[] result = dialog.getResult();
+				if (result != null && result.length > 0 && result[0] instanceof PageLayout_typeImpl)
+					fillValues((PageLayout_typeImpl) result[0]);
+			}
+		} else {
+			InputDialog dialog = new InputDialog(composite.getShell(), Messages.LayoutComponent_layout_name,
+					Messages.LayoutComponent_layout_name_msg,
+					Format.MDY_FORMAT.get().format(System.currentTimeMillis()), LayoutComponent.this);
+			if (dialog.open() == InputDialog.OK) {
+				String value = dialog.getValue();
+				IDbManager dbManager = Core.getCore().getDbManager();
+				if (!dbManager.obtainObjects(PageLayout_typeImpl.class, "name", value, //$NON-NLS-1$
+						QueryField.EQUALS).isEmpty()
+						&& !AcousticMessageDialog.openQuestion(loadButton.getShell(),
+								Messages.LayoutComponent_save_layout_title, Messages.LayoutComponent_layout_exists))
+					return;
+				PageLayout_typeImpl newLayout = new PageLayout_typeImpl();
+				saveValues(newLayout);
+				newLayout.setName(value);
+				newLayout.setType(type);
+				dbManager.storeAndCommit(newLayout);
+				updateButtons();
+			}
+		}
+
 	}
 
 }

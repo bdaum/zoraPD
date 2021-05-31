@@ -51,6 +51,7 @@
                locationURI="menu:window?after=windowStart">
             <command
                   commandId="org.ugosan.eclipse.fullscreen.fullscreenCommand"
+                  icon="icons/fullscreen.png"
                   label="%command.label"
                   mnemonic="%command.mnemonic"
                   style="toggle"

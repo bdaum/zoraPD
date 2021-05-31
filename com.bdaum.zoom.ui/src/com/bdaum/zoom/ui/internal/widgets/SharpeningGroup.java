@@ -60,14 +60,6 @@ public class SharpeningGroup implements Listener {
 		group.setLayout(layout);
 		applyButton = WidgetFactory.createCheckButton(group, Messages.SharpeningGroup_apply_sharpening,
 				new GridData(SWT.BEGINNING, SWT.CENTER, true, false, 6, 1));
-		applyButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				updateControls();
-				if (radiusField.getEnabled())
-					radiusField.setFocus();
-			}
-		});
 		Label radiusLabel = new Label(group, SWT.NONE);
 		GridData layoutData = new GridData();
 		layoutData.horizontalIndent = 15;
@@ -109,6 +101,11 @@ public class SharpeningGroup implements Listener {
 
 	@Override
 	public void handleEvent(Event e) {
+		if (e.widget == applyButton) {
+			updateControls();
+			if (radiusField.getEnabled())
+				radiusField.setFocus();
+		}
 		e.data = this;
 		for (Listener listener : listeners)
 			listener.handleEvent(e);

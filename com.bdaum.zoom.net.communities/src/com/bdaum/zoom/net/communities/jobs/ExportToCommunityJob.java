@@ -318,11 +318,10 @@ public class ExportToCommunityJob extends AbstractExportJob implements IErrorHan
 												Messages.ExportToCommunityJob_skip_all,
 												Messages.ExportToCommunityJob_skp,
 												Messages.ExportToCommunityJob_cancel });
-						SimpleDateFormat df = Format.TRACK_DATE_FORMAT.get();
 						final AcousticMessageDialog dialog = new AcousticMessageDialog(shell,
 								Messages.ExportToCommunityJob_image_already_uploaded, null,
 								NLS.bind(Messages.ExportToCommunityJob_image_uploaded_at, new Object[] { name,
-										df.format(date), communityName, session.getAccount().getName() }),
+										Format.TRACK_DATE_FORMAT.get().format(date), communityName, session.getAccount().getName() }),
 								MessageDialog.QUESTION, buttons, 1);
 						shell.getDisplay().syncExec(new Runnable() {
 

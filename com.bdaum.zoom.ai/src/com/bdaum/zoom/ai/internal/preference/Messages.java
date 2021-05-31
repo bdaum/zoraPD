@@ -7,13 +7,19 @@ public class Messages extends NLS {
 	public static String AiPreferencePage_0;
 	public static String AiPreferencePage_configure;
 	public static String AiPreferencePage_enable;
+	public static String AiPreferencePage_endpoint;
 	public static String AiPreferencePage_key1_or_key2;
 	public static String AiPreferencePage_login_faild;
 	public static String AiPreferencePage_no_app_key;
+	public static String AiPreferencePage_no_endpoint;
 	public static String AiPreferencePage_status;
 	public static String AiPreferencePage_translate_to;
 	public static String AiPreferencePage_verified;
 	public static String AiPreferencePage_visit_account;
+	public static String AiPreferencePage_x_used;
+	public static String PreferenceConstants_ai;
+	public static String PreferenceConstants_general;
+	public static String PreferenceConstants_translator;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

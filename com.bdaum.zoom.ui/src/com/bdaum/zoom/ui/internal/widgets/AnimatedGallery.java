@@ -51,8 +51,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
@@ -112,7 +110,7 @@ import com.bdaum.zoom.ui.internal.views.ImageRegion;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandler, Listener {
+public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandler, Listener, IPropertyChangeListener {
 
 	private final class GalleryPBasicInputEventHandler extends PBasicInputEventHandler {
 		private final PSWTCanvas pcanvas;
@@ -595,7 +593,7 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 						return QueryField.NAME.isValid(newText, anAsset);
 					}
 				});
-				caption.addErrorListener(titleVerifyListener);
+				caption.addErrorListener(AnimatedGallery.this);
 			}
 			addChild(caption);
 		}
@@ -1028,8 +1026,6 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 
 	private org.eclipse.swt.graphics.Color backgroundColor;
 
-	public VerifyListener titleVerifyListener;
-
 	private String personId;
 
 	private final Point2D pntSrc = new Point(0, 0);
@@ -1091,16 +1087,13 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		canvas.addInputEventListener(eventHandler);
 		setEventHandlers();
 		canvas.addListener(SWT.Paint, this);
-		titleVerifyListener = new VerifyListener() {
-			public void verifyText(VerifyEvent e) {
-				fireErrorEvent(e);
-			}
-		};
 	}
 
 	@Override
 	public void handleEvent(Event e) {
-		if (collection != null)
+		if (e.type == SWT.Verify)
+			fireEvent(e);
+		else if (collection != null)
 			fillSlidebar(collection);
 	}
 
@@ -1160,20 +1153,19 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 	}
 
 	protected void setPreferences() {
-		IPreferenceStore preferenceStore = applyPreferences();
-		preferenceStore.addPropertyChangeListener(new IPropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent event) {
-				String property = event.getProperty();
-				if (PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
-						|| PreferenceConstants.SHOWCOLORCODE.equals(property)
-						|| PreferenceConstants.SHOWRATING.equals(property)
-						|| PreferenceConstants.SHOWLOCATION.equals(property)
-						|| PreferenceConstants.SHOWDONEMARK.equals(property)
-						|| PreferenceConstants.SHOWVOICENOTE.equals(property)
-						|| PreferenceConstants.MAXREGIONS.equals(property))
-					applyPreferences();
-			}
-		});
+		applyPreferences().addPropertyChangeListener(this);
+	}
+	
+	public void propertyChange(PropertyChangeEvent event) {
+		String property = event.getProperty();
+		if (PreferenceConstants.SHOWROTATEBUTTONS.equals(property)
+				|| PreferenceConstants.SHOWCOLORCODE.equals(property)
+				|| PreferenceConstants.SHOWRATING.equals(property)
+				|| PreferenceConstants.SHOWLOCATION.equals(property)
+				|| PreferenceConstants.SHOWDONEMARK.equals(property)
+				|| PreferenceConstants.SHOWVOICENOTE.equals(property)
+				|| PreferenceConstants.MAXREGIONS.equals(property))
+			applyPreferences();
 	}
 
 	protected IPreferenceStore applyPreferences() {
@@ -1505,14 +1497,6 @@ public class AnimatedGallery implements IExtendedColorModel2, IPresentationHandl
 		e.data = asset;
 		e.text = newTitle;
 		fireEvent(e);
-	}
-
-	private void fireErrorEvent(VerifyEvent e) {
-		Event ev = new Event();
-		ev.data = e.data;
-		ev.text = e.text;
-		ev.type = SWT.Verify;
-		fireEvent(ev);
 	}
 
 	private void fireEvent(Event ev) {

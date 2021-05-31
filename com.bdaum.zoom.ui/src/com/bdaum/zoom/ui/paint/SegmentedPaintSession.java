@@ -121,11 +121,11 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 						controlPoints.size(), true);
 			}
 			resetSession();
-			break;
+			return;
 		case SWT.MouseUp:
 			if (e.button != 1)
 				resetSession(); // abort if right or middle mouse button pressed
-			break;
+			return;
 		case SWT.MouseMove:
 			final PaintSurface ps = getPaintSurface();
 			if (controlPoints.isEmpty())
@@ -138,7 +138,6 @@ public abstract class SegmentedPaintSession extends BasicPaintSession {
 				currentFigure = createFigure(points, points.length, false);
 				ps.addRubberbandSelection(currentFigure);
 			}
-			break;
 		}
 	}
 

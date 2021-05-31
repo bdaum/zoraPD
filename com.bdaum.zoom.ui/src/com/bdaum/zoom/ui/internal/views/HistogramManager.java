@@ -19,6 +19,8 @@
  */
 package com.bdaum.zoom.ui.internal.views;
 
+import org.eclipse.jface.resource.ColorRegistry;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
@@ -32,15 +34,26 @@ import org.eclipse.swt.graphics.Transform;
 
 public class HistogramManager {
 
+	private static final String LIGHT_BLUE = "lightBlue"; //$NON-NLS-1$
+
+	public HistogramManager() {
+		ColorRegistry colorRegistry = JFaceResources.getColorRegistry();
+		if (!colorRegistry.hasValueFor(LIGHT_BLUE))
+			colorRegistry.put(LIGHT_BLUE, new RGB(96, 144, 255));
+	}
+
+	public final static int LIGHT = 0;
+	public final static int DARK = 1;
+	public final static int CONTRAST = 2;
+
 	private static final int MINTHUMBNAILSIZE = 160 * 120;
-	private int[] reds = new int[256];
-	private int[] greens = new int[256];
-	private int[] blues = new int[256];
-	private int[] greys = new int[256];
+	private int[] reds = new int[256], greens = new int[256], blues = new int[256], greys = new int[256];
 	private int[] polyline = new int[516];
 	private int mxvalue;
+	private boolean weighted;
 
 	public void recalculate(Image image, boolean weighted) {
+		this.weighted = weighted;
 		mxvalue = 0;
 		if (image != null) {
 			for (int i = 0; i < 256; i++)
@@ -121,9 +134,10 @@ public class HistogramManager {
 		}
 	}
 
-	public void paint(GC gc, int x, int y, int width, int height, boolean dark, boolean inline, boolean showGrey, boolean showRed,
-			boolean showGreen, boolean showBlue) {
+	public void paint(GC gc, int x, int y, int width, int height, int colorMode, boolean inline, boolean showGrey,
+			boolean showRed, boolean showGreen, boolean showBlue, boolean proposals) {
 		Device display = gc.getDevice();
+		String message = null;
 		int gmax = 0;
 		int gavg = 0;
 		int shadows = 0;
@@ -142,12 +156,11 @@ public class HistogramManager {
 					highlights = g;
 			}
 		}
-		gmax >>= 1;
-		gavg >>= 8;
-		shadows >>= 1;
-		highlights >>= 1;
-		String message = null;
-		if (!inline) {
+		if (proposals) {
+			gmax >>= 1;
+			gavg >>= 8;
+			shadows >>= 1;
+			highlights >>= 1;
 			double threshold = gavg * 0.05;
 			if (shadows <= threshold)
 				message = highlights > gavg ? Messages.getString("HistogramView.overexpose") //$NON-NLS-1$
@@ -160,33 +173,51 @@ public class HistogramManager {
 				message = Messages.getString("HistogramView.compress_contrast"); //$NON-NLS-1$
 		}
 		Transform transform = new Transform(display);
-		transform.translate(x, y+height);
+		transform.translate(x, y + height);
 		transform.scale(width / 256f, -(float) height / mxvalue);
 		gc.setTransform(transform);
-		if (showGrey)
-			drawCurve(gc, greys,
-					display.getSystemColor(
-							(showRed || showGreen || showBlue) ? dark ? SWT.COLOR_GRAY : SWT.COLOR_DARK_GRAY
-									: dark ? SWT.COLOR_WHITE : SWT.COLOR_BLACK),
-					true, false);
+		if (showGrey) {
+			boolean hasColorCurves = showRed || showGreen || showBlue;
+			int color;
+			switch (colorMode) {
+			case DARK:
+				color = hasColorCurves ? SWT.COLOR_GRAY : SWT.COLOR_WHITE;
+				break;
+			case CONTRAST:
+				color = SWT.COLOR_CYAN;
+				break;
+			default:
+				color = hasColorCurves ? SWT.COLOR_DARK_GRAY : SWT.COLOR_BLACK;
+			}
+			drawCurve(gc, greys, display.getSystemColor(color), true, false);
+		}
 		if (showRed)
 			drawCurve(gc, reds, display.getSystemColor(SWT.COLOR_RED), !showGrey, true);
 		if (showGreen)
-			drawCurve(gc, greens, display.getSystemColor(SWT.COLOR_GREEN), !showGrey, true);
+			drawCurve(gc, greens, display.getSystemColor(colorMode == DARK ? SWT.COLOR_GREEN : SWT.COLOR_DARK_GREEN),
+					!showGrey, true);
 		if (showBlue)
-			drawCurve(gc, blues, display.getSystemColor(SWT.COLOR_BLUE), !showGrey, true);
+			drawCurve(gc, blues, colorMode == DARK ? JFaceResources.getColorRegistry().get(LIGHT_BLUE)
+					: display.getSystemColor(SWT.COLOR_BLUE), !showGrey, true);
 		gc.setTransform(null);
 		transform.dispose();
 		if (message != null) {
-			gc.setForeground(gc.getDevice().getSystemColor(dark ? SWT.COLOR_CYAN : SWT.COLOR_DARK_CYAN));
+			gc.setForeground(display.getSystemColor(colorMode == DARK ? SWT.COLOR_CYAN : SWT.COLOR_DARK_CYAN));
 			TextLayout textLayout = new TextLayout(gc.getDevice());
 			textLayout.setText(message);
 			textLayout.draw(gc, width - textLayout.getBounds().width - 10, 15);
 			textLayout.dispose();
 		}
+		if (weighted) {
+			gc.setForeground(display.getSystemColor(colorMode == DARK ? SWT.COLOR_GRAY : SWT.COLOR_DARK_GRAY));
+			TextLayout textLayout = new TextLayout(gc.getDevice());
+			textLayout.setText(Messages.getString("HistogramManager.center_weighted")); //$NON-NLS-1$
+			textLayout.draw(gc, 10, 5);
+			textLayout.dispose();
+		}
 		if (!inline) {
 			gc.setAlpha(255);
-			gc.setForeground(display.getSystemColor(dark ? SWT.COLOR_GRAY : SWT.COLOR_DARK_GRAY));
+			gc.setForeground(display.getSystemColor(colorMode == DARK ? SWT.COLOR_GRAY : SWT.COLOR_DARK_GRAY));
 			gc.drawLine(width / 3, 0, width / 3, height);
 			gc.drawLine(2 * width / 3, 0, 2 * width / 3, height);
 		}

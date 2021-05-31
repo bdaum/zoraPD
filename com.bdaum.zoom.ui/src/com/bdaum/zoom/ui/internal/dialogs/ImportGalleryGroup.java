@@ -25,13 +25,13 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import com.bdaum.aoModeling.runtime.IdentifiableObject;
@@ -40,15 +40,14 @@ import com.bdaum.zoom.cat.model.group.exhibition.ExhibitionImpl;
 import com.bdaum.zoom.cat.model.group.slideShow.SlideShowImpl;
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
 
-public class ImportGalleryGroup {
+public class ImportGalleryGroup implements Listener {
 
 	private Text fromField;
 	private IdentifiableObject selectedItem;
 	private ListenerList<ISelectionChangedListener> listeners = new ListenerList<ISelectionChangedListener>();
 	private Button clearButton;
 
-	public ImportGalleryGroup(final Composite parent, GridData gridData,
-			final String targetType) {
+	public ImportGalleryGroup(final Composite parent, GridData gridData, final String targetType) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		comp.setLayoutData(gridData);
 		GridLayout layout = new GridLayout(4, false);
@@ -56,33 +55,21 @@ public class ImportGalleryGroup {
 		layout.marginWidth = 0;
 		comp.setLayout(layout);
 		Label label = new Label(comp, SWT.NONE);
-		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
-				false));
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		label.setText(Messages.ImportGalleryGroup_import_from);
-		fromField = new Text(comp, SWT.SINGLE | SWT.LEAD | SWT.BORDER
-				| SWT.READ_ONLY);
+		fromField = new Text(comp, SWT.SINGLE | SWT.LEAD | SWT.BORDER | SWT.READ_ONLY);
 		fromField.setLayoutData(new GridData(200, -1));
 		clearButton = new Button(comp, SWT.PUSH);
-		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		clearButton.setText(Messages.ImportGalleryGroup_clear);
-		clearButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				fromField.setText(""); //$NON-NLS-1$
-				selectedItem = null;
-				updateButtons();
-			}
-		});
+		clearButton.addListener(SWT.Selection, this);
 		Button browseButton = new Button(comp, SWT.PUSH);
-		browseButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
-				false, false));
+		browseButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		browseButton.setText(Messages.ImportGalleryGroup_browse);
-		browseButton.addSelectionListener(new SelectionAdapter() {
+		browseButton.addListener(SWT.Selection, new Listener() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				PresentationSelectDialog dialog = new PresentationSelectDialog(
-						parent.getShell(), targetType);
+			public void handleEvent(Event e) {
+				PresentationSelectDialog dialog = new PresentationSelectDialog(parent.getShell(), targetType);
 				if (dialog.open() == Window.OK) {
 					selectedItem = dialog.getResult();
 					fromField.setText(getName());
@@ -105,20 +92,16 @@ public class ImportGalleryGroup {
 
 	protected String getName() {
 		if (selectedItem instanceof SlideShowImpl)
-			return NLS.bind(Messages.ImportGalleryGroup_slideshow_n,
-					((SlideShowImpl) selectedItem).getName());
+			return NLS.bind(Messages.ImportGalleryGroup_slideshow_n, ((SlideShowImpl) selectedItem).getName());
 		if (selectedItem instanceof ExhibitionImpl)
-			return NLS.bind(Messages.ImportGalleryGroup_exhibition_n,
-					((ExhibitionImpl) selectedItem).getName());
+			return NLS.bind(Messages.ImportGalleryGroup_exhibition_n, ((ExhibitionImpl) selectedItem).getName());
 		if (selectedItem instanceof WebGalleryImpl)
-			return NLS.bind(Messages.ImportGalleryGroup_web_gallery_n,
-					((WebGalleryImpl) selectedItem).getName());
+			return NLS.bind(Messages.ImportGalleryGroup_web_gallery_n, ((WebGalleryImpl) selectedItem).getName());
 		if (selectedItem instanceof SmartCollectionImpl) {
 			SmartCollectionImpl sm = (SmartCollectionImpl) selectedItem;
-			return NLS.bind(
-					sm.getAlbum() ? sm.getSystem() ? Messages.ImportGalleryGroup_persons
-							: Messages.ImportGalleryGroup_album : Messages.ImportGalleryGroup_user_defined, sm
-							.getName());
+			return NLS.bind(sm.getAlbum()
+					? sm.getSystem() ? Messages.ImportGalleryGroup_persons : Messages.ImportGalleryGroup_album
+					: Messages.ImportGalleryGroup_user_defined, sm.getName());
 		}
 		return ""; //$NON-NLS-1$
 	}
@@ -141,6 +124,13 @@ public class ImportGalleryGroup {
 
 	public IdentifiableObject getFromItem() {
 		return selectedItem;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		fromField.setText(""); //$NON-NLS-1$
+		selectedItem = null;
+		updateButtons();
 	}
 
 }

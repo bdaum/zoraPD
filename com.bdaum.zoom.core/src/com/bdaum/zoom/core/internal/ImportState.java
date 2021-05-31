@@ -351,6 +351,10 @@ public class ImportState {
 	public String getDcimOwner() {
 		return importFromDeviceData == null ? null : importFromDeviceData.getDcimOwner();
 	}
+	
+	public String getMedia() {
+		return importFromDeviceData == null ? null : importFromDeviceData.getMedia();
+	}
 
 	public int getTimeshift() {
 		return importFromDeviceData == null ? sidecarTimeshift : importFromDeviceData.getTimeshift() + sidecarTimeshift;

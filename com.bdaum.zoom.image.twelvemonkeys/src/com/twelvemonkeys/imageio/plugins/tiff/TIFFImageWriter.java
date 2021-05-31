@@ -30,6 +30,53 @@
 
 package com.twelvemonkeys.imageio.plugins.tiff;
 
+import static com.twelvemonkeys.imageio.plugins.tiff.TIFFStreamMetadata.configureStreamByteOrder;
+
+import java.awt.Graphics2D;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_ColorSpace;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentSampleModel;
+import java.awt.image.DataBuffer;
+import java.awt.image.IndexColorModel;
+import java.awt.image.MultiPixelPackedSampleModel;
+import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
+import java.awt.image.SampleModel;
+import java.awt.image.SinglePixelPackedSampleModel;
+import java.awt.image.WritableRaster;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+
+import javax.imageio.IIOException;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.event.IIOWriteWarningListener;
+import javax.imageio.metadata.IIOInvalidTreeException;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataFormatImpl;
+import javax.imageio.spi.ImageWriterSpi;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
+
 import com.twelvemonkeys.image.ImageUtil;
 import com.twelvemonkeys.imageio.ImageWriterBase;
 import com.twelvemonkeys.imageio.metadata.Directory;
@@ -44,26 +91,6 @@ import com.twelvemonkeys.imageio.util.ProgressListenerBase;
 import com.twelvemonkeys.io.enc.EncoderStream;
 import com.twelvemonkeys.io.enc.PackBitsEncoder;
 import com.twelvemonkeys.lang.Validate;
-
-import javax.imageio.*;
-import javax.imageio.event.IIOWriteWarningListener;
-import javax.imageio.metadata.IIOInvalidTreeException;
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.metadata.IIOMetadataFormatImpl;
-import javax.imageio.spi.ImageWriterSpi;
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageOutputStream;
-import java.awt.*;
-import java.awt.color.ColorSpace;
-import java.awt.color.ICC_ColorSpace;
-import java.awt.image.*;
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
-
-import static com.twelvemonkeys.imageio.plugins.tiff.TIFFStreamMetadata.configureStreamByteOrder;
 
 /**
  * TIFFImageWriter
@@ -820,7 +847,7 @@ public final class TIFFImageWriter extends ImageWriterBase {
 
     // TODO: Would be better to solve this on stream level... But writers would then have to explicitly flush the buffer before done.
     private void flushBuffer(final ByteBuffer buffer, final DataOutput stream) throws IOException {
-        buffer.flip();
+    	((Buffer) buffer).flip();  // cast because of JDK compatibilty
         stream.write(buffer.array(), buffer.arrayOffset(), buffer.remaining());
 
         buffer.clear();

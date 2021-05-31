@@ -65,7 +65,7 @@ import com.bdaum.zoom.ui.internal.Icons;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 
 @SuppressWarnings("restriction")
-public class HistoryView extends AbstractCatalogView implements HistoryListener {
+public class HistoryView extends AbstractCatalogView implements HistoryListener, IDoubleClickListener, ISelectionChangedListener {
 
 	private class HistoryAction extends Action {
 
@@ -419,19 +419,7 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 //		setInput();
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), HelpContextIds.HISTORY_VIEW);
 		addCtrlKeyListener();
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(final SelectionChangedEvent event) {
-				if (settingSelection <= 0) {
-					cancelJobs(HistoryView.this);
-					new SelectionJob(viewer, event).schedule();
-				}
-				if (cntrlDwn && editItemAction.isEnabled()) {
-					editItemAction.run();
-					cntrlDwn = false;
-				}
-			}
-		});
-
+		viewer.addSelectionChangedListener(this);
 		addKeyListener();
 		addGestureListener(((TableViewer) viewer).getTable());
 		makeActions();
@@ -505,6 +493,17 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 		}
 	}
 	
+	public void selectionChanged(final SelectionChangedEvent event) {
+		if (settingSelection <= 0) {
+			cancelJobs(HistoryView.this);
+			new SelectionJob(viewer, event).schedule();
+		}
+		if (cntrlDwn && editItemAction.isEnabled()) {
+			editItemAction.run();
+			cntrlDwn = false;
+		}
+	}
+	
 	@Override
 	public void dispose() {
 		getNavigationHistory().removeHistoryListener(this);
@@ -574,12 +573,12 @@ public class HistoryView extends AbstractCatalogView implements HistoryListener 
 	}
 
 	private void hookDoubleClickAction() {
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			public void doubleClick(DoubleClickEvent event) {
-				if (!cntrlDwn)
-					editItemAction.run();
-			}
-		});
+		viewer.addDoubleClickListener(this);
+	}
+	
+	public void doubleClick(DoubleClickEvent event) {
+		if (!cntrlDwn)
+			editItemAction.run();
 	}
 
 	@Override

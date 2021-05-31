@@ -20,14 +20,15 @@
 package com.bdaum.zoom.ai.msvision.internal;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
 
 import com.bdaum.zoom.ai.internal.AiActivator;
 import com.bdaum.zoom.ai.msvision.internal.preference.PreferenceConstants;
 import com.bdaum.zoom.ui.internal.ZUiPlugin;
-import com.microsoft.projectoxford.vision.VisionServiceRestClient;
+import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionClient;
+import com.microsoft.azure.cognitiveservices.vision.computervision.ComputerVisionManager;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -35,36 +36,27 @@ import com.microsoft.projectoxford.vision.VisionServiceRestClient;
 @SuppressWarnings("restriction")
 public class MsVisionActivator extends ZUiPlugin {
 
-	// The plug-in ID
 	public static final String PLUGIN_ID = "com.bdaum.zoom.ai.msVision"; //$NON-NLS-1$
 
-	// The shared instance
 	private static MsVisionActivator plugin;
 
 	private String key;
 
-	private VisionServiceRestClient client;
+	private String endpoint;
 
-	/**
-	 * The constructor
-	 */
+	private ComputerVisionClient client;
 
-	public VisionServiceRestClient getClient() {
+	public ComputerVisionClient getClient() {
 		if (client == null && key != null && !key.isEmpty())
-			client = new VisionServiceRestClient(key);
+			client = ComputerVisionManager.authenticate(key).withEndpoint(endpoint);
 		return client;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.
-	 * BundleContext)
-	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 		key = getPreferenceStore().getString(PreferenceConstants.KEY);
+		endpoint = getPreferenceStore().getString(PreferenceConstants.ENDPOINT);
 		InstanceScope.INSTANCE.getNode(AiActivator.PLUGIN_ID)
 				.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
 					@Override
@@ -75,12 +67,6 @@ public class MsVisionActivator extends ZUiPlugin {
 				});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.
-	 * BundleContext)
-	 */
 	public void stop(BundleContext context) throws Exception {
 		disposeClient();
 		plugin = null;
@@ -96,12 +82,21 @@ public class MsVisionActivator extends ZUiPlugin {
 		return plugin;
 	}
 
-	public void setAccountCredentials(String key) {
+	public void setAccountCredentials(String key, String endpoint) {
 		this.key = key;
+		this.endpoint = endpoint;
 	}
 
 	public void disposeClient() {
 		client = null;
+	}
+
+	public String getEndpoint() {
+		return endpoint;
+	}
+
+	public String getKey() {
+		return key;
 	}
 
 }

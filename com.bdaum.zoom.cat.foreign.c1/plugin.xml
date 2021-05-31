@@ -7,6 +7,7 @@
             allPopups="false"
             locationURI="menu:catalog?after=catExt1">
          <menu
+               icon="icons/import_wiz.gif"
                id="importForeignCat"
                label="%menu.label.import"
                mnemonic="%menu.mnemonic.import">

@@ -33,7 +33,6 @@ import com.bdaum.aoModeling.runtime.IdentifiableObject;
 import com.bdaum.zoom.cat.model.group.Group;
 import com.bdaum.zoom.cat.model.group.GroupImpl;
 import com.bdaum.zoom.cat.model.group.SmartCollection;
-import com.bdaum.zoom.cat.model.group.SmartCollectionImpl;
 import com.bdaum.zoom.core.Core;
 import com.bdaum.zoom.core.db.IDbManager;
 
@@ -70,8 +69,8 @@ public class CatalogContentProvider implements ITreeContentProvider {
 		if (child instanceof Group)
 			return ((Group) child).getGroup_subgroup_parent();
 		String groupId = null;
-		if (child instanceof SmartCollectionImpl) {
-			SmartCollectionImpl coll = (SmartCollectionImpl) child;
+		if (child instanceof SmartCollection) {
+			SmartCollection coll = (SmartCollection) child;
 			if (coll.getSmartCollection_subSelection_parent() != null)
 				return coll.getSmartCollection_subSelection_parent();
 			groupId = coll.getGroup_rootCollection_parent();
@@ -95,8 +94,8 @@ public class CatalogContentProvider implements ITreeContentProvider {
 			if (!ids.isEmpty()) {
 				List<IdentifiableObject> set = dbManager.obtainByIds(IdentifiableObject.class, ids);
 				for (IdentifiableObject obj : set) {
-					if (obj instanceof SmartCollectionImpl
-							&& groupId.equals(((SmartCollectionImpl) obj).getGroup_rootCollection_parent()))
+					if (obj instanceof SmartCollection
+							&& groupId.equals(((SmartCollection) obj).getGroup_rootCollection_parent()))
 						children.add(obj);
 				}
 			}

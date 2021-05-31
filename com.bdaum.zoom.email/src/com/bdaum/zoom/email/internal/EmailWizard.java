@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.email.internal;
@@ -35,7 +35,7 @@ import com.bdaum.zoom.ui.internal.wizards.AbstractAssetSelectionWizard;
 import com.bdaum.zoom.ui.internal.wizards.MetaSelectionPage;
 
 @SuppressWarnings("restriction")
-public class EmailWizard extends AbstractAssetSelectionWizard implements IExportWizard {
+public class EmailWizard extends AbstractAssetSelectionWizard implements IExportWizard, IMailWizard {
 
 	public static final String MODE = "mode"; //$NON-NLS-1$
 	public static final String SCALING = "scaling"; //$NON-NLS-1$
@@ -45,8 +45,9 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 	public static final String INCLUDEMETA = "includeMeta"; //$NON-NLS-1$
 	public static final String TRACKEXPORTS = "trackExports"; //$NON-NLS-1$
 
-	private SendEmailPage mainPage;
+	private ProcessingPage mainPage;
 	private MetaSelectionPage metaPage;
+	private MailPage mailPage;
 
 	public EmailWizard() {
 		setHelpAvailable(true);
@@ -61,31 +62,25 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 						Messages.EmailWizard_Email_n_images, size));
 	}
 
-	/*
-	 * (non-Javadoc) Method declared on IWizard.
-	 */
-
 	@Override
 	public void addPages() {
-		super.addPages();
 		ImageDescriptor imageDescriptor = Icons.email64.getDescriptor();
-		mainPage = new SendEmailPage(assets, false);
+		addPage(mainPage = new ProcessingPage(assets, false));
 		mainPage.setImageDescriptor(imageDescriptor);
-		addPage(mainPage);
 		if (!assets.isEmpty()) {
-			metaPage = new MetaSelectionPage(new QueryField[] {
-					QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false, ExportFieldViewerFilter.INSTANCE, false);
+			addPage(metaPage = new MetaSelectionPage(new QueryField[] {
+					QueryField.EXIF_ALL, QueryField.IPTC_ALL }, false, ExportFieldViewerFilter.INSTANCE, false));
 			metaPage.setImageDescriptor(imageDescriptor);
-			addPage(metaPage);
 		}
+		addPage(mailPage = new MailPage());
+		mailPage.setImageDescriptor(imageDescriptor);
+		
 	}
 
 
 	@Override
 	public IWizardPage getNextPage(IWizardPage page) {
-		if (assets.isEmpty())
-			return null;
-		if (page == mainPage && !mainPage.getIncludeMeta())
+		if (assets.isEmpty() || page == mailPage && !mainPage.getIncludeMeta())
 			return null;
 		return super.getNextPage(page);
 	}
@@ -95,8 +90,7 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 	public boolean canFinish() {
 		if (assets.isEmpty())
 			return false;
-		IWizardPage currentPage = getContainer().getCurrentPage();
-		if (currentPage == mainPage && mainPage.getIncludeMeta())
+		if (getContainer().getCurrentPage() == mailPage && mainPage.getIncludeMeta())
 			return false;
 		return super.canFinish();
 	}
@@ -104,13 +98,25 @@ public class EmailWizard extends AbstractAssetSelectionWizard implements IExport
 
 	@Override
 	public boolean performFinish() {
-		boolean finish = mainPage.finish();
+		boolean finish = mailPage.finish();
 		saveDialogSettings();
+		mailPage.saveSettings();
+		mainPage.saveSettings();
 		return finish;
 	}
 
 	public Set<QueryField> getFilter() {
 		return metaPage != null && mainPage.getIncludeMeta() ? metaPage.getFilter() : null;
+	}
+
+	public EmailData getEmailData() {
+		EmailData emailData = mainPage.getEmailData();
+		mailPage.completeEmailData(emailData);
+		return emailData;
+	}
+
+	public String getImageList() {
+		return mainPage.getImageList();
 	}
 
 }

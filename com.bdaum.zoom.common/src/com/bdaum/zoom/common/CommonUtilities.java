@@ -19,14 +19,27 @@
  */
 package com.bdaum.zoom.common;
 
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
 public class CommonUtilities {
 
+	public static final String key = "Bcp18793Var93012"; //$NON-NLS-1$
+	public static final String prefix = "\n!\n"; //$NON-NLS-1$
 	private static int hoverDelay = 200;
 	private static int hoverBaseTime = 1000;
 	private static int hoverTimePerChar = 25;
+	private static Cipher cipher;
+	private static SecretKeySpec aesKey;
 
 	private CommonUtilities() {
 		// inhibit instantiation
@@ -35,7 +48,8 @@ public class CommonUtilities {
 	/**
 	 * Encodes the blanks of a URL
 	 *
-	 * @param s - URL or URL part/
+	 * @param s
+	 *            - URL or URL part/
 	 * @return the encoded string
 	 */
 	public static String encodeBlanks(String s) {
@@ -45,8 +59,10 @@ public class CommonUtilities {
 	/**
 	 * Converts a separator separated string list into a list of strings
 	 *
-	 * @param stringlist - input string
-	 * @param seps       - valid separators
+	 * @param stringlist
+	 *            - input string
+	 * @param seps
+	 *            - valid separators
 	 * @return - resulting list
 	 */
 
@@ -68,7 +84,7 @@ public class CommonUtilities {
 							offset = i;
 							break;
 						}
-				} 
+				}
 				if (!token)
 					for (int j = 0; j < seplen; j++)
 						if (c == separators[j]) {
@@ -104,6 +120,46 @@ public class CommonUtilities {
 
 	public static long getHoverDelay() {
 		return hoverDelay;
+	}
+
+	public static String decode(String string) {
+		if (string != null && !string.isEmpty()) {
+			if (!string.startsWith(prefix))
+				return string;
+			try {
+				getCipher().init(Cipher.DECRYPT_MODE, getAesKey());
+				return new String(cipher.doFinal(string.substring(prefix.length()).getBytes()));
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+					| BadPaddingException e) {
+				// should never happen
+			}
+		}
+		return ""; //$NON-NLS-1$
+	}
+
+	private static Key getAesKey() {
+		if (aesKey == null)
+			aesKey = new SecretKeySpec(key.getBytes(), "AES"); //$NON-NLS-1$
+		return aesKey;
+	}
+
+	private static Cipher getCipher() throws NoSuchAlgorithmException, NoSuchPaddingException {
+		if (cipher == null)
+			cipher = Cipher.getInstance("AES"); //$NON-NLS-1$
+		return cipher;
+	}
+
+	public static String encode(String text) {
+		if (text != null && !text.isEmpty())
+			try {
+				// encrypt the text
+				getCipher().init(Cipher.ENCRYPT_MODE, getAesKey());
+				return prefix + new String(cipher.doFinal(text.getBytes()));
+			} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+					| BadPaddingException e) {
+				// should never happen
+			}
+		return ""; //$NON-NLS-1$
 	}
 
 }

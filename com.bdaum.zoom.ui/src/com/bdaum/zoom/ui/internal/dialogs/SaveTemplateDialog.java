@@ -27,8 +27,6 @@ import java.net.MalformedURLException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -40,7 +38,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -57,7 +57,7 @@ import com.bdaum.zoom.core.QueryField;
 import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.image.internal.swt.ImageLoader;
 
-public class SaveTemplateDialog extends ZTrayDialog {
+public class SaveTemplateDialog extends ZTrayDialog implements Listener  {
 
 	private static final String MESSAGE = Messages.SaveTemplateDialog_you_can_ssve_the_design;
 	private final File start;
@@ -111,17 +111,12 @@ public class SaveTemplateDialog extends ZTrayDialog {
 		data = new GridData(SWT.END, SWT.CENTER, false, false);
 		data.widthHint = 250;
 		nameField.setLayoutData(data);
-		nameField.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				updateButtons();
-			}
-		});
+		nameField.addListener(SWT.Modify, this);
 		try {
 			browser.setUrl(start.toURI().toURL().toString());
 		} catch (MalformedURLException e) {
 			// should not happen
 		}
-
 		return area;
 	}
 
@@ -234,5 +229,10 @@ public class SaveTemplateDialog extends ZTrayDialog {
 			image.dispose();
 			gc.dispose();
 		}
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		updateButtons();
 	}
 }

@@ -29,7 +29,9 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 			850, // large
 			1050, // very large
 			450, // small
-			300 // very small
+			300, // very small
+			1920, // HD
+			4000 //4k
 	};
 
 	private static final int BODYPADDING = 40;
@@ -98,7 +100,7 @@ public class GalleriaGenerator extends AbstractGalleryGenerator {
 		varmap.put("bodyheight", String.valueOf(bodyheight)); //$NON-NLS-1$
 		varmap.put("navwidth", String.valueOf(navwidth)); //$NON-NLS-1$
 		varmap.put("pagewidth", String.valueOf(containerwidth)); //$NON-NLS-1$
-		int galleriaHeight = bodywidth + Math.abs(getThumbnailSizeInPixel(show.getThumbSize()));
+		int galleriaHeight = bodywidth + Math.abs(getThumbnailSize(show.getThumbSize()));
 		varmap.put("galleriaHeight", String.valueOf(galleriaHeight)); //$NON-NLS-1$
 		varmap.put("galleriaWidth", String.valueOf(galleriaHeight * 2)); //$NON-NLS-1$
 		WebParameter tOptions = getShow().getParameter(Activator.PLUGIN_ID + ".themeOptions"); //$NON-NLS-1$

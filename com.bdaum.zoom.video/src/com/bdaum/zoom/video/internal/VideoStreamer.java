@@ -44,7 +44,7 @@ public class VideoStreamer implements IVideoStreamer {
 				grabber.setImageHeight(newHeight);
 			}
 			int lengthInFrames = grabber.getLengthInFrames();
-			double frameRate = grabber.getFrameRate();
+//			double frameRate = grabber.getFrameRate();
 			for (frameNo = 0; frameNo < lengthInFrames; frameNo++) {
 				grabber.setFrameNumber(frameNo);
 				Frame frame = grabber.grabImage();
@@ -55,7 +55,7 @@ public class VideoStreamer implements IVideoStreamer {
 		} catch (Exception e) {
 			if (frameNo > 0 && e.getMessage().contains("_seek_")) //$NON-NLS-1$
 				throw new UnsupportedOperationException(e.getMessage());
-			throw new IOException(NLS.bind("Streaming of file {0} failed", file), e);
+			throw new IOException(NLS.bind("Streaming of file {0} failed", file), e); //$NON-NLS-1$
 		}
 	}
 

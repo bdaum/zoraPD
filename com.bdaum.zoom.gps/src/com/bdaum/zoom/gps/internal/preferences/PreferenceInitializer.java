@@ -13,7 +13,6 @@ package com.bdaum.zoom.gps.internal.preferences;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.TimeZone;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
@@ -30,11 +29,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		IEclipsePreferences node = DefaultScope.INSTANCE.getNode(GpsActivator.PLUGIN_ID);
 		// get local time shift to UTC
 		SimpleDateFormat df = Format.XML_DATE_TIME_FORMAT.get();
-		Date now = new Date();
+		long now = System.currentTimeMillis();
 		String today = df.format(now);
 		df.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
 		try {
-			long diff = now.getTime() - df.parse(today).getTime();
+			long diff = now - df.parse(today).getTime();
 			diff += diff < 0 ? -30000L : 30000L;
 			node.putInt(PreferenceConstants.TIMESHIFT, (int) (diff / 60000L));
 		} catch (ParseException e) {

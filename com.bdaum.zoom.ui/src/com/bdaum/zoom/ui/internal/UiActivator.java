@@ -23,6 +23,7 @@ package com.bdaum.zoom.ui.internal;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -281,6 +282,10 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 
 	private Map<Rectangle, IKiosk> viewerMonitorMap = new HashMap<>(5);
 
+	private HoverManager hoverManager;
+
+	private boolean importDialogActive = false;
+
 	private IPreferenceChangeListener preferenceListener = new IPreferenceChangeListener() {
 		public void preferenceChange(PreferenceChangeEvent event) {
 			if (PreferenceConstants.FILEASSOCIATION.equals(event.getKey()))
@@ -301,12 +306,25 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		try {
-			for (File file : Platform.getLogFileLocation().toFile().getParentFile().listFiles()) {
-				String path = file.getPath();
-				if (path.indexOf(".log") >= 0 && path.indexOf(".bak") >= 0) //$NON-NLS-1$ //$NON-NLS-2$
-					file.delete();
+		if (Constants.WIN32) {
+			String p = FileLocator.findAbsolutePath(getBundle(), "ver.bat"); //$NON-NLS-1$
+			Process pr = Runtime.getRuntime().exec(p);
+			try (InputStream inputStream = pr.getInputStream()) {
+				byte[] b = new byte[100];
+				int len = inputStream.read(b, 0, 100);
+				if (new String(b, 0, len).contains(" 10.")) //$NON-NLS-1$
+					System.setProperty("org.eclipse.swt.browser.IEVersion", "12001"); //$NON-NLS-1$//$NON-NLS-2$
 			}
+
+		}
+		try {
+			File[] files = Platform.getLogFileLocation().toFile().getParentFile().listFiles();
+			if (files != null)
+				for (File file : files) {
+					String path = file.getPath();
+					if (path.indexOf(".log") >= 0 && path.indexOf(".bak") >= 0) //$NON-NLS-1$ //$NON-NLS-2$
+						file.delete();
+				}
 		} catch (RuntimeException e) {
 			// exit gracefully
 		}
@@ -1500,8 +1518,6 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 		}
 	};
 
-	private HoverManager hoverManager;
-
 	public boolean startTetheredShooting(StorageObject[] dcims, IJobChangeListener listener) {
 		if (!isTetheredShootingActive()) {
 			TetheredDialog dialog = new TetheredDialog(PlatformUI.getWorkbench().getDisplay().getActiveShell());
@@ -1605,6 +1621,14 @@ public class UiActivator extends ZUiPlugin implements IUi, IDngLocator {
 	public void setServerMessage(String message, IAction clickHandler) {
 		for (ServerListener listener : serverListeners)
 			listener.setMessage(message, clickHandler);
+	}
+
+	public void setImportDialogActive(boolean importDialogActive) {
+		this.importDialogActive = importDialogActive;
+	}
+
+	public boolean getImportDialogActive() {
+		return importDialogActive;
 	}
 
 }

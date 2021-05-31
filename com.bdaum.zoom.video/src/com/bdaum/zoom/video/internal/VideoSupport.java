@@ -87,13 +87,13 @@ public class VideoSupport extends AbstractMediaSupport {
 	private static final Class<?>[] NOPARMS = new Class[0];
 	private static final Object[] NOARGS = new Object[0];
 
-	public static final IFormatter durationFormatter = new IFormatter() {
+	public static final IFormatter durationFormatter = new Format.FormatAdapter() {
 
-		public String toString(Object obj) {
-			return Format.getDecimalFormat(3).format(((Double) obj).doubleValue()) + " s"; //$NON-NLS-1$
+		public String format(double d) {
+			return Format.getDecimalFormat(3).format(d) + " s"; //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim().toLowerCase();
 			if (s.endsWith("s")) //$NON-NLS-1$
 				s = s.substring(0, s.length() - 1).trim();
@@ -105,13 +105,13 @@ public class VideoSupport extends AbstractMediaSupport {
 		}
 	};
 
-	private static final IFormatter frameFormatter = new IFormatter() {
+	private static final IFormatter frameFormatter = new Format.FormatAdapter() {
 
-		public String toString(Object obj) {
-			return Format.getDecimalFormat(2).format(((Double) obj).doubleValue()) + " fps"; //$NON-NLS-1$
+		public String format(double d) {
+			return Format.getDecimalFormat(2).format(d) + " fps"; //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim().toLowerCase();
 			if (s.endsWith("fps")) //$NON-NLS-1$
 				s = s.substring(0, s.length() - 3).trim();
@@ -123,16 +123,15 @@ public class VideoSupport extends AbstractMediaSupport {
 		}
 	};
 
-	private static final IFormatter bitrateFormatter = new IFormatter() {
+	private static final IFormatter bitrateFormatter = new Format.FormatAdapter() {
 
-		public String toString(Object obj) {
-			double d = ((Integer) obj).intValue();
+		public String format(int d) {
 			if (d > 2000000)
 				return Format.getDecimalFormat(3).format(d / 1000000d) + " Mbps"; //$NON-NLS-1$
 			return Format.getDecimalFormat(1).format(d / 1000d) + " kbps"; //$NON-NLS-1$
 		}
 
-		public Object fromString(String s) throws ParseException {
+		public Object parse(String s) throws ParseException {
 			s = s.trim().toLowerCase();
 			double f = 1d;
 			if (s.endsWith("mbps")) { //$NON-NLS-1$
@@ -424,21 +423,11 @@ public class VideoSupport extends AbstractMediaSupport {
 	}
 
 	private ImportState importState;
-	private String name;
-	private String plural;
+	private String name, plural, collectionID;
 	private boolean convertall;
 	private List<File> backups = new ArrayList<File>();
 	private Map<String, String> mimeMap;
-	private String collectionID;
 
-	/**
-	 * (nicht-Javadoc)
-	 *
-	 * @see com.bdaum.zoom.core.internal.IMediaSupport#importFile(java.io.File,
-	 *      java.lang.String, java.util.Date, int,
-	 *      org.eclipse.core.runtime.IProgressMonitor, java.net.URI,
-	 *      com.bdaum.zoom.core.internal.ImportState)
-	 */
 	public int importFile(StorageObject object, String extension, ImportState importState, IProgressMonitor aMonitor,
 			URI remote) throws IOException, DiskFullException {
 		if (this.importState != importState) {
@@ -542,7 +531,8 @@ public class VideoSupport extends AbstractMediaSupport {
 						image = fromImportFilter
 								? ((ExifToolSubstitute) etool).loadThumbnail(twidth, twidth / 4 * 3,
 										importState.thumbnailRaster, 0f)
-								: decodeAndCaptureFrames(files[0], twidth, importState.thumbnailRaster, 1, null, aMonitor);
+								: decodeAndCaptureFrames(files[0], twidth, importState.thumbnailRaster, 1, null,
+										aMonitor);
 					} catch (UnsupportedOperationException e) {
 						// should not happen
 					}
@@ -551,9 +541,9 @@ public class VideoSupport extends AbstractMediaSupport {
 				}
 				aMonitor.worked(1);
 				--work;
-				if (asset != null
-						&& createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail, oldFrameNo, etool, null,
-								ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted, aMonitor)) {
+				if (asset != null && createImageEntry(files[0], uri, extension, false, ensemble, image, oldThumbnail,
+						oldFrameNo, etool, null, ensemble.xmpTimestamp, importState.importDate, toBeStored, toBeDeleted,
+						aMonitor)) {
 					AssetEnsemble.deleteAll(existing, deletedAssets, toBeDeleted, toBeStored);
 					ensemble.removeFromTrash(trashed);
 					ensemble.store(toBeDeleted, toBeStored);
@@ -579,8 +569,9 @@ public class VideoSupport extends AbstractMediaSupport {
 				SmartCollectionImpl coll = new SmartCollectionImpl(Messages.VideoSupport_Videos, true, false, false,
 						false, null, 0, null, 0, null, Constants.INHERIT_LABEL, null, 0, 1, null);
 				coll.setStringId(collectionID);
-				coll.addCriterion(new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", null, QueryField.STARTSWITH, //$NON-NLS-1$
-						false));
+				coll.addCriterion(
+						new CriterionImpl(QueryField.MIMETYPE.getKey(), null, "video/", null, QueryField.STARTSWITH, //$NON-NLS-1$
+								false));
 				coll.addSortCriterion(new SortCriterionImpl(QueryField.NAME.getKey(), null, false));
 				coll.setGroup_rootCollection_parent(group.getStringId());
 				group.addRootCollection(collectionID);
@@ -615,7 +606,8 @@ public class VideoSupport extends AbstractMediaSupport {
 		ensemble.setAnalogProperties(importState.getAnalogProperties());
 		if (!importState.processExifData(ensemble, originalFile, 0))
 			return false;
-		importState.processXmpSidecars(uri, monitor, ensemble);
+		if ("file".equals(uri.getScheme())) //$NON-NLS-1$
+			importState.processXmpSidecars(uri, monitor, ensemble);
 		ensemble.cleanUp(now, importState.getTimeshift());
 		asset.setContentType(QueryField.CONTENTTYPE_PHOTO);
 		Video vx = getVx(asset, false);

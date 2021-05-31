@@ -15,7 +15,7 @@
  * along with ZoRa; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * (c) 2009-2017 Berthold Daum  
+ * (c) 2009-2021 Berthold Daum  
  */
 
 package com.bdaum.zoom.ui.internal.preferences;
@@ -31,14 +31,14 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.IPluginContribution;
@@ -50,10 +50,11 @@ import com.bdaum.zoom.css.ZColumnLabelProvider;
 import com.bdaum.zoom.ui.internal.HelpContextIds;
 import com.bdaum.zoom.ui.internal.UiUtilities;
 import com.bdaum.zoom.ui.internal.ZViewerComparator;
+import com.bdaum.zoom.ui.internal.views.ZColumnViewerToolTipSupport;
 import com.bdaum.zoom.ui.preferences.AbstractPreferencePage;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class PerspectivesPreferencePage extends AbstractPreferencePage {
+public class PerspectivesPreferencePage extends AbstractPreferencePage implements ISelectionChangedListener, Listener {
 	IPerspectiveRegistry perspectiveRegistry;
 
 	private ArrayList<IPerspectiveDescriptor> perspectives;
@@ -77,14 +78,6 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		createCustomizePerspective(composite);
 	}
 
-	/**
-	 * Create a table of 3 buttons to enable the user to manage customized
-	 * perspectives.
-	 *
-	 * @param parent
-	 *            the parent for the button parent
-	 * @return Composite that the buttons are created in.
-	 */
 	protected Composite createCustomizePerspective(Composite parent) {
 		Composite perspectivesComponent = new Composite(parent, SWT.NONE);
 		perspectivesComponent.setLayoutData(new GridData(GridData.FILL_BOTH));
@@ -98,17 +91,12 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		CGroup perspGroup = UiUtilities.createGroup(perspectivesComponent, 2,
 				Messages.getString("PerspectivesPreferencePage.available_perspectives")); //$NON-NLS-1$
 		viewer = new TableViewer(perspGroup, SWT.V_SCROLL | SWT.FULL_SELECTION);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		viewer.getTable().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
 		viewer.setComparator(ZViewerComparator.INSTANCE);
 		TableViewerColumn col1 = new TableViewerColumn(viewer, SWT.NONE);
-		col1.getColumn().setWidth(180);
+		col1.getColumn().setWidth(150);
 		col1.setLabelProvider(new ZColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -129,6 +117,17 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 				return element.toString();
 			}
 		});
+		TableViewerColumn col3 = new TableViewerColumn(viewer, SWT.NONE);
+		col3.getColumn().setWidth(350);
+		col3.setLabelProvider(new ZColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				if (element instanceof IPerspectiveDescriptor)
+					return ((IPerspectiveDescriptor) element).getDescription();
+				return element.toString();
+			}
+		});
+		ZColumnViewerToolTipSupport.enableFor(viewer);
 		IPerspectiveDescriptor[] persps = perspectiveRegistry.getPerspectives();
 		perspectives = new ArrayList<IPerspectiveDescriptor>(persps.length);
 		for (int i = 0; i < persps.length; i++)
@@ -138,13 +137,6 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		return perspectivesComponent;
 	}
 
-	/**
-	 * Creates and returns the vertical button bar.
-	 *
-	 * @param parent
-	 *            the parent composite to contain the button bar
-	 * @return the button bar control
-	 */
 	protected Control createVerticalButtonBar(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NULL);
 		composite.setLayoutData(new GridData(GridData.FILL_VERTICAL));
@@ -153,34 +145,12 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		composite.setLayout(layout);
 		deleteButton = new Button(composite, SWT.PUSH);
 		deleteButton.setText(Messages.getString("PerspectivesPreferencePage.delete")); //$NON-NLS-1$
-		deleteButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				IPerspectiveDescriptor desc = (IPerspectiveDescriptor) viewer.getStructuredSelection()
-						.getFirstElement();
-				if (desc != null) {
-					if (event.widget == deleteButton && !isPredefined(desc) && !perspToDelete.contains(desc)
-							&& !findOpenInstance(desc)) {
-						perspToDelete.add(desc);
-						perspectives.remove(desc);
-						viewer.remove(desc);
-					}
-					updateButtons();
-				}
-			}
-		});
+		deleteButton.addListener(SWT.Selection, this);
 		deleteButton.setToolTipText(Messages.getString("PerspectivesPreferencePage.delete_tooltip")); //$NON-NLS-1$
 		updateButtons();
 		return composite;
 	}
 
-	/**
-	 * Deletes the perspectives selected by the user if there is no opened instance
-	 * of that perspective.
-	 *
-	 * @return boolean <code>true</code> if all of the perspectives could be
-	 *         deleted.
-	 */
 	private boolean findOpenInstance(IPerspectiveDescriptor desc) {
 		IWorkbenchWindow windows[] = workbench.getWorkbenchWindows();
 		for (int i = 0; i < windows.length; i++) {
@@ -191,9 +161,8 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 					if (!MessageDialog.openQuestion(getShell(),
 							Messages.getString("PerspectivesPreferencePage.delete_perspective"), //$NON-NLS-1$
 							NLS.bind(Messages.getString("PerspectivesPreferencePage.are_you_sure"), //$NON-NLS-1$
-									desc.getLabel()))) {
+									desc.getLabel())))
 						return true;
-					}
 			}
 		}
 		return false;
@@ -224,6 +193,26 @@ public class PerspectivesPreferencePage extends AbstractPreferencePage {
 		if (desc instanceof IPluginContribution)
 			return !desc.getId().endsWith('.' + desc.getLabel());
 		return false;
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		IPerspectiveDescriptor desc = (IPerspectiveDescriptor) viewer.getStructuredSelection()
+				.getFirstElement();
+		if (desc != null) {
+			if (event.widget == deleteButton && !isPredefined(desc) && !perspToDelete.contains(desc)
+					&& !findOpenInstance(desc)) {
+				perspToDelete.add(desc);
+				perspectives.remove(desc);
+				viewer.remove(desc);
+			}
+			updateButtons();
+		}
 	}
 
 }

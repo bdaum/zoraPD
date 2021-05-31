@@ -30,8 +30,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -42,6 +40,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.bdaum.zoom.cat.model.group.webGallery.WebGalleryImpl;
@@ -52,7 +52,7 @@ import com.bdaum.zoom.image.ImageUtilities;
 import com.bdaum.zoom.ui.dialogs.AcousticMessageDialog;
 import com.bdaum.zoom.ui.dialogs.ZTitleAreaDialog;
 
-public class DesignSelectionDialog extends ZTitleAreaDialog implements PaintListener {
+public class DesignSelectionDialog extends ZTitleAreaDialog implements PaintListener, ISelectionChangedListener, Listener {
 
 	private TableViewer viewer;
 	private Canvas canvas;
@@ -103,32 +103,12 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements PaintList
 				return element.toString();
 			}
 		});
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updatedButtons();
-				canvas.redraw();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		viewer.setInput(elements);
 		clearButton = new Button(viewComp, SWT.PUSH);
 		clearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		clearButton.setText(Messages.DesignSelectionDialog_delete);
-		clearButton.addSelectionListener(new SelectionAdapter() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				IStructuredSelection selection = viewer.getStructuredSelection();
-				Object first = selection.getFirstElement();
-				if (first instanceof WebGalleryImpl) {
-					String name = ((WebGalleryImpl) first).getName();
-					if (AcousticMessageDialog.openConfirm(getShell(), Messages.DesignSelectionDialog_delete_design,
-							NLS.bind(Messages.DesignSelectionDialog_do_you_really_want_to_delete, name))) {
-						viewer.remove(first);
-						dbManager.safeTransaction(first, null);
-					}
-				}
-			}
-		});
+		clearButton.addListener(SWT.Selection, this);
 		Composite previewComp = new Composite(comp, SWT.NONE);
 		previewComp.setLayout(new GridLayout());
 		canvas = new Canvas(previewComp, SWT.DOUBLE_BUFFERED | SWT.BORDER);
@@ -171,6 +151,25 @@ public class DesignSelectionDialog extends ZTitleAreaDialog implements PaintList
 
 	public WebGalleryImpl getResult() {
 		return selected;
+	}
+	
+	public void selectionChanged(SelectionChangedEvent event) {
+		updatedButtons();
+		canvas.redraw();
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		IStructuredSelection selection = viewer.getStructuredSelection();
+		Object first = selection.getFirstElement();
+		if (first instanceof WebGalleryImpl) {
+			String name = ((WebGalleryImpl) first).getName();
+			if (AcousticMessageDialog.openConfirm(getShell(), Messages.DesignSelectionDialog_delete_design,
+					NLS.bind(Messages.DesignSelectionDialog_do_you_really_want_to_delete, name))) {
+				viewer.remove(first);
+				dbManager.safeTransaction(first, null);
+			}
+		}
 	}
 
 }

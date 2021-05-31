@@ -73,7 +73,7 @@ public abstract class DragPaintSession extends BasicPaintSession {
 				anchorPosition.x = e.x;
 				anchorPosition.y = e.y;
 			}
-			break;
+			return;
 		case SWT.MouseUp:
 			if (e.button != 1)
 				resetSession(); // abort if right or middle mouse button pressed
@@ -82,7 +82,7 @@ public abstract class DragPaintSession extends BasicPaintSession {
 				if (anchorPosition.x != -1)
 					getPaintSurface().commitRubberbandSelection();
 			}
-			break;
+			return;
 		case SWT.MouseMove:
 			final PaintSurface ps = getPaintSurface();
 			if (!dragInProgress)
@@ -94,7 +94,6 @@ public abstract class DragPaintSession extends BasicPaintSession {
 				tempPosition.y = e.y;
 				ps.addRubberbandSelection(createFigure(anchorPosition, tempPosition));
 			}
-			break;
 		}
 	}
 

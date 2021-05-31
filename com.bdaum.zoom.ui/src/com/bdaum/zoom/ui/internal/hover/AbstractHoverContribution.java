@@ -33,9 +33,10 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 public abstract class AbstractHoverContribution implements IHoverContribution {
 
 	private String id;
-
-	public AbstractHoverContribution() {
-		super();
+	
+	@Override
+	public void init() {
+		// do nothing
 	}
 
 	@Override

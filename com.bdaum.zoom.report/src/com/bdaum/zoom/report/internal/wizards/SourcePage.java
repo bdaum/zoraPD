@@ -262,8 +262,7 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 				report.setName(nameField.getText());
 			else
 				report.setDescription(descriptionField.getText());
-			break;
-
+			return;
 		case SWT.Selection:
 			if (e.widget == browseButton) {
 				ReportSelectionDialog dialog = new ReportSelectionDialog(getShell(), SWT.SINGLE);
@@ -278,7 +277,6 @@ public class SourcePage extends ColoredWizardPage implements Listener {
 				}
 			} else
 				updateFields();
-			break;
 		}
 
 	}

@@ -38,8 +38,8 @@ import com.bdaum.zoom.ui.internal.dialogs.Messages;
 public class SortCriterionGroup extends AbstractCriterionGroup {
 
 	private static final FieldDescriptor extra = new FieldDescriptor(Messages.SortCriterionGroup_no_sort);
-	private static final String[] relationLabels = new String[] { Messages.SortCriterionGroup_no_sort, Messages.SortCriterionGroup_ascending,
-			Messages.SortCriterionGroup_descending };
+	private static final String[] relationLabels = new String[] { Messages.SortCriterionGroup_no_sort,
+			Messages.SortCriterionGroup_ascending, Messages.SortCriterionGroup_descending };
 
 	public SortCriterionGroup(final Composite parent, int groupNo, CollectionEditGroup collectionEditGroup,
 			final SortCriterion crit, boolean enabled) {
@@ -84,25 +84,9 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 
 	private void createButtons(final Composite parent) {
 		andButton = createButton(parent, Messages.SortCriterionGroup_AND);
-		andButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				collectionEditGroup.addSortGroup(parent, SortCriterionGroup.this, null);
-				signalModification(e);
-			}
-		});
+		andButton.addListener(SWT.Selection, this);
 		clearButton = createButton(parent, Icons.delete.getImage());
-		clearButton.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event e) {
-				if (groupNo == 0)
-					reset();
-				else {
-					collectionEditGroup.removeSortGroup(SortCriterionGroup.this);
-					signalModification(e);
-				}
-			}
-		});
+		clearButton.addListener(SWT.Selection, this);
 	}
 
 	protected void reset() {
@@ -149,6 +133,22 @@ public class SortCriterionGroup extends AbstractCriterionGroup {
 						|| element instanceof QueryField && !((QueryField) element).getCategory().extension;
 			}
 		};
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		if (e.widget == andButton) {
+			collectionEditGroup.addSortGroup(andButton.getParent(), SortCriterionGroup.this, null);
+			signalModification(e);
+		} else if (e.widget == clearButton) {
+			if (groupNo == 0)
+				reset();
+			else {
+				collectionEditGroup.removeSortGroup(SortCriterionGroup.this);
+				signalModification(e);
+			}
+		} else
+			super.handleEvent(e);
 	}
 
 }

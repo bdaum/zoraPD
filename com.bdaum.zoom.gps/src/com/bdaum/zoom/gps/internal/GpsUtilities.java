@@ -31,7 +31,6 @@ import java.util.StringTokenizer;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.httpclient.HttpException;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.xml.sax.SAXException;
 
@@ -92,21 +91,21 @@ public class GpsUtilities {
 	}
 
 	public static Place fetchPlaceInfo(double lat, double lon) throws SocketTimeoutException, IOException,
-			WebServiceException, SAXException, ParserConfigurationException, UnknownHostException, HttpException {
+			WebServiceException, SAXException, ParserConfigurationException, UnknownHostException {
 		IGeocodingService service = GpsActivator.getDefault().getNamingService();
 		return (service != null) ? service.fetchPlaceInfo(lat, lon) : null;
 	}
 
 	public static WaypointArea[] findLocation(String address) throws SocketTimeoutException, IOException,
-			WebServiceException, SAXException, ParserConfigurationException, HttpException {
+			WebServiceException, SAXException, ParserConfigurationException {
 		address = address.trim();
 		char sep = address.indexOf('°') >= 0 ? ' ' : ',';
 		int p = address.indexOf(sep);
 		if (p > 0 && p < address.length() - 1) {
 			try {
 				return new WaypointArea[] { new WaypointArea(address,
-						(double) Format.longitudeFormatter.fromString(address.substring(p + 1)),
-						(double) Format.latitudeFormatter.fromString(address.substring(0, p))) };
+						(double) Format.longitudeFormatter.parse(address.substring(p + 1)),
+						(double) Format.latitudeFormatter.parse(address.substring(0, p))) };
 			} catch (ParseException e) {
 				// fall through
 			}
@@ -122,7 +121,7 @@ public class GpsUtilities {
 		return (service != null) ? service.findLocation(address) : null;
 	}
 
-	public static double fetchElevation(double lat, double lon) throws IOException, HttpException {
+	public static double fetchElevation(double lat, double lon) throws IOException {
 		IGeocodingService service = GpsActivator.getDefault().getNamingServiceById("GeoNames"); //$NON-NLS-1$
 		return service == null ? Double.NaN : service.getElevation(lat, lon);
 	}

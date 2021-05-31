@@ -39,8 +39,6 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -95,7 +93,8 @@ import com.bdaum.zoom.ui.internal.preferences.ImportPreferencePage;
 import com.bdaum.zoom.ui.preferences.PreferenceConstants;
 
 @SuppressWarnings("restriction")
-public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAdaptable {
+public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
+		implements IAdaptable, Listener, IEclipsePreferences.IPreferenceChangeListener {
 
 	private final class ErrorHandler implements IDbErrorHandler {
 		private final IWorkbenchConfigurer configurer;
@@ -248,13 +247,13 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			return dialog.getResult();
 		}
 
-		public IRawConverter showRawDialog(IAdaptable adaptable) { 
-			if (question(Constants.APPLICATION_NAME,
-					Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), adaptable)) { //$NON-NLS-1$
+		public IRawConverter showRawDialog(IAdaptable adaptable) {
+			if (question(Constants.APPLICATION_NAME, Messages.getString("ApplicationWorkbenchAdvisor.no_raw_converter"), //$NON-NLS-1$
+					adaptable)) {
 				final Shell shell = getShell(adaptable);
 				final int ret[] = new int[1];
-				syncExec(shell, () -> ret[0] = PreferencesUtil.createPreferenceDialogOn(shell, ImportPreferencePage.ID, new String[0],
-						ImportPreferencePage.RAW).open());
+				syncExec(shell, () -> ret[0] = PreferencesUtil.createPreferenceDialogOn(shell, ImportPreferencePage.ID,
+						new String[0], ImportPreferencePage.RAW).open());
 				if (ret[0] == Dialog.OK)
 					return BatchActivator.getDefault().getCurrentRawConverter(true);
 			}
@@ -318,42 +317,23 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				trayItem = new TrayItem(tray, SWT.NONE);
 				trayItem.setData(UiConstants.ID, RcpActivator.PLUGIN_ID + "_" + System.currentTimeMillis()); //$NON-NLS-1$
 				setTrayVisible(true, APPSTARTING);
-				trayItem.addListener(SWT.Show, new Listener() {
-					public void handleEvent(Event event) {
-						// do nothing
-					}
-				});
-				trayItem.addListener(SWT.Hide, new Listener() {
-					public void handleEvent(Event event) {
-						// do nothing
-					}
-				});
-				trayItem.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						restoreHideWindows(workbench);
-					}
-				});
+				// trayItem.addListener(SWT.Show, new Listener() {
+				// public void handleEvent(Event event) {
+				// // do nothing
+				// }
+				// });
+				// trayItem.addListener(SWT.Hide, new Listener() {
+				// public void handleEvent(Event event) {
+				// // do nothing
+				// }
+				// });
+				trayItem.addListener(SWT.Selection, this);
 				if (!shell.isDisposed()) {
 					final Menu menu = new Menu(shell, SWT.POP_UP);
 					for (int i = 0; i < trayMenuItems.length; i++) {
 						menuItems[i] = new MenuItem(menu, SWT.PUSH);
 						menuItems[i].setText(trayMenuItems[i]);
-						final int cmd = i;
-						menuItems[i].addSelectionListener(new SelectionAdapter() {
-							@Override
-							public void widgetSelected(SelectionEvent e) {
-								switch (cmd) {
-								case QUIT:
-									BatchActivator.setFastExit(false);
-									workbench.close();
-									break;
-								case RESTORE:
-									restoreHideWindows(workbench);
-									break;
-								}
-							}
-						});
+						menuItems[i].addListener(SWT.Selection, this);
 					}
 					trayItem.addListener(SWT.MenuDetect, new Listener() {
 						public void handleEvent(Event event) {
@@ -369,12 +349,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				setTrayMode();
 				IUi ui = Ui.getUi();
 				if (ui != null)
-					ui.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
-						public void preferenceChange(PreferenceChangeEvent event) {
-							if (event.getKey().equals(PreferenceConstants.TRAY_MODE))
-								setTrayMode();
-						}
-					});
+					ui.addPreferenceChangeListener(this);
 			}
 		}
 		OperationJob.addOperationJobListener(new JobChangeAdapter() {
@@ -446,6 +421,11 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 			}
 		});
 		System.gc();
+	}
+
+	public void preferenceChange(PreferenceChangeEvent event) {
+		if (event.getKey().equals(PreferenceConstants.TRAY_MODE))
+			setTrayMode();
 	}
 
 	private static void createApplicationFonts() {
@@ -701,6 +681,18 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor implements IAd
 				return activeWorkbenchWindow.getShell();
 		}
 		return null;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		IWorkbench workbench = getWorkbenchConfigurer().getWorkbench();
+		if (e.widget == trayItem)
+			restoreHideWindows(workbench);
+		else if (e.widget == menuItems[QUIT]) {
+			BatchActivator.setFastExit(false);
+			workbench.close();
+		} else if (e.widget == menuItems[RESTORE])
+			restoreHideWindows(workbench);
 	}
 
 }

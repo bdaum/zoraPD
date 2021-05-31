@@ -26,8 +26,6 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
@@ -35,13 +33,15 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import com.bdaum.zoom.core.Constants;
 import com.bdaum.zoom.ui.IStateListener;
 
-public abstract class AbstractKiosk implements IKiosk, DisposeListener, IAdaptable {
+public abstract class AbstractKiosk implements IKiosk, Listener, IAdaptable {
 
 	protected Date creationDate;
 	protected IWorkbenchWindow parentWindow;
@@ -58,7 +58,7 @@ public abstract class AbstractKiosk implements IKiosk, DisposeListener, IAdaptab
 		this.kind = kind;
 		shell = parentWindow.getShell();
 		if (kind == PRIMARY)
-			shell.addDisposeListener(this);
+			shell.addListener(SWT.Dispose, this);
 		this.display = shell.getDisplay();
 	}
 
@@ -91,7 +91,7 @@ public abstract class AbstractKiosk implements IKiosk, DisposeListener, IAdaptab
 	}
 
 	@Override
-	public void widgetDisposed(DisposeEvent e) {
+	public void handleEvent(Event e) {
 		close();
 	}
 

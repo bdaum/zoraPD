@@ -34,8 +34,6 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -43,8 +41,11 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.dialogs.ListSelectionDialog;
 
@@ -66,7 +67,7 @@ import com.bdaum.zoom.ui.internal.UiActivator;
 import com.bdaum.zoom.ui.internal.widgets.FileEditor;
 import com.bdaum.zoom.ui.widgets.CGroup;
 
-public class MigrateDialog extends ZTitleAreaDialog {
+public class MigrateDialog extends ZTitleAreaDialog implements Listener, ISelectionChangedListener {
 
 	private static final int LOAD = 9999;
 	private static final int SAVE = 9998;
@@ -83,6 +84,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 	private boolean dirty;
 	private Combo fileSeparatorCombo;
 	private int fileSepearatorPolicy = Constants.WIN32 ? 1 : 2;
+	private Button addPatternButton;
 
 	public MigrateDialog(Shell parentShell, File catFile) {
 		super(parentShell, HelpContextIds.MIGRATE_DIALOG);
@@ -175,149 +177,36 @@ public class MigrateDialog extends ZTitleAreaDialog {
 			}
 		});
 		viewer.setContentProvider(ArrayContentProvider.getInstance());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				updateButtons();
-			}
-		});
+		viewer.addSelectionChangedListener(this);
 		Composite buttonComp = new Composite(tableComp, SWT.NONE);
 		buttonComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		buttonComp.setLayout(new GridLayout(1, false));
-		Button addPatternButton = new Button(buttonComp, SWT.PUSH);
+		addPatternButton = new Button(buttonComp, SWT.PUSH);
 		addPatternButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addPatternButton.setText(Messages.MigrateDialog_add_pattern);
-		addPatternButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				RegExDialog dialog = new RegExDialog(getShell(), null, null, false,
-						fileSeparatorCombo.getSelectionIndex(), -1);
-				if (dialog.open() == RegExDialog.OK) {
-					MigrationRule result = dialog.getResult();
-					rules.add(result);
-					viewer.add(result);
-					viewer.setSelection(new StructuredSelection(result));
-					updateButtons();
-					dirty = true;
-				}
-			}
-		});
+		addPatternButton.addListener(SWT.Selection, this);
 		Button addFolderButton = new Button(buttonComp, SWT.PUSH);
-		addFolderButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				DirectoryDialog dirDialog = new DirectoryDialog(getShell());
-				dirDialog.setText(Messages.MigrateDialog_select_folder);
-				String dir = dirDialog.open();
-				if (dir != null) {
-					if (!dir.endsWith(File.separator))
-						dir += File.separator;
-					if (Constants.WIN32) {
-						int i = dir.indexOf(':');
-						if (i == 1) {
-							String volume = Core.getCore().getVolumeManager().getVolumeForFile(new File(dir));
-							if (volume != null)
-								dir = volume + dir.substring(1);
-						}
-					}
-					char filesep;
-					fileSepearatorPolicy = fileSeparatorCombo.getSelectionIndex();
-					switch (fileSepearatorPolicy) {
-					case 1:
-						filesep = '/';
-						break;
-					case 2:
-						filesep = '\\';
-						break;
-					default:
-						filesep = File.separatorChar;
-						break;
-					}
-					String sourcePattern = dir + "(.*)"; //$NON-NLS-1$
-					MigrationRule rule = new MigrationRuleImpl(sourcePattern.replaceAll("\\\\", "\\\\\\\\"), //$NON-NLS-1$ //$NON-NLS-2$
-							Messages.MigrateDialog_target_folder + filesep + "$1", null); //$NON-NLS-1$
-					RegExDialog regexDialog = new RegExDialog(getShell(), rule, dir, true, fileSepearatorPolicy,
-							Messages.MigrateDialog_target_folder.length());
-					if (regexDialog.open() == RegExDialog.OK) {
-						MigrationRule result = regexDialog.getResult();
-						rules.add(result);
-						viewer.add(result);
-						viewer.setSelection(new StructuredSelection(result));
-						updateButtons();
-						dirty = true;
-					}
-				}
-			}
-		});
+		addFolderButton.addListener(SWT.Selection, this);
 		addFolderButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		addFolderButton.setText(Messages.MigrateDialog_add_folder);
 		editPatternButton = new Button(buttonComp, SWT.PUSH);
 		editPatternButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		editPatternButton.setText(Messages.MigrateDialog_edit_pattern);
-		editPatternButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
-				RegExDialog regexDialog = new RegExDialog(getShell(), policy, null, false,
-						fileSeparatorCombo.getSelectionIndex(), -1);
-				if (regexDialog.open() == RegExDialog.OK) {
-					MigrationRule result = regexDialog.getResult();
-					policy.setSourcePattern(result.getSourcePattern());
-					policy.setTargetPattern(result.getTargetPattern());
-					viewer.update(policy, null);
-					updateButtons();
-					dirty = true;
-				}
-			}
-		});
+		editPatternButton.addListener(SWT.Selection, this);
 		removePatternButton = new Button(buttonComp, SWT.PUSH);
 		removePatternButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		removePatternButton.setText(Messages.MigrateDialog_remove_pattern);
-		removePatternButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Object policy = viewer.getStructuredSelection().getFirstElement();
-				rules.remove(policy);
-				viewer.remove(policy);
-				updateButtons();
-				dirty = true;
-			}
-		});
+		removePatternButton.addListener(SWT.Selection, this);
 		Label sep = new Label(buttonComp, SWT.SEPARATOR | SWT.HORIZONTAL);
 		sep.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		upButton = new Button(buttonComp, SWT.PUSH);
 		upButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		upButton.setText(Messages.MigrateDialog_up);
-		upButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
-				int i = rules.indexOf(policy);
-				if (i > 0) {
-					rules.remove(i);
-					rules.add(i - 1, policy);
-					viewer.setInput(rules);
-					viewer.setSelection(new StructuredSelection(policy));
-					updateButtons();
-				}
-			}
-		});
+		upButton.addListener(SWT.Selection, this);
 		downButton = new Button(buttonComp, SWT.PUSH);
 		downButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 		downButton.setText(Messages.MigrateDialog_down);
-		downButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
-				int i = rules.indexOf(policy);
-				if (i < rules.size() - 1) {
-					rules.remove(i);
-					rules.add(i + 1, policy);
-					viewer.setInput(rules);
-					viewer.setSelection(new StructuredSelection(policy));
-					updateButtons();
-				}
-			}
-		});
+		downButton.addListener(SWT.Selection, this);
 		return area;
 	}
 
@@ -356,7 +245,7 @@ public class MigrateDialog extends ZTitleAreaDialog {
 			long catSize = (long) (dbManager.getFile().length() * 1.05d);
 			if (freeSpace < catSize)
 				errorMessage = NLS.bind(Messages.MigrateDialog_not_enough_free_space,
-						Format.sizeFormatter.toString(freeSpace), Format.sizeFormatter.toString(catSize));
+						Format.sizeFormatter.format(freeSpace), Format.sizeFormatter.format(catSize));
 		}
 		setErrorMessage(errorMessage);
 		getButton(OK).setEnabled(errorMessage == null);
@@ -487,9 +376,12 @@ public class MigrateDialog extends ZTitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
-		targetCatalog = fileEditor.getText();
-		fileSepearatorPolicy = fileSeparatorCombo.getSelectionIndex();
-		super.okPressed();
+		if (fileEditor.testSave()) {
+			targetCatalog = fileEditor.getText();
+			fileSepearatorPolicy = fileSeparatorCombo.getSelectionIndex();
+			super.okPressed();
+		} else
+			cancelPressed();
 	}
 
 	/**
@@ -499,6 +391,107 @@ public class MigrateDialog extends ZTitleAreaDialog {
 		MigrationPolicyImpl policy = new MigrationPolicyImpl("", convertFileSeparatorPolicy(), targetCatalog); //$NON-NLS-1$
 		policy.setRule(rules.toArray(new MigrationRule[rules.size()]));
 		return policy;
+	}
+
+	@Override
+	public void handleEvent(Event e) {
+		Widget widget = e.widget;
+		if (widget == editPatternButton) {
+			MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
+			RegExDialog regexDialog = new RegExDialog(getShell(), policy, null, false,
+					fileSeparatorCombo.getSelectionIndex(), -1);
+			if (regexDialog.open() == RegExDialog.OK) {
+				MigrationRule result = regexDialog.getResult();
+				policy.setSourcePattern(result.getSourcePattern());
+				policy.setTargetPattern(result.getTargetPattern());
+				viewer.update(policy, null);
+				updateButtons();
+				dirty = true;
+			}
+		} else if (widget == removePatternButton) {
+			Object policy = viewer.getStructuredSelection().getFirstElement();
+			rules.remove(policy);
+			viewer.remove(policy);
+			updateButtons();
+			dirty = true;
+		} else if (widget == upButton) {
+			MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
+			int i = rules.indexOf(policy);
+			if (i > 0) {
+				rules.remove(i);
+				rules.add(i - 1, policy);
+				viewer.setInput(rules);
+				viewer.setSelection(new StructuredSelection(policy));
+				updateButtons();
+			}
+		} else if (widget == downButton) {
+			MigrationRule policy = (MigrationRule) viewer.getStructuredSelection().getFirstElement();
+			int i = rules.indexOf(policy);
+			if (i < rules.size() - 1) {
+				rules.remove(i);
+				rules.add(i + 1, policy);
+				viewer.setInput(rules);
+				viewer.setSelection(new StructuredSelection(policy));
+				updateButtons();
+			}
+		} else if (widget == addPatternButton) {
+			RegExDialog dialog = new RegExDialog(getShell(), null, null, false, fileSeparatorCombo.getSelectionIndex(),
+					-1);
+			if (dialog.open() == RegExDialog.OK) {
+				MigrationRule result = dialog.getResult();
+				rules.add(result);
+				viewer.add(result);
+				viewer.setSelection(new StructuredSelection(result));
+				updateButtons();
+				dirty = true;
+			}
+		} else {
+			DirectoryDialog dirDialog = new DirectoryDialog(getShell());
+			dirDialog.setText(Messages.MigrateDialog_select_folder);
+			String dir = dirDialog.open();
+			if (dir != null) {
+				if (!dir.endsWith(File.separator))
+					dir += File.separator;
+				if (Constants.WIN32) {
+					int i = dir.indexOf(':');
+					if (i == 1) {
+						String volume = Core.getCore().getVolumeManager().getVolumeForFile(new File(dir));
+						if (volume != null)
+							dir = volume + dir.substring(1);
+					}
+				}
+				char filesep;
+				fileSepearatorPolicy = fileSeparatorCombo.getSelectionIndex();
+				switch (fileSepearatorPolicy) {
+				case 1:
+					filesep = '/';
+					break;
+				case 2:
+					filesep = '\\';
+					break;
+				default:
+					filesep = File.separatorChar;
+					break;
+				}
+				String sourcePattern = dir + "(.*)"; //$NON-NLS-1$
+				MigrationRule rule = new MigrationRuleImpl(sourcePattern.replaceAll("\\\\", "\\\\\\\\"), //$NON-NLS-1$ //$NON-NLS-2$
+						Messages.MigrateDialog_target_folder + filesep + "$1", null); //$NON-NLS-1$
+				RegExDialog regexDialog = new RegExDialog(getShell(), rule, dir, true, fileSepearatorPolicy,
+						Messages.MigrateDialog_target_folder.length());
+				if (regexDialog.open() == RegExDialog.OK) {
+					MigrationRule result = regexDialog.getResult();
+					rules.add(result);
+					viewer.add(result);
+					viewer.setSelection(new StructuredSelection(result));
+					updateButtons();
+					dirty = true;
+				}
+			}
+		}
+	}
+
+	public void selectionChanged(SelectionChangedEvent event) {
+		updateButtons();
 	}
 
 }

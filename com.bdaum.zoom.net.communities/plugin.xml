@@ -53,5 +53,11 @@
             pageId="com.bdaum.zoom.net.preferences.InternetPreferencePage">
       </preferencePageExtension>
    </extension>
+   <extension
+         point="com.bdaum.zoom.common.preferenceConstants">
+      <constants
+            class="com.bdaum.zoom.net.communities.PreferenceConstants">
+      </constants>
+   </extension>
 
 </plugin>

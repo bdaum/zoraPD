@@ -53,8 +53,7 @@ public class HoveringController implements Listener {
 		private Object fCoveredObject;
 		private ImageRegion[] fCoveredRegions;
 		private Control control;
-		private Daemon stopper;
-		private Daemon delayer;
+		private Daemon stopper, delayer;
 
 		/**
 		 * Creates a new window manager for the given area.
@@ -147,21 +146,19 @@ public class HoveringController implements Listener {
 			case SWT.Resize:
 			case SWT.Move:
 				stop();
-				break;
+				return;
 			case SWT.MouseMove:
 				Object foundItem = subject.findObject(e);
 				ImageRegion[] foundRegions = subject.findAllRegions(e);
 				if (foundItem != fCoveredObject || !Arrays.equals(foundRegions, fCoveredRegions))
 					stop();
-				break;
+				return;
 			case SWT.FocusOut:
-				if (subject.getControl() == e.widget) {
+				if (subject.getControl() == e.widget)
 					e.display.asyncExec(() -> {
 						if (!e.display.isDisposed())
 							stop();
 					});
-				}
-				break;
 			}
 
 		}

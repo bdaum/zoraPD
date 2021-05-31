@@ -88,7 +88,7 @@ public class BackupJob extends CustomJob {
 			} catch (IOException e) {
 				core.logError(Messages.getString("BackupJob.io_error_index_backup"), e); //$NON-NLS-1$
 			}
-			BatchUtilities.exportPreferences(new File(folder, BatchConstants.APP_PREFERENCES));
+			BatchUtilities.exportPreferences(new File(folder, BatchConstants.APP_PREFERENCES), null);
 			if (monitor.isCanceled())
 				return Status.CANCEL_STATUS;
 			int deleted = -1;
@@ -100,7 +100,7 @@ public class BackupJob extends CustomJob {
 							return (child.isDirectory() && child.getName().matches(generationPattern));
 						}
 					});
-					if (children != null) {
+					if (children != null && children.length > 0) {
 						deleted = children.length - generations - 1;
 						if (deleted > 0) {
 							Arrays.sort(children);
